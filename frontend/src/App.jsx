@@ -1,13 +1,13 @@
-
-import './App.css'
+import { Routes, Route } from 'react-router-dom'
 
 
 function App() {
 
 
   return (
-    <>
+    
       <div>
+        
         <div class="mx-auto flex max-w-sm items-center gap-x-4 rounded-xl bg-white p-6 shadow-lg outline outline-black/5 dark:bg-slate-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10">
           <img class="size-12 shrink-0" src="/img/logo.svg" alt="ChitChat Logo" />
           <div>
@@ -17,7 +17,7 @@ function App() {
         </div>
       </div>
 
-    </>
+    
   )
 }
 
