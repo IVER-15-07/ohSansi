@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\AreaController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -14,9 +14,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return 'XD';
 });
 
 Route::get('prueba', function () {
     return 'Hola desde la ruta de prueba';
 });
+
+
+Route::post('/areas', [AreaController::class, 'almacenar']);

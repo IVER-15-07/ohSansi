@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrearTablaCategoria extends Migration
+class CrearTablaGrado extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,9 @@ class CrearTablaCategoria extends Migration
      */
     public function up()
     {
-        Schema::create('categoria', function (Blueprint $table) {
+        Schema::create('grado', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->timestamps();
-            
-            $table->foreignId('area_id')->constrained('area')->onDelete('cascade');
-
         });
     }
 
@@ -30,6 +26,6 @@ class CrearTablaCategoria extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('categoria');
+        Schema::dropIfExists('grado');
     }
 }

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrearTablaCategoriaGrado extends Migration
+class CrearTablaDivision extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,11 @@ class CrearTablaCategoriaGrado extends Migration
      */
     public function up()
     {
-        Schema::create('categoria-grado', function (Blueprint $table) {
+        Schema::create('division', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->string('nombre');
 
-            $table->foreignId('categoria_id')->constrained('categoria');
-            $table->foreignId('grado_id')->constrained('grado');
+            $table->foreignId('tipo_division_id')->constrained('tipo_division');
         });
     }
 
@@ -29,6 +28,6 @@ class CrearTablaCategoriaGrado extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('categoria-grado');
+        Schema::dropIfExists('division');
     }
 }

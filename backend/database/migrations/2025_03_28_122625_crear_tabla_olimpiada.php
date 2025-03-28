@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrearTablaArea extends Migration
+class CrearTablaOlimpiada extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,10 @@ class CrearTablaArea extends Migration
      */
     public function up()
     {
-        Schema::create('area', function (Blueprint $table) {
+        Schema::create('olimpiada', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
-            $table->timestamps();
-
-            $table->foreignId('olimpiada_id')->constrained('olimpiada')->onDelete('cascade');
+            $table->date('fecha_inicio');
+            $table->date('fecha_fin');
         });
     }
 
@@ -29,6 +27,6 @@ class CrearTablaArea extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('area');
+        Schema::dropIfExists('olimpiada');
     }
 }

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrearTablaGrado extends Migration
+class CrearTablaCampoInscripcion extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,13 @@ class CrearTablaGrado extends Migration
      */
     public function up()
     {
-        Schema::create('grado', function (Blueprint $table) {
+        Schema::create('campo_inscripcion', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->timestamps();
+
+            $table->foreignId('tipo_campo_id')->constrained('tipo_campo')->onDelete('cascade');
+            $table->foreignId('seccion_campo_id')->constrained('seccion_campo')->onDelete('cascade');
+            
         });
     }
 
@@ -27,6 +30,6 @@ class CrearTablaGrado extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('grado');
+        Schema::dropIfExists('campo_inscripcion');
     }
 }

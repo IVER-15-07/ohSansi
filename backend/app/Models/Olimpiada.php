@@ -11,30 +11,14 @@ class Olimpiada extends Model
 
     protected $table = 'olimpiada';
 
-    // Agregar propiedades para las columnas de la tabla
     protected $fillable = [
-        'nombre',
         'fecha_inicio',
-        'fecha_fin',
-        'lugar',
-        'descripcion'
+        'fecha_fin'
     ];
 
-    // Definir la relación con Area
-    public function areas()
+    // Relación uno a muchos con Configuracion
+    public function configuraciones()
     {
-        return $this->hasMany(Area::class);
-    }
-
-    // Definir la relación con Inscripcion
-    public function inscripcion()
-    {
-        return $this->hasOne(Inscripcion::class);
-    }
-
-    // Definir la relación con OrdenDePago
-    public function ordenDePago()
-    {
-        return $this->hasOne(OrdenDePago::class);
+        return $this->hasMany(Configuracion::class, 'id_olimpiada');
     }
 }

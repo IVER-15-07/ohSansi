@@ -9,30 +9,15 @@ class Area extends Model
 {
     use HasFactory;
 
-    protected $table = 'areas';
-
-    // Agregar propiedades para las columnas de la tabla
+    protected $table = 'area';
+    public $timestamps = false;
     protected $fillable = [
-        'nombre',
-        'descripcion',
-        'olimpiada_id' // Clave foránea que referencia a la tabla olimpiada
+        'nombre'
     ];
 
-    // Definir la relación inversa con Olimpiada
-    public function olimpiada()
+    // Relación uno a muchos con Configuracion
+    public function configuraciones()
     {
-        return $this->belongsTo(Olimpiada::class);
-    }
-
-    // Definir la relación con Categoria
-    public function categorias()
-    {
-        return $this->hasMany(Categoria::class);
-    }
-
-    // Definir la relación con Nivel
-    public function niveles()
-    {
-        return $this->hasMany(Nivel::class);
+        return $this->hasMany(Configuracion::class, 'id_area');
     }
 }

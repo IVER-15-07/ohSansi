@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Grado extends Model
+class Division extends Model
 {
     use HasFactory;
 
-    protected $table = 'grado';
+    protected $table = 'division';
 
     protected $fillable = [
         'nombre'
@@ -18,6 +18,12 @@ class Grado extends Model
     // Relación uno a muchos con Configuracion
     public function configuraciones()
     {
-        return $this->hasMany(Configuracion::class, 'id_grado');
+        return $this->hasMany(Configuracion::class, 'id_division');
+    }
+
+    // Relación uno a muchos con TipoDivision
+    public function tipoDivision()
+    {
+        return $this->belongsTo(TipoDivision::class, 'id_tipo_division');
     }
 }
