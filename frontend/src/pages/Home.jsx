@@ -5,7 +5,7 @@ const Home = () => {
     const navigate = useNavigate()
 
     const handleNavigate = () => {
-            navigate('/AdminLayout')
+        navigate('/AdminLayout')
     }
 
 
