@@ -17,6 +17,7 @@ const AdminLayout = () => {
       <div className="flex-1">
         <div className="pt-3 pl-4 pb-0">
           <MenuIcon onClick={() => setIsCollapsed(!isCollapsed)} className="cursor-pointer" />
+
         </div>
         <Outlet />
       </div>
