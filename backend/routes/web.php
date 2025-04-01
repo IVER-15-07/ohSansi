@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\DivisionController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -22,4 +23,12 @@ Route::get('prueba', function () {
 });
 
 
-Route::post('/areas', [AreaController::class, 'almacenar']);
+Route::get('/areas', [AreaController::class, 'obtenerAreas']);
+
+Route::post('/areas', [AreaController::class, 'almacenarArea']);
+
+
+
+Route::get('/divisiones', [DivisionController::class, 'obtenerDivisiones']);
+
+Route::post('/divisiones', [DivisionController::class, 'almacenarDivision']);

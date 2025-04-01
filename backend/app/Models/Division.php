@@ -10,7 +10,7 @@ class Division extends Model
     use HasFactory;
 
     protected $table = 'division';
-
+    public $timestamps = false;
     protected $fillable = [
         'nombre'
     ];
