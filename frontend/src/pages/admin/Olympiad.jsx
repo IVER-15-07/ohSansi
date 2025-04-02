@@ -8,7 +8,7 @@ const Olympiad = () => {
   const [AgregarOlimpiada, setAgregarOlimpiada] = useState(false)
 
   return (
-    <div className="p-4">
+    <div className="p-4 pt-2">
     {AgregarOlimpiada ? (
       <CrearOlimpiada onBack={() => setAgregarOlimpiada(false)} />
     ) : (
