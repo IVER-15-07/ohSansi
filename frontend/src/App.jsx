@@ -4,10 +4,6 @@ import Home from './pages/Home'
 import AdminLayout from './layouts/AdminLayout'
 
 
-
-
-
-
 import Olympiad from './pages/admin/Olympiad'
 
 

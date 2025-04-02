@@ -1,10 +1,15 @@
 import React from 'react'
 
-const Datosgenerales = () => {
+const Datosgenerales = ({nextStep}) => {
   return (
     <div>
 
-        <h1>aqui estan lo s datos  generales </h1>
+<div>
+      <h2>Datos Generales</h2>
+      <button onClick={nextStep} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
+        Siguiente
+      </button>
+    </div>
       
     </div>
   )

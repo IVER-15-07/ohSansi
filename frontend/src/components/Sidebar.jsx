@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
-import { PanelIcon, OlympiadIcon, ConfigIcon, ExitIcon } from '../assets/Icons';
+import { PanelIcon, OlympiadIcon, ParametrosIcon, ExitIcon } from '../assets/Icons';
 
 
 const Sidebar = ({ isCollapsed }) => {
@@ -9,7 +9,7 @@ const Sidebar = ({ isCollapsed }) => {
   const menuItems = [
     { label: 'Panel', icon: <PanelIcon />, path: '/AdminLayout' },
     { label: 'Olimpiada', icon: <OlympiadIcon />, path: '/AdminLayout/Olympiad' },
-    { label: 'Parametros', icon: <ConfigIcon />, path: '/AdminLayout/Parametros' },
+    { label: 'Parametros', icon: <ParametrosIcon />, path: '/AdminLayout/Parametros' },
   ];
 
   return (

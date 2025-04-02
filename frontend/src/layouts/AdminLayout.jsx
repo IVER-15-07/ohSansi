@@ -19,7 +19,15 @@ const AdminLayout = () => {
           <MenuIcon onClick={() => setIsCollapsed(!isCollapsed)} className="cursor-pointer" />
 
         </div>
+
+        <div>
+
         <Outlet />
+        
+        
+        </div>
+
+
       </div>
     </div>
   )
