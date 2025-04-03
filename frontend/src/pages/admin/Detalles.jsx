@@ -16,6 +16,7 @@ const areasConfig = [
     niveles: [
       { categoria: "1s", grado: "1ro de secundaria" },
       { categoria: "2s", grado: "2do de secundaria" },
+      { categoria: "3s", grado: "3ro de secundaria" },
     ],
   },
   {
