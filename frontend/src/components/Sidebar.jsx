@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom';
-import { PanelIcon, OlympiadIcon, ParametrosIcon, ExitIcon } from '../assets/Icons';
+import { PanelIcon, OlympiadIcon, ParametrosIcon, ExitIcon, CategoriaIcon, AreasIcon } from '../assets/Icons';
 import { useState } from 'react';
 
 
@@ -11,7 +11,10 @@ const Sidebar = ({ isCollapsed }) => {
   const menuItems = [
     { label: 'Panel', icon: <PanelIcon />, path: '/AdminLayout' },
     { label: 'Olimpiada', icon: <OlympiadIcon />, path: '/AdminLayout/Olympiad' },
+    { label: 'Areas', icon: <AreasIcon />, path: '/AdminLayout/Areas' },
+    { label: 'Nivel/Categoria', icon: <CategoriaIcon   />, path: '/AdminLayout/NivelCategoria' },
     { label: 'Parametros', icon: <ParametrosIcon />, path: '/AdminLayout/Parametros' },
+    
   ];
 
   return (
@@ -29,29 +32,40 @@ const Sidebar = ({ isCollapsed }) => {
 
       {/* Navigation Buttons */}
       <ul className="flex flex-col gap-2">
-        {menuItems.map(({ label, icon, path }, index) => (
-          <li key={label}>
-            <button
-              onClick={() => navigate(path)}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
-              className={`flex items-center w-full py-3 px-4 text-lg rounded-lg transition duration-300 
-              ${hoveredIndex === index ? 'bg-blue-900 text-white' : 'hover:bg-blue-950'}
-              ${isCollapsed ? 'justify-center' : 'text-white'}
-              `}
-            >
-              {/* Ícono siempre visible, cambia a azul si isCollapsed es true */}
-              <span
-                className={`${isCollapsed ? 'text-blue-900' : 'text-white'
-                  } transition duration-300`}
-              >
-                {icon}
-              </span>
-              {/* Texto visible solo si no está colapsado */}
-              {!isCollapsed && <span className="ml-3">{label}</span>}
-            </button>
-          </li>
-        ))}
+       {menuItems.map(({ label, icon, path }, index) => (
+  <li key={label}>
+    <button
+      onClick={() => navigate(path)}
+      onMouseEnter={() => setHoveredIndex(index)}
+      onMouseLeave={() => setHoveredIndex(null)}
+      className={`flex items-center w-full py-3 px-4 text-lg rounded-lg transition-all duration-300 ease-in-out
+        ${hoveredIndex === index
+          ? 'bg-white text-blue-900 shadow-md scale-[1.02]'
+          : 'text-white hover:bg-blue-800 hover:text-white'
+        }
+        ${isCollapsed ? 'justify-center' : ''}
+      `}
+    >
+      {/* Ícono */}
+      <span
+        className={`transition-colors duration-300
+          ${hoveredIndex === index
+            ? 'text-blue-900'
+            : isCollapsed
+              ? 'text-blue-200'
+              : 'text-white'}
+        `}
+      >
+        {icon}
+      </span>
+
+      {/* Texto (solo si no está colapsado) */}
+      {!isCollapsed && (
+        <span className="ml-3 transition-colors duration-300">{label}</span>
+      )}
+    </button>
+  </li>
+))}
       </ul>
 
       {/* Botón de Salir */}
