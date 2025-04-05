@@ -42,6 +42,7 @@ function App() {
         <Route path="/Datosgenerales" element={<Datosgenerales />} /> 
         <Route path="/Detalles" element={<Detalles />} />
         <Route path="/Divisiones" element={<Divisiones />} />
+        <Route path="/ConfOlimpiada" element={<Olympiad />} />
 
          {/* Rutas del  user */}
 
