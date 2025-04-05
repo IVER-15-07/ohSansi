@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrearTablaDivision extends Migration
+class CrearTablaNivelCategoria extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,10 @@ class CrearTablaDivision extends Migration
      */
     public function up()
     {
-        Schema::create('division', function (Blueprint $table) {
+        Schema::create('nivel_categoria', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-
-            $table->foreignId('tipo_division_id')->constrained('tipo_division');
+            $table->boolean('esNivel');
         });
     }
 
@@ -28,6 +27,6 @@ class CrearTablaDivision extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('division');
+        Schema::dropIfExists('nivel_categoria');
     }
 }

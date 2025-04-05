@@ -30,9 +30,9 @@ class Configuracion extends Model
     }
 
     // Relación inversa con Division
-    public function division()
+    public function nivel_categoria()
     {
-        return $this->belongsTo(Division::class, 'id_division');
+        return $this->belongsTo(NivelCategoria::class, 'id_nivel_categoria');
     }
 
     public function registros()

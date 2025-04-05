@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAreas } from '../../../service/areas.api';
-import { getDivisiones } from '../../../service/divisiones.api';
+import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
+import { getGrados } from '../../../service/grados.api';
 
 const Areas = () => {
   const [areas, setAreas] = useState([]);
@@ -38,28 +39,28 @@ const Areas = () => {
   );
 };
 
-const Divisiones = () => {
-  const [divisiones, setDivisiones] = useState([]);
+const NivelesCategorias = () => {
+  const [niveles_categorias, setNivelesCategorias] = useState([]);
 
   useEffect(() => {
-    const divisiones = getDivisiones();
-    divisiones.then((response) => {
-      setDivisiones(response.data);
+    const niveles_categorias = getNivelesCategorias();
+    niveles_categorias.then((response) => {
+      setNivelesCategorias(response.data);
     }).catch((error) => {
-      console.error("Error fetching divisiones:", error);
+      console.error("Error fetching niveles/categorias:", error);
     });
   }, []);
 
   return (
     <div>
         <div className='p-10 bg-blue-500 text-white'>
-          <h1>Divisiones</h1>
+          <h1>Niveles/Categorias</h1>
         </div>
 
         <div>
           <ol className='list-decimal list-inside'>
-            {divisiones.map((division, index) => (
-              <li key={index} className='p-2'>{division.nombre}</li>
+            {niveles_categorias.map((nivel_categoria, index) => (
+              <li key={index} className='p-2'>{nivel_categoria.nombre}  {nivel_categoria.esNivel ? "Nivel": "Categoria"}</li>
             ))}
 
           </ol>
@@ -70,6 +71,17 @@ const Divisiones = () => {
 };
 
 const Grados = () => {
+  const [grados, setGrados] = useState([]);
+  
+  useEffect(() => {
+    const gradosLocal = getGrados();
+    gradosLocal.then((response) => {
+      setGrados(response.data);
+    }).catch((error) => {
+      console.error("Error fetching grados:", error);
+    });
+  }, []);
+
   return (
     <div>
         <div className='p-10 bg-blue-500 text-white'>
@@ -78,11 +90,11 @@ const Grados = () => {
 
         <div>
           <ol className='list-decimal list-inside'>
-            <li className='p-2'>Grado 1</li>
-            <li className='p-2'>Grado 2</li>
-            <li className='p-2'>Grado 3</li>
-            <li className='p-2'>Grado 4</li>
-            <li className='p-2'>Grado 5</li>
+            {
+              grados.map((grado, index) => (
+                <li key={index} className='p-2 bg-green-300'>{grado.nombre}</li>
+              ))
+            }
           </ol>
         </div>
         
@@ -93,9 +105,8 @@ const Grados = () => {
 const Parametros = () => {
   return (
     <div> 
-      
       <Areas />
-      <Divisiones />
+      <NivelesCategorias />
       <Grados />
     </div>
     

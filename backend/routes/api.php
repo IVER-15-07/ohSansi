@@ -5,7 +5,9 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AreaController;
 
-use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\NivelCategoriaController;
+
+use App\Http\Controllers\GradoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +29,9 @@ Route::get('/areas', [AreaController::class, 'obtenerAreas']);
 Route::post('/areas', [AreaController::class, 'almacenarArea']);
 
 
-Route::get('/divisiones', [DivisionController::class, 'obtenerDivisiones']);
+Route::get('/niveles_categorias', [NivelCategoriaController::class, 'obtenerNivelCategoria']);
 
-Route::post('/divisiones', [DivisionController::class, 'almacenarDivision']);
+Route::post('/niveles_categorias', [NivelCategoriaController::class, 'almacenarNivelCategoria']);
+
+Route::get('/grados', [GradoController::class, 'obtenerGrados']);
+
