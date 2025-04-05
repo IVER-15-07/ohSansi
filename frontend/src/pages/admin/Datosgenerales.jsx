@@ -6,99 +6,108 @@ const Datosgenerales = () => {
  
 
   return (
-    <div className="w-full px-3 py-2">
-      <h2 className="text-2xl font-bold text-gray-700 ">Datos generales de la Olimpiada</h2>
+<div className="w-full px-6 py-4 bg-gray-50 rounded-xl">
+  <h2 className="text-2xl font-bold text-gray-700 mb-4">Datos generales de la Olimpiada</h2>
 
-      <form className="grid grid-cols-2 gap-x-8 gap-y-4 bg-white p-4 rounded-lg shadow-md">
-        {/* Nombre de la olimpiada */}
-        <div className="col-span-2">
-          <label className="block text-gray-600 text-sm mb-1">Nombre de la olimpiada</label>
-          <input 
-            type="text" 
-            placeholder="Ingrese el nombre de la olimpiada" 
-            className="w-full p-2 border rounded-lg border-gray-300 focus:ring focus:ring-blue-300"
-          />
-        </div>
-
-        {/* Fechas */}
-        <div>
-          <label className="block text-gray-600 text-sm mb-1">Fecha inicio</label>
-          <input 
-            type="date" 
-            className="w-full p-2 border rounded-lg border-gray-300 focus:ring focus:ring-blue-300"
-          />
-        </div>
-        <div>
-          <label className="block text-gray-600 text-sm mb-1">Fecha fin</label>
-          <input 
-            type="date" 
-            className="w-full p-2 border rounded-lg border-gray-300 focus:ring focus:ring-blue-300"
-          />
-        </div>
-
-        {/* Costo */}
-        <div>
-          <label className="block text-gray-600 text-sm mb-1">Costo de la Olimpiada</label>
-          <input 
-            type="number" 
-            placeholder="00.00 Bs." 
-            className="w-full p-2 border rounded-lg border-gray-300 focus:ring focus:ring-blue-300"
-          />
-        </div>
-
-        {/* Modalidad */}
-        <div>
-          <label className="block text-gray-600 text-sm mb-1">Modalidad</label>
-          <div className="flex flex-col space-y-1 border p-2 rounded-lg">
-            <label className="flex items-center space-x-2">
-              <input type="checkbox" className="form-checkbox" />
-              <span>Presencial</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input type="checkbox" className="form-checkbox" />
-              <span>Virtual</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input type="checkbox" className="form-checkbox" />
-              <span>Híbrida</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Descripción */}
-        <div className="col-span-2">
-          <label className="block text-gray-600 text-sm mb-1">Descripción</label>
-          <textarea 
-            placeholder="Inserte descripción de la olimpiada" 
-            className="w-full p-2 border rounded-lg border-gray-300 focus:ring focus:ring-blue-300 h-24"
-          />
-        </div>
-
-        {/* Ubicación y Mapa */}
-        <div className="col-span-2 grid grid-cols-2 gap-4 items-center">
-          <div>
-            <label className="block text-gray-600 text-sm mb-1">Ubicación</label>
-            <input
-              type="text"
-              value={urlMapa}
-              onChange={(e) => setUrlMapa(e.target.value)}
-              placeholder="Ingrese ubicación"
-              className="w-full p-2 border rounded-lg border-gray-300 focus:ring focus:ring-blue-300"
-            />
-          </div>
-
-          {/* Mapa (Imagen de referencia) */}
-          <div className="h-32 border rounded-lg overflow-hidden">
-            <img 
-              src="https://via.placeholder.com/200x150" 
-              alt="Mapa"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-
-      </form>
+  <form className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 bg-white p-6 rounded-2xl shadow border border-gray-200">
+    
+    {/* Nombre de la olimpiada */}
+    <div className="col-span-2">
+      <label className="block text-sm font-medium text-gray-600 mb-1">Nombre de la olimpiada</label>
+      <input 
+        type="text" 
+        placeholder="Ingrese el nombre de la olimpiada" 
+        className="w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
     </div>
+
+    {/* Fechas de la olimpiada */}
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-1">Fecha de inicio</label>
+      <input 
+        type="date" 
+        className="w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-1">Fecha de finalización</label>
+      <input 
+        type="date" 
+        className="w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+
+    {/* Fechas de inscripción */}
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-1">Fecha de inicio de inscripción</label>
+      <input 
+        type="date" 
+        className="w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-1">Fecha de fin de inscripción</label>
+      <input 
+        type="date" 
+        className="w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+
+    {/* Costo */}
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-1">Costo de la Olimpiada</label>
+      <input 
+        type="number" 
+        placeholder="00.00 Bs." 
+        className="w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+
+    {/* Modalidad */}
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-1">Modalidad</label>
+      <div className="flex flex-col gap-1 border p-3 rounded-lg bg-gray-50">
+        {["Presencial", "Virtual", "Híbrida"].map((mod, i) => (
+          <label key={i} className="flex items-center gap-2 text-gray-700">
+            <input type="checkbox" className="form-checkbox" />
+            <span>{mod}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    {/* Descripción */}
+    <div className="col-span-2">
+      <label className="block text-sm font-medium text-gray-600 mb-1">Descripción</label>
+      <textarea 
+        placeholder="Inserte descripción de la olimpiada" 
+        className="w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 h-28 resize-none"
+      />
+    </div>
+
+    {/* Ubicación y Mapa */}
+    <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+      <div>
+        <label className="block text-sm font-medium text-gray-600 mb-1">Ubicación</label>
+        <input
+          type="text"
+          value={urlMapa}
+          onChange={(e) => setUrlMapa(e.target.value)}
+          placeholder="Ingrese ubicación"
+          className="w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div className="h-32 border rounded-lg overflow-hidden">
+        <img 
+          src="https://via.placeholder.com/200x150" 
+          alt="Mapa"
+          className="w-full h-full object-cover"
+        />
+      </div>
+    </div>
+  </form>
+</div>
+
   )
 }
 
