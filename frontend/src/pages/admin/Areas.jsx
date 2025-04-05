@@ -21,42 +21,35 @@ const Areas = () => {
   return (
 
     <div className="p-4 pt-2 flex flex-col gap-4 w-full h-full">
-      <div className="  bg-white rounded-lg shadow-md border border-gray-300">
+      <div className="bg-white rounded-lg shadow-md border border-gray-300 p-4">
 
-        {/* Lista de Olimpiadas */}
-        <div className="p-4  bg-white rounded-lg shadow-md border border-gray-300">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">
-            Lista de Olimpiadas
-          </h2>
-          <div className="space-y-2 p-2">
-  {areas.map((area, index) => (
-    <div
-      key={index}
-      className="flex items-center gap-4 bg-gradient-to-r from-gray-100 to-gray-50 p-4 rounded-xl shadow-md hover:shadow-lg transition-all"
-    >
-      <span className="text-gray-800 font-semibold">{area.name}</span>
-      <button
-        onClick={() => handleRemoveArea(index)}
-        className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all"
-      >
-        Eliminar
-      </button>
-    </div>
-  ))}
-</div>
+        
+        <div className="bg-white rounded-lg shadow-md border border-gray-300 p-4">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">Lista de Áreas</h2>
 
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-2 overflow-y-auto max-h-[300px] min-h-[300px]">
+            {areas.map((area, index) => (
+              <div
+                key={index}
+                className="flex justify-between items-center gap-4 bg-gradient-to-r from-gray-100 to-gray-50 p-4 rounded-xl shadow-md hover:shadow-lg transition-all"
+              >
+                <span className="text-gray-800 font-semibold">{area.name}</span>
+                <button
+                  onClick={() => handleRemoveArea(index)}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all"
+                >
+                  Eliminar
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
+
         
+        <div className="p-4 bg-white rounded-lg shadow-md border border-gray-300 mt-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">Agregar áreas de competencia</h2>
 
-
-
-
-        {/* Agregar Áreas de Competencia */}
-        <div className="p-4 bg-white rounded-lg shadow-md border border-gray-300">
-        
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">
-            Agregar áreas de competencia
-          </h2>
           <div>
             <label className="block text-gray-700 mb-1">Nombre del área</label>
             <input
@@ -75,19 +68,9 @@ const Areas = () => {
           </button>
         </div>
 
-
-
-        {/* Botones de acción */}
-        <div className="flex justify-end gap-4">
-          <button className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800">
-            Cancelar
-          </button>
-          <button className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800">
-            Aceptar
-          </button>
-        </div>
       </div>
     </div>
+
 
   )
 }
