@@ -33,6 +33,7 @@ class OlimpiadaController extends Controller
             ], 500);
         }
     }
+    
     /**
      * Almacenar una nueva olimpiada.
      *
@@ -51,7 +52,7 @@ class OlimpiadaController extends Controller
                 'fecha_fin' => 'required|date|after:fecha_inicio', 
             ]);
 
-            // Crear el área
+            // Crear la olimpiada de forma controlada
             $olimpiada = Olimpiada::create([
                 'nombre' => $validated['nombre'],
                 'descripcion' => $validated['descripcion'],

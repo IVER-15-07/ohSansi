@@ -15,10 +15,12 @@ class CrearTablaEncargado extends Migration
     {
         Schema::create('encargado', function (Blueprint $table) {
             $table->id();
-            $table->string('ci');
+            $table->string('ci')->unique();
             $table->string('nombre');
             $table->string('apellido');
             $table->date('fecha_nacimiento');
+            $table->string('telefono')->unique();
+            $table->string('correo')->unique();
         });
     }
 

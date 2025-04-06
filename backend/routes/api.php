@@ -13,6 +13,7 @@ use App\Http\Controllers\ConfiguracionController;
 
 use App\Http\Controllers\OlimpiadaController;
 
+use App\Http\Controllers\EncargadoController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -49,6 +50,8 @@ Route::post('/configuraciones', [ConfiguracionController::class, 'almacenarConfi
 Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
+
+Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 
 
 
