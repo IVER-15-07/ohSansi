@@ -9,6 +9,10 @@ use App\Http\Controllers\NivelCategoriaController;
 
 use App\Http\Controllers\GradoController;
 
+use App\Http\Controllers\ConfiguracionController;
+
+use App\Http\Controllers\OlimpiadaController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -29,9 +33,24 @@ Route::get('/areas', [AreaController::class, 'obtenerAreas']);
 Route::post('/areas', [AreaController::class, 'almacenarArea']);
 
 
-Route::get('/niveles_categorias', [NivelCategoriaController::class, 'obtenerNivelCategoria']);
+Route::get('/niveles_categorias', [NivelCategoriaController::class, 'obtenerNivelesCategorias']);
 
 Route::post('/niveles_categorias', [NivelCategoriaController::class, 'almacenarNivelCategoria']);
 
+
 Route::get('/grados', [GradoController::class, 'obtenerGrados']);
+
+
+Route::get('/configuraciones', [ConfiguracionController::class, 'obtenerConfiguraciones']);
+
+Route::post('/configuraciones', [ConfiguracionController::class, 'almacenarConfiguracion']);
+
+
+Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
+
+Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
+
+
+
+
 

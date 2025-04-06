@@ -12,6 +12,10 @@ class Olimpiada extends Model
     protected $table = 'olimpiada';
 
     protected $fillable = [
+        'nombre',
+        'descripcion',
+        'costo',
+        'ubicacion',
         'fecha_inicio',
         'fecha_fin'
     ];
