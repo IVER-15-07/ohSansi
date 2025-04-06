@@ -1,12 +1,25 @@
 import React from 'react'
+import {getAreas} from '../../../service/areas.api'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const Areas = () => {
 
-  const [areas, setAreas] = useState([{ name: "Química" }]);
+  const [areas, setAreas] = useState([]);
   const [newArea, setNewArea] = useState("");
 
+
+  useEffect(() => {
+    const areas = getAreas();
+    areas.then((response) => {
+      setAreas(response.data);
+    }).catch((error) => {
+      console.error("Error fetching areas:", error);
+    });
+  }, []);
+
+
+    
   const handleAddArea = () => {
     if (newArea.trim() !== "") {
       setAreas([...areas, { name: newArea }]);
@@ -33,7 +46,7 @@ const Areas = () => {
               key={index}
               className="flex justify-between items-center gap-4 bg-gradient-to-r from-gray-100 to-gray-50 p-4 rounded-xl shadow hover:shadow-lg transition-all"
             >
-              <span className="text-gray-800 font-medium">{area.name}</span>
+              <span className="text-gray-800 font-medium">{area.nombre}</span>
               <button
                 onClick={() => handleRemoveArea(index)}
                 className="bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 transition"

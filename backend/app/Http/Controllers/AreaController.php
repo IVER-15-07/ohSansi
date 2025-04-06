@@ -22,6 +22,8 @@ class AreaController extends Controller
             ], 500);
         }
     }
+
+    
     public function almacenarArea(Request $request)
     {
         try{
