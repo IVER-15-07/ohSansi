@@ -22,7 +22,7 @@ const Areas = () => {
     
   const handleAddArea = () => {
     if (newArea.trim() !== "") {
-      setAreas([...areas, { name: newArea }]);
+      createArea({ nombre: newArea });
       setNewArea("");
     }
   };
@@ -90,7 +90,9 @@ const Areas = () => {
   
 
 
-  )
+      
+          )
 }
 
-export default Areas
+
+          export default Areas
