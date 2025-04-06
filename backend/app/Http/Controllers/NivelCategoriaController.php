@@ -13,7 +13,7 @@ class NivelCategoriaController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function obtenerNivelCategoria(Request $request)
+    public function obtenerNivelesCategorias(Request $request)
     {
         try {
             // Obtener todos los niveles o categorías

@@ -15,7 +15,9 @@ class Encargado extends Model
         'ci',
         'nombre',
         'apellido',
-        'fecha_nacimiento'
+        'fecha_nacimiento',
+        'telefono',	
+        'correo',
     ];
 
     public function registros()
