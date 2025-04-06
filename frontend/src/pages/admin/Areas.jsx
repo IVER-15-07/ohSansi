@@ -1,15 +1,11 @@
-import React from 'react'
-import { createArea } from '../../services/areaService'; // Adjust the path as needed
-import { getAreas } from '../../../service/areas.api';
+import React, { useEffect, useState } from 'react';
+import { getAreas, createArea } from '../../../service/areas.api';
 
 
-import { useState, useEffect } from 'react'
 
 const Areas = () => {
-
-  const [areas, setAreas] = useState([]);
+  const [areas, setAreas] = useState([{ name: "Química" }]);
   const [newArea, setNewArea] = useState("");
-
 
   useEffect(() => {
     const areas = getAreas();
@@ -20,17 +16,11 @@ const Areas = () => {
     });
   }, []);
 
-
-
   const handleAddArea = () => {
     if (newArea.trim() !== "") {
       createArea({ nombre: newArea });
       setNewArea("");
     }
-  };
-
-  const handleRemoveArea = (index) => {
-    setAreas(areas.filter((_, i) => i !== index));
   };
 
   return (
