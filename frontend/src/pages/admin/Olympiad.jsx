@@ -2,13 +2,13 @@ import React from 'react'
 import { useState, useEffect } from 'react'
 import CrearOlimpiada from './CrearOlimpiada'
 import { getOlimpiadas } from "../../../service/olimpiadas.api";
-
+import { useNavigate } from 'react-router-dom'
 import ConfOlimpiada from './ConfOlimpiada'
 import { Plus, Settings, Play, Archive, Trash2 } from 'lucide-react'
 
 
 const Olympiad = () => {
-
+  const navigate = useNavigate()
   const [AgregarOlimpiada, setAgregarOlimpiada] = useState(false)
   const [isConfOlimpiada, setIsConfOlimpiada] = useState(false)
 
@@ -62,7 +62,8 @@ const Olympiad = () => {
                     {olimp.descripcion || "Sin descripción disponible"}
                   </p>
                   <div className="flex justify-between items-center mt-4 gap-3 text-sm font-medium">
-                    <button onClick={() => setIsConfOlimpiada(true)} className="flex items-center text-blue-600 hover:underline">
+                    <button onClick={() => navigate(`/AdminLayout/Olympiad/${olimp.id}/configurar`)} 
+              className="flex items-center text-blue-600 hover:underline">
                       <Settings size={16} className="mr-1" /> Configurar
                     </button>
                     <button className="flex items-center text-green-600 hover:underline">

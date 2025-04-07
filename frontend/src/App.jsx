@@ -8,6 +8,7 @@ import Detalles from './pages/admin/Detalles'
 import Divisiones from './pages/admin/Divisiones'
 import Areas from './pages/admin/Areas'
 import NivelCategoria from './pages/admin/NivelCategoria'
+import ConfOlimpiada from './pages/admin/ConfOlimpiada'
 
 
 
@@ -30,6 +31,7 @@ function App() {
         <Route path="/AdminLayout" element={<AdminLayout />}>
           {/* Subrutas */}
           <Route path="Olympiad" element={<Olympiad />} />
+          <Route path="Olympiad/:id/configurar" element={<ConfOlimpiada />} /> 
 
           <Route path="Areas" element={<Areas />}/>
           <Route path="NivelCategoria" element={<NivelCategoria />} />
