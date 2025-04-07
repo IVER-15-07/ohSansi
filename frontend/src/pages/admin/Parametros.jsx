@@ -1,19 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getAreas } from '../../../service/areas.api';
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
 import { getGrados } from '../../../service/grados.api';
 
 const Areas = () => {
-  const [areas, setAreas] = useState([]);
-
-  useEffect(() => {
-    const areas = getAreas();
-    areas.then((response) => {
-      setAreas(response.data);
-    }).catch((error) => {
-      console.error("Error fetching areas:", error);
-    });
-  }, []);
+  const {data: areas, isLoading, error} = useQuery({
+    queryKey: ['areas'],
+    queryFn: getAreas,
+  });
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div>
@@ -23,7 +20,7 @@ const Areas = () => {
 
         <div>
           <ol className='list-decimal list-inside'>
-            {areas.map((area, index) => (
+            {areas.data.map((area, index) => (
               <li key={index} className='p-2'>{area.nombre}</li>
             ))}
 
@@ -40,16 +37,12 @@ const Areas = () => {
 };
 
 const NivelesCategorias = () => {
-  const [niveles_categorias, setNivelesCategorias] = useState([]);
-
-  useEffect(() => {
-    const niveles_categorias = getNivelesCategorias();
-    niveles_categorias.then((response) => {
-      setNivelesCategorias(response.data);
-    }).catch((error) => {
-      console.error("Error fetching niveles/categorias:", error);
-    });
-  }, []);
+  const {data: niveles_categorias, isLoading, error} = useQuery({
+    queryKey: ['niveles_categorias'],
+    queryFn: getNivelesCategorias,
+  });
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div>
@@ -59,7 +52,7 @@ const NivelesCategorias = () => {
 
         <div>
           <ol className='list-decimal list-inside'>
-            {niveles_categorias.map((nivel_categoria, index) => (
+            {niveles_categorias.data.map((nivel_categoria, index) => (
               <li key={index} className='p-2'>{nivel_categoria.nombre}  {nivel_categoria.esNivel ? "Nivel": "Categoria"}</li>
             ))}
 
@@ -71,16 +64,13 @@ const NivelesCategorias = () => {
 };
 
 const Grados = () => {
-  const [grados, setGrados] = useState([]);
-  
-  useEffect(() => {
-    const gradosLocal = getGrados();
-    gradosLocal.then((response) => {
-      setGrados(response.data);
-    }).catch((error) => {
-      console.error("Error fetching grados:", error);
-    });
-  }, []);
+  const {data: grados, isLoading, error} = useQuery({
+    queryKey: ['grados'],
+    queryFn: getGrados,
+  });
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div>
@@ -91,7 +81,7 @@ const Grados = () => {
         <div>
           <ol className='list-decimal list-inside'>
             {
-              grados.map((grado, index) => (
+              grados.data.map((grado, index) => (
                 <li key={index} className='p-2 bg-green-300'>{grado.nombre}</li>
               ))
             }

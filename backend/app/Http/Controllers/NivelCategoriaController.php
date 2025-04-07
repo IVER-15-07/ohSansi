@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Models\NivelCategoria;
 
 class NivelCategoriaController extends Controller
@@ -16,9 +17,11 @@ class NivelCategoriaController extends Controller
     public function obtenerNivelesCategorias(Request $request)
     {
         try {
-            // Obtener todos los niveles o categorías
-            $nivelescategorias = NivelCategoria::with('grados')->get();
-
+            // Intenta obtener los niveles/categorias desde la caché
+            $nivelescategorias = Cache::remember('niveles_categorias', 3600, function () {
+                return NivelCategoria::with('grados')->get();// Consulta a la base de datos si no está en caché
+            });
+            
             // Retornar una respuesta exitosa
             return response()->json([
                 'success' => true,
@@ -63,6 +66,9 @@ class NivelCategoriaController extends Controller
             $nivelcategoria->grados()->sync($validated['grados']); // Sincroniza los grados
         }
 
+        // Elimina la caché para que se actualice en la próxima consulta
+        Cache::forget('niveles_categorias');
+
         // Retornar una respuesta exitosa con los grados asociados
         return response()->json([
             'success' => true,
@@ -102,6 +108,8 @@ class NivelCategoriaController extends Controller
             // Asociar los grados al nivel/categoría
             $nivelCategoria->grados()->sync($validated['grados']); // Sincroniza los grados
 
+            // Elimina la caché para que se actualice en la próxima consulta
+            Cache::forget('niveles_categorias');
             return response()->json([
                 'success' => true,
                 'message' => 'Grados asociados correctamente al nivel/categoría.',

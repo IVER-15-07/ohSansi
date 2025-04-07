@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Cache;
 use App\Models\Encargado;
 
 class EncargadoController extends Controller
@@ -18,9 +18,11 @@ class EncargadoController extends Controller
     public function obtenerEncargados(Request $request)
     {
         try {
-            // Obtener todos los niveles o categorías
-            $encargados = Encargado::all();
-
+            // Intenta obtener los encargados desde la caché
+            $encargados = Cache::remember('encargados', 3600, function () {
+                return Encargado::all(); // Consulta a la base de datos si no está en caché
+            });
+            
             // Retornar una respuesta exitosa
             return response()->json([
                 'success' => true,
@@ -55,7 +57,7 @@ class EncargadoController extends Controller
                 'correo' => 'required|string|email|max:255|unique:encargado,correo',
             ]);
 
-            // Crear la olimpiada de forma controlada
+            // Crear el encargado de forma controlada
             $encargado = Encargado::create([
                 'nombre' => $validated['nombre'],
                 'apellido' => $validated['apellido'],
@@ -64,6 +66,9 @@ class EncargadoController extends Controller
                 'telefono' => $validated['telefono'],
                 'correo' => $validated['correo'],
             ]);
+
+            // Elimina la caché para que se actualice en la próxima consulta
+            Cache::forget('encargados');
 
             // Retornar una respuesta
             return response()->json([

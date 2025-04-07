@@ -5,7 +5,6 @@ import Olympiad from './pages/admin/Olympiad'
 import Parametros from './pages/admin/Parametros'
 import Datosgenerales from './pages/admin/Datosgenerales'
 import Detalles from './pages/admin/Detalles'
-import Divisiones from './pages/admin/Divisiones'
 import Areas from './pages/admin/Areas'
 import NivelCategoria from './pages/admin/NivelCategoria'
 import ConfOlimpiada from './pages/admin/ConfOlimpiada'
@@ -43,7 +42,6 @@ function App() {
 
         <Route path="/Datosgenerales" element={<Datosgenerales />} /> 
         <Route path="/Detalles" element={<Detalles />} />
-        <Route path="/Divisiones" element={<Divisiones />} />
         <Route path="/ConfOlimpiada" element={<Olympiad />} />
 
          {/* Rutas del  user */}

@@ -1,25 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAreas, createArea } from '../../../service/areas.api';
 
-
-
 const Areas = () => {
-  const [areas, setAreas] = useState([{ name: "Química" }]);
+  const queryClient = useQueryClient();
+
+  const {data: areas, isLoading, error} = useQuery({
+    queryKey: ['areas'],
+    queryFn: getAreas,
+  });
+
   const [newArea, setNewArea] = useState("");
 
-  useEffect(() => {
-    const areas = getAreas();
-    areas.then((response) => {
-      setAreas(response.data);
-    }).catch((error) => {
-      console.error("Error fetching areas:", error);
-    });
-  }, []);
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
-  const handleAddArea = () => {
+  const handleAddArea = async () => {
     if (newArea.trim() !== "") {
-      createArea({ nombre: newArea });
-      setNewArea("");
+      try {
+        const nuevaArea = await createArea({ nombre: newArea }); // Llama a la API para crear el área
+        setNewArea(""); // Limpia el campo de entrada
+        
+        // Actualiza la caché de React Query inmediatamente
+        queryClient.setQueryData(['areas'], (oldData) => {
+          return {
+            ...oldData,
+            data: [...oldData.data, nuevaArea.data], // Agrega la nueva área a la lista existente
+          };	
+        });
+
+        queryClient.invalidateQueries(['areas']); // Invalida la consulta para actualizar la lista
+      } catch (error) {
+        console.error("Error al agregar el área:", error);
+        alert("Hubo un error al agregar el área. Inténtalo nuevamente.");
+      }
     }
   };
 
@@ -33,7 +47,7 @@ const Areas = () => {
           <h2 className="text-xl font-bold text-gray-800 mb-4">Lista de Áreas</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-y-auto max-h-[300px] min-h-[300px] pr-2">
-            {areas.map((area, index) => (
+            {areas.data.map((area, index) => (
               <div
                 key={index}
                 className="flex justify-between items-center gap-4 bg-gradient-to-r from-gray-100 to-gray-50 p-4 rounded-xl shadow hover:shadow-lg transition-all"

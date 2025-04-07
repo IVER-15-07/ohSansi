@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Olimpiada; 
 
 class OlimpiadaController extends Controller
@@ -16,8 +17,10 @@ class OlimpiadaController extends Controller
     public function obtenerOlimpiadas(Request $request)
     {
         try {
-            // Obtener todas las olimpiadas con relaciones
-            $olimpiadas = Olimpiada::all();
+            // Intenta obtener las olimpiadas desde la caché
+            $olimpiadas = Cache::remember('olimpiadas', 3600, function () {
+                return Olimpiada::all(); // Consulta a la base de datos si no está en caché
+            });
 
             // Retornar una respuesta exitosa
             return response()->json([
@@ -61,6 +64,9 @@ class OlimpiadaController extends Controller
                 'fecha_inicio' => $validated['fecha_inicio'],
                 'fecha_fin' => $validated['fecha_fin'],
             ]);
+
+            // Elimina la caché para que se actualice en la próxima consulta
+            Cache::forget('olimpiadas');
 
             // Retornar una respuesta
             return response()->json([

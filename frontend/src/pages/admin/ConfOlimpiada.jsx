@@ -1,5 +1,6 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAreas } from '../../../service/areas.api';
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
 import { createConfiguracion } from '../../../service/configuraciones.api';
@@ -7,39 +8,30 @@ import { useParams } from 'react-router-dom';
 import { Loader2, Plus, X } from 'lucide-react';
 
 const ConfOlimpiada = () => {
+  const queryClient = useQueryClient();
+
+  const {data: areasDisponibles, isLoading: isLoadingAreasDisponibles, error: errorAreasDisponibles} = useQuery({
+    queryKey: ['areas'],
+    queryFn: getAreas,
+  });
+  
+  const {data: nivelesDisponibles, isLoading: isLoadingNivelesDisponibles, error: errorNivelesDisponibles} = useQuery({
+    queryKey: ['niveles_categorias'],
+    queryFn: getNivelesCategorias,
+  });
+
   const { id } = useParams();
-  const [areasDisponibles, setAreasDisponibles] = useState([]);
-  const [nivelesDisponibles, setNivelesDisponibles] = useState([]);
   const [areasSeleccionadas, setAreasSeleccionadas] = useState([]);
   const [areaActiva, setAreaActiva] = useState(null);
   const [nivelesPorArea, setNivelesPorArea] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const cargarDatos = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const areasRes = await getAreas();
-        const nivelesRes = await getNivelesCategorias();
-        setAreasDisponibles(areasRes.data || []);
-        setNivelesDisponibles(nivelesRes.data || []);
-      } catch (error) {
-        console.error(error);
-        setError('Error al cargar los datos. Intenta nuevamente.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    cargarDatos();
-  }, [id]);
 
   const handleSeleccionarArea = (area) => setAreaActiva(area.id);
 
   const handleAñadirArea = (area) => {
     setAreasSeleccionadas([...areasSeleccionadas, area]);
-    setAreasDisponibles(areasDisponibles.filter((a) => a.id !== area.id));
+    setAreasDisponibles(areasDisponibles.data.filter((a) => a.id !== area.id));
     setNivelesPorArea({ ...nivelesPorArea, [area.id]: [] });
     if (!areaActiva) setAreaActiva(area.id);
   };
@@ -82,7 +74,7 @@ const ConfOlimpiada = () => {
           configuraciones.push({
             id_olimpiada: id,
             id_area: area.id,
-            id_nivel_categoria: nivelesDisponibles.find((n) => n.nombre === nivelNombre)?.id,
+            id_nivel_categoria: nivelesDisponibles.data.find((n) => n.nombre === nivelNombre)?.id,
           });
         });
       });
@@ -95,9 +87,9 @@ const ConfOlimpiada = () => {
   };
 
   
-  if (isLoading) return <div>Cargando datos...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
-
+  if (isLoadingNivelesDisponibles || isLoadingAreasDisponibles) return <div>Cargando Datos...</div>;
+  if (errorNivelesDisponibles) return <div>Error al cargar niveles/categorías: {errorNivelesDisponibles.message}</div>;
+  if (errorAreasDisponibles) return <div className='text-red-600'>Error al cargar areas: {errorAreasDisponibles.message}</div>;
 
   const areaActivaObj = areasSeleccionadas.find((a) => a.id === areaActiva);
   return (
@@ -110,7 +102,7 @@ const ConfOlimpiada = () => {
         <div className="flex-1 overflow-y-auto rounded-2xl border border-gray-200 p-4">
           <h3 className="font-semibold text-gray-600 mb-2">Áreas disponibles</h3>
           <div className="flex flex-wrap gap-2">
-            {areasDisponibles.map((area) => (
+            {areasDisponibles.data.map((area) => (
               <div key={area.id} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
                 <span>{area.nombre}</span>
                 <button
@@ -167,7 +159,7 @@ const ConfOlimpiada = () => {
           <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto h-full">
             <h3 className="font-semibold text-gray-600 mb-2">Niveles disponibles</h3>
             <div className="flex flex-wrap gap-2">
-              {nivelesDisponibles.map((nivel) => (
+              {nivelesDisponibles.data.map((nivel) => (
                 <div key={nivel.id} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
                   <span>{nivel.nombre}</span>
                   <button
