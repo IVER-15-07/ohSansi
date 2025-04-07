@@ -1,5 +1,6 @@
+import axiosInstance from "../helpers/axios-config";
 
-export const getAreas = async () => {
+export const getOlimpiadas = async () => {
     try {
         const response = await axiosInstance.get("/olimpiadas");
         return response.data;
@@ -9,7 +10,7 @@ export const getAreas = async () => {
     }
 }
 
-export const createArea = async (data) => {
+export const createOlimpiada = async (data) => {
     try {
         const response = await axiosInstance.post("/olimpiadas", data);
         return response.data;
