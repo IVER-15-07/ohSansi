@@ -94,7 +94,7 @@ El código del frontend está organizado de la siguiente manera:
     ```bash
     cp .env.example .env
     ```
-cp .env.example .env
+
 4. Configura las variables de entorno en el archivo .env:
 
     - Configura la conexión a la base de datos (**DB_HOST**, **DB_DATABASE**, **DB_USERNAME**, **DB_PASSWORD**).
