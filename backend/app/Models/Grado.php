@@ -10,14 +10,15 @@ class Grado extends Model
     use HasFactory;
 
     protected $table = 'grado';
+    public $timestamps = false;
 
     protected $fillable = [
         'nombre'
     ];
 
-    // Relación uno a muchos con Configuracion
-    public function configuraciones()
+    // Relación muchos a muchos con NivelCategoria
+    public function nivelesCategorias()
     {
-        return $this->hasMany(Configuracion::class, 'id_grado');
+        return $this->belongsToMany(NivelCategoria::class, 'nivel_categoria_grado', 'id_grado', 'id_nivel_categoria');
     }
 }

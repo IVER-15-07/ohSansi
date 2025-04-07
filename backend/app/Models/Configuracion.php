@@ -10,7 +10,7 @@ class Configuracion extends Model
     use HasFactory;
 
     protected $table = 'configuracion';
-
+    public $timestamps = false;
     // Relación inversa con Olimpiada
     public function olimpiada()
     {
@@ -23,13 +23,8 @@ class Configuracion extends Model
         return $this->belongsTo(Area::class, 'id_area');
     }
 
-    // Relación inversa con Grado
-    public function grado()
-    {
-        return $this->belongsTo(Grado::class, 'id_grado');
-    }
 
-    // Relación inversa con Division
+    // Relación inversa con NivelCategoria
     public function nivel_categoria()
     {
         return $this->belongsTo(NivelCategoria::class, 'id_nivel_categoria');

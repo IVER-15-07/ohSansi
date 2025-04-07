@@ -10,7 +10,7 @@ class CampoInscripcion extends Model
     use HasFactory;
 
     protected $table = 'campo_inscripcion';
-
+    public $timestamps = false;
     protected $fillable = [
         'nombre'
     ];
