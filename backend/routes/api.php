@@ -38,6 +38,8 @@ Route::get('/niveles_categorias', [NivelCategoriaController::class, 'obtenerNive
 
 Route::post('/niveles_categorias', [NivelCategoriaController::class, 'almacenarNivelCategoria']);
 
+Route::post('/niveles_categorias/{id}/grados', [NivelCategoriaController::class, 'asociarGrados']);
+
 
 Route::get('/grados', [GradoController::class, 'obtenerGrados']);
 
@@ -50,6 +52,9 @@ Route::post('/configuraciones', [ConfiguracionController::class, 'almacenarConfi
 Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
+
+
+Route::get('/encargados', [EncargadoController::class, 'obtenerEncargados']);
 
 Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 

@@ -18,7 +18,6 @@ class CrearTablaConfiguracion extends Migration
 
             $table->foreignId('id_olimpiada')->constrained('olimpiada')->onDelete('cascade');
             $table->foreignId('id_area')->constrained('area')->onDelete('cascade');
-            $table->foreignId('id_grado')->constrained('grado')->onDelete('cascade');
             $table->foreignId('id_nivel_categoria')->constrained('nivel_categoria')->onDelete('cascade');
         });
     }

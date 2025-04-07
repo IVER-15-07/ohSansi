@@ -18,7 +18,7 @@ class ConfiguracionController extends Controller
     {
         try {
             // Obtener todas las configuraciones con relaciones
-            $configuraciones = Configuracion::with(['area', 'nivel_categoria', 'grado'])->get();
+            $configuraciones = Configuracion::with(['olimpiada', 'area', 'nivel_categoria'])->get();
             
             // Retornar una respuesta exitosa
             return response()->json([
@@ -47,20 +47,16 @@ class ConfiguracionController extends Controller
         try {
             // Validar los datos enviados
             $validated = $request->validate([
-                'nombre' => 'required|string|max:255',
                 'id_olimpiada' => 'required|exists:olimpiada,id', // Validar que la olimpiada exista
                 'id_area' => 'required|exists:area,id', // Validar que el área exista
                 'id_nivel_categoria' => 'required|exists:nivel_categoria,id', // Validar que el nivel/categoría exista
-                'id_grado' => 'required|exists:grado,id', // Validar que el grado exista
             ]);
 
             // Crear la configuración de forma controlada
             $configuracion = new Configuracion();
-            $configuracion->nombre = $validated['nombre'];
             $configuracion->id_olimpiada = $validated['id_olimpiada'];
             $configuracion->id_area = $validated['id_area'];
             $configuracion->id_nivel_categoria = $validated['id_nivel_categoria'];
-            $configuracion->id_grado = $validated['id_grado'];
             
             $configuracion->save();
 

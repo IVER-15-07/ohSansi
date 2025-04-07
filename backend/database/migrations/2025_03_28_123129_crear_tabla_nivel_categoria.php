@@ -15,7 +15,7 @@ class CrearTablaNivelCategoria extends Migration
     {
         Schema::create('nivel_categoria', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
+            $table->string('nombre')->unique();
             $table->boolean('esNivel');
         });
     }

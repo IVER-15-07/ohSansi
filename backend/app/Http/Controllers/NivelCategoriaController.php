@@ -8,7 +8,7 @@ use App\Models\NivelCategoria;
 class NivelCategoriaController extends Controller
 {
     /**
-     * Obtener todas las divisiones.
+     * Obtener todas los niveles o categorías.
      *
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -17,7 +17,7 @@ class NivelCategoriaController extends Controller
     {
         try {
             // Obtener todos los niveles o categorías
-            $nivelescategorias = NivelCategoria::all();
+            $nivelescategorias = NivelCategoria::with('grados')->get();
 
             // Retornar una respuesta exitosa
             return response()->json([
@@ -71,4 +71,44 @@ class NivelCategoriaController extends Controller
             ], 500);
         }
     }
+
+
+    /**
+     * Asociar grados a un nivel/categoría.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function asociarGrados(Request $request, $idNivelCategoria)
+    {
+        try {
+            // Validar los datos enviados
+            $validated = $request->validate([
+                'grados' => 'required|array', // Debe ser un array de IDs de grados
+                'grados.*' => 'exists:grado,id', // Cada ID debe existir en la tabla `grado`
+            ]);
+
+            // Encontrar el nivel/categoría
+            $nivelCategoria = NivelCategoria::findOrFail($idNivelCategoria);
+
+            // Asociar los grados al nivel/categoría
+            $nivelCategoria->grados()->sync($validated['grados']); // Sincroniza los grados
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Grados asociados correctamente al nivel/categoría.',
+                'data' => $nivelCategoria->grados, // Retorna los grados asociados
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al asociar los grados: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
 }
+
+

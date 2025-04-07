@@ -22,4 +22,10 @@ class NivelCategoria extends Model
         return $this->hasMany(Configuracion::class, 'id_nivel_categoria');
     }
 
+    // Relación muchos a muchos con Grado
+    public function grados()
+    {
+        return $this->belongsToMany(Grado::class, 'nivel_categoria_grado', 'id_nivel_categoria', 'id_grado');
+    }
+
 }

@@ -19,3 +19,13 @@ export const createNivelCategoria = async (data) => {
       throw error;
     }
   }
+
+  export const addGradoToNivelCategoria = async (data, id_nivel_categoria) => {
+    try {
+      const response = await axiosInstance.post(`/niveles_categorias/:${id_nivel_categoria}/grados`, data);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding grados to nivel/categoria:", error);
+      throw error;
+    }
+  }

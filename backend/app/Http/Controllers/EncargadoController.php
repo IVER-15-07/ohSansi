@@ -8,6 +8,35 @@ use App\Models\Encargado;
 
 class EncargadoController extends Controller
 {
+
+    /**
+     * Obtener todos los encargados. 
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function obtenerEncargados(Request $request)
+    {
+        try {
+            // Obtener todos los niveles o categorías
+            $encargados = Encargado::all();
+
+            // Retornar una respuesta exitosa
+            return response()->json([
+                'success' => true,
+                'data' => $encargados,
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar errores y retornar una respuesta
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al obtener los encargados: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
     /**
      * Almacenar un nuevo encargado.
      *
