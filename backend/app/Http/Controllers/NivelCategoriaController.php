@@ -59,7 +59,7 @@ class NivelCategoriaController extends Controller
         $nivelcategoria->save();
 
         // Asociar los grados si es un nivel y se enviaron grados
-        if ($validated['esNivel'] && isset($validated['grados'])) {
+        if ( isset($validated['grados'])) {
             $nivelcategoria->grados()->sync($validated['grados']); // Sincroniza los grados
         }
 
