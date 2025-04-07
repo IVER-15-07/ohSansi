@@ -2,52 +2,60 @@ import React from 'react'
 import { useState, useEffect } from 'react'
 import { getAreas } from '../../../service/areas.api';
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
+import { createConfiguracion } from '../../../service/configuraciones.api';
+import { useParams } from 'react-router-dom';
 
 const ConfOlimpiada = () => {
-  const [areasDisponibles, setAreasDisponibles] = useState([]); // Inicializa como array vacío
-  const [nivelesDisponibles, setNivelesDisponibles] = useState([]); // Inicializa como array vacío
+  const { id } = useParams();
+  const [areasDisponibles, setAreasDisponibles] = useState([]);
+  const [nivelesDisponibles, setNivelesDisponibles] = useState([]);
   const [areasSeleccionadas, setAreasSeleccionadas] = useState([]);
-  const [areaActiva, setAreaActiva] = useState(null);
+  const [areaActiva, setAreaActiva] = useState(null); // ahora es el ID
   const [nivelesPorArea, setNivelesPorArea] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Cargar datos al montar el componente
   useEffect(() => {
     const cargarDatos = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
-        // Cargar áreas desde la API
         const areasResponse = await getAreas();
-        setAreasDisponibles(areasResponse.data || []); // Asegúrate de que sea un array
-
-        // Cargar niveles/categorías desde la API
+        setAreasDisponibles(areasResponse.data || []);
         const nivelesResponse = await getNivelesCategorias();
-        setNivelesDisponibles(nivelesResponse.data || []); // Asegúrate de que sea un array
+        setNivelesDisponibles(nivelesResponse.data || []);
+        console.log(`Cargando configuración para la olimpiada con ID: ${id}`);
       } catch (error) {
         console.error('Error al cargar datos:', error);
+        setError('Error al cargar los datos. Por favor, inténtalo de nuevo.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     cargarDatos();
-  }, []);
+  }, [id]);
 
   const handleSeleccionarArea = (area) => {
-    setAreaActiva(area);
+    setAreaActiva(area.id);
   };
 
   const handleAñadirArea = (area) => {
     setAreasSeleccionadas([...areasSeleccionadas, area]);
     setAreasDisponibles(areasDisponibles.filter((a) => a.id !== area.id));
-    setNivelesPorArea({ ...nivelesPorArea, [area.nombre]: [] });
-    if (!areaActiva) setAreaActiva(area.nombre);
+    setNivelesPorArea({ ...nivelesPorArea, [area.id]: [] });
+    if (!areaActiva) setAreaActiva(area.id);
   };
 
   const handleQuitarArea = (area) => {
     setAreasSeleccionadas(areasSeleccionadas.filter((a) => a.id !== area.id));
     setAreasDisponibles([...areasDisponibles, area]);
     const nuevosNiveles = { ...nivelesPorArea };
-    delete nuevosNiveles[area.nombre];
+    delete nuevosNiveles[area.id];
     setNivelesPorArea(nuevosNiveles);
-    if (areaActiva === area.nombre) {
-      setAreaActiva(areasSeleccionadas.length > 1 ? areasSeleccionadas[0].nombre : null);
+    if (areaActiva === area.id) {
+      const nuevasAreas = areasSeleccionadas.filter((a) => a.id !== area.id);
+      setAreaActiva(nuevasAreas.length > 0 ? nuevasAreas[0].id : null);
     }
   };
 
@@ -68,10 +76,38 @@ const ConfOlimpiada = () => {
     });
   };
 
+  const handleGuardarConfiguracion = async () => {
+    try {
+      const configuraciones = [];
+
+      areasSeleccionadas.forEach((area) => {
+        const niveles = nivelesPorArea[area.id] || [];
+        niveles.forEach((nivelNombre) => {
+          configuraciones.push({
+            id_olimpiada: id,
+            id_area: area.id,
+            id_nivel_categoria: nivelesDisponibles.find((n) => n.nombre === nivelNombre)?.id,
+          });
+        });
+      });
+
+      await Promise.all(configuraciones.map((config) => createConfiguracion(config)));
+
+      alert('Configuraciones guardadas exitosamente.');
+    } catch (error) {
+      console.error('Error al guardar configuraciones:', error);
+      setError('Error al guardar configuraciones. Por favor, inténtalo de nuevo.');
+    }
+  };
+
+  if (isLoading) return <div>Cargando datos...</div>;
+  if (error) return <div className="text-red-600">{error}</div>;
+
+  const areaActivaObj = areasSeleccionadas.find((a) => a.id === areaActiva);
   return (
     <div className="p-2 w-full h-full bg-gray-50 overflow-hidden">
     <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 h-full">
-      <h2 className="text-xl font-bold text-gray-800">Áreas y Niveles</h2>
+      <h2 className="text-xl font-bold text-gray-800">Configuración de la Olimpiada {id}</h2>
 
       <div className="flex gap-4 flex-1 overflow-hidden">
         {/* Áreas disponibles */}
@@ -117,11 +153,11 @@ const ConfOlimpiada = () => {
           <button
             key={area.id}
             className={`px-4 py-1 rounded-full text-sm font-medium transition whitespace-nowrap ${
-              areaActiva === area.nombre
+              areaActiva === area.id
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
             }`}
-            onClick={() => handleSeleccionarArea(area.nombre)}
+            onClick={() => handleSeleccionarArea(area)}
           >
             {area.nombre}
           </button>
@@ -129,7 +165,7 @@ const ConfOlimpiada = () => {
       </div>
 
       {/* Configuración de niveles */}
-      {areaActiva && (
+      {areaActivaObj && (
         <div className="flex flex-1 gap-4 overflow-hidden">
           {/* Niveles disponibles */}
           <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto">
@@ -151,7 +187,9 @@ const ConfOlimpiada = () => {
 
           {/* Niveles seleccionados */}
           <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto">
-            <h3 className="font-semibold text-gray-600 mb-2">Niveles de {areaActiva}</h3>
+            <h3 className="font-semibold text-gray-600 mb-2">
+              Niveles de {areaActivaObj.nombre}
+            </h3>
             <div className="flex flex-wrap gap-2">
               {nivelesPorArea[areaActiva]?.map((nivel) => (
                 <div key={nivel} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
@@ -168,6 +206,17 @@ const ConfOlimpiada = () => {
           </div>
         </div>
       )}
+
+      {/* Botón para guardar configuraciones */}
+      <div className="flex justify-end gap-4 mt-4">
+        {error && <p className="text-red-600">{error}</p>}
+        <button
+          onClick={handleGuardarConfiguracion}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+        >
+          Guardar Configuración
+        </button>
+      </div>
     </div>
   </div>
   )
