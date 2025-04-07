@@ -4,13 +4,14 @@ import { getAreas } from '../../../service/areas.api';
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
 import { createConfiguracion } from '../../../service/configuraciones.api';
 import { useParams } from 'react-router-dom';
+import { Loader2, Plus, X } from 'lucide-react';
 
 const ConfOlimpiada = () => {
   const { id } = useParams();
   const [areasDisponibles, setAreasDisponibles] = useState([]);
   const [nivelesDisponibles, setNivelesDisponibles] = useState([]);
   const [areasSeleccionadas, setAreasSeleccionadas] = useState([]);
-  const [areaActiva, setAreaActiva] = useState(null); // ahora es el ID
+  const [areaActiva, setAreaActiva] = useState(null);
   const [nivelesPorArea, setNivelesPorArea] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,25 +21,21 @@ const ConfOlimpiada = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const areasResponse = await getAreas();
-        setAreasDisponibles(areasResponse.data || []);
-        const nivelesResponse = await getNivelesCategorias();
-        setNivelesDisponibles(nivelesResponse.data || []);
-        console.log(`Cargando configuración para la olimpiada con ID: ${id}`);
+        const areasRes = await getAreas();
+        const nivelesRes = await getNivelesCategorias();
+        setAreasDisponibles(areasRes.data || []);
+        setNivelesDisponibles(nivelesRes.data || []);
       } catch (error) {
-        console.error('Error al cargar datos:', error);
-        setError('Error al cargar los datos. Por favor, inténtalo de nuevo.');
+        console.error(error);
+        setError('Error al cargar los datos. Intenta nuevamente.');
       } finally {
         setIsLoading(false);
       }
     };
-
     cargarDatos();
   }, [id]);
 
-  const handleSeleccionarArea = (area) => {
-    setAreaActiva(area.id);
-  };
+  const handleSeleccionarArea = (area) => setAreaActiva(area.id);
 
   const handleAñadirArea = (area) => {
     setAreasSeleccionadas([...areasSeleccionadas, area]);
@@ -60,11 +57,11 @@ const ConfOlimpiada = () => {
   };
 
   const handleAñadirNivel = (nivel) => {
-    const nivelesActuales = nivelesPorArea[areaActiva] || [];
-    if (!nivelesActuales.includes(nivel.nombre)) {
+    const actuales = nivelesPorArea[areaActiva] || [];
+    if (!actuales.includes(nivel.nombre)) {
       setNivelesPorArea({
         ...nivelesPorArea,
-        [areaActiva]: [...nivelesActuales, nivel.nombre],
+        [areaActiva]: [...actuales, nivel.nombre],
       });
     }
   };
@@ -79,7 +76,6 @@ const ConfOlimpiada = () => {
   const handleGuardarConfiguracion = async () => {
     try {
       const configuraciones = [];
-
       areasSeleccionadas.forEach((area) => {
         const niveles = nivelesPorArea[area.id] || [];
         niveles.forEach((nivelNombre) => {
@@ -90,22 +86,22 @@ const ConfOlimpiada = () => {
           });
         });
       });
-
       await Promise.all(configuraciones.map((config) => createConfiguracion(config)));
-
       alert('Configuraciones guardadas exitosamente.');
     } catch (error) {
-      console.error('Error al guardar configuraciones:', error);
-      setError('Error al guardar configuraciones. Por favor, inténtalo de nuevo.');
+      console.error(error);
+      setError('Error al guardar configuraciones. Intenta nuevamente.');
     }
   };
 
+  
   if (isLoading) return <div>Cargando datos...</div>;
   if (error) return <div className="text-red-600">{error}</div>;
 
+
   const areaActivaObj = areasSeleccionadas.find((a) => a.id === areaActiva);
   return (
-    <div className="p-2 w-full h-full bg-gray-50 overflow-hidden">
+    <div className="p-2 w-full h-[calc(100vh-80px)] bg-gray-50 overflow-hidden">
     <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 h-full">
       <h2 className="text-xl font-bold text-gray-800">Configuración de la Olimpiada {id}</h2>
 
@@ -147,7 +143,7 @@ const ConfOlimpiada = () => {
         </div>
       </div>
 
-      {/* Carrusel de selección de áreas activas */}
+      {/* Carrusel de áreas seleccionadas activas */}
       <div className="mt-2 overflow-x-auto whitespace-nowrap flex gap-2 pb-2">
         {areasSeleccionadas.map((area) => (
           <button
@@ -168,7 +164,7 @@ const ConfOlimpiada = () => {
       {areaActivaObj && (
         <div className="flex flex-1 gap-4 overflow-hidden">
           {/* Niveles disponibles */}
-          <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto">
+          <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto h-full">
             <h3 className="font-semibold text-gray-600 mb-2">Niveles disponibles</h3>
             <div className="flex flex-wrap gap-2">
               {nivelesDisponibles.map((nivel) => (
@@ -186,7 +182,7 @@ const ConfOlimpiada = () => {
           </div>
 
           {/* Niveles seleccionados */}
-          <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto">
+          <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto h-full">
             <h3 className="font-semibold text-gray-600 mb-2">
               Niveles de {areaActivaObj.nombre}
             </h3>
