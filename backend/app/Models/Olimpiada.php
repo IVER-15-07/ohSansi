@@ -10,7 +10,8 @@ class Olimpiada extends Model
     use HasFactory;
 
     protected $table = 'olimpiada';
-
+    public $timestamps = false;
+    
     protected $fillable = [
         'nombre',
         'descripcion',

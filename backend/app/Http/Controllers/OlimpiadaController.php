@@ -17,7 +17,7 @@ class OlimpiadaController extends Controller
     {
         try {
             // Obtener todas las olimpiadas con relaciones
-            $olimpiadas = Olimpiada::all()->get();
+            $olimpiadas = Olimpiada::all();
 
             // Retornar una respuesta exitosa
             return response()->json([
