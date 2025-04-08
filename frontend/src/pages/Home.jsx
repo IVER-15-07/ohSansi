@@ -5,8 +5,6 @@ import Navbar from '../components/Navbar'
 const Home = () => {
     const navigate = useNavigate()
 
-   
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
     <Navbar/>
@@ -24,6 +22,15 @@ const Home = () => {
                     hover:bg-red-700 transition duration-300"
         >
           iniciar como  administra
+        </button>
+
+        {/* Botón para ir a Registro de datos de tutor */}
+        <button
+          onClick={() => navigate('/registro-tutor')}
+          className="px-6 py-3 bg-red-600 text-white text-lg font-semibold rounded-lg shadow-md 
+                    hover:bg-green-700 transition duration-300"
+        >
+          Registro de datos de tutor
         </button>
       </div>
     </div>
