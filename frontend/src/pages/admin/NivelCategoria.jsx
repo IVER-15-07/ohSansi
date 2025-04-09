@@ -87,39 +87,35 @@ const NivelCategoria = () => {
   };
 
   return (
-    <div className="p-6 flex flex-col gap-6 w-full h-full min-h-[600px] max-h-[780px] bg-gray-50">
-    {/* Vista previa */}
-    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 min-h-[260px] max-h-[340px]">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Niveles y Categorías</h1>
-
+    <div className="p-6 flex flex-col gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
+    {/* VISTA PREVIA */}
+    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 py-4 min-h-[280px] max-h-[360px]">
+      <h1 className="text-2xl font-bold text-[#20335C] mb-4 text-center">Niveles y Categorías</h1>
+  
       <div className="flex flex-col md:flex-row justify-between gap-6">
-        {/* Lista de niveles */}
+        {/* Niveles */}
         <div className="w-full md:w-1/2">
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">Nivel</h2>
-          <ul className="list-disc list-inside space-y-1 overflow-y-auto max-h-[220px] pr-1">
+          <h2 className="text-lg font-semibold text-[#20335C] mb-2">Nivel</h2>
+          <ul className="space-y-2 overflow-y-auto max-h-[220px] pr-1">
             {niveles.map((nivel) => (
-              <li key={nivel.id} className="p-2 bg-blue-100 rounded-md">
-                <div>
-                  <strong>{nivel.nombre}</strong>
-                </div>
-                <div className="text-sm text-gray-700">
+              <li key={nivel.id} className="p-3 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+                <div className="text-[#20335C] font-medium">{nivel.nombre}</div>
+                <div className="text-sm text-gray-600">
                   Grados: {obtenerGradosAsociados(nivel.grados)}
                 </div>
               </li>
             ))}
           </ul>
         </div>
-
-        {/* Lista de categorías */}
+  
+        {/* Categorías */}
         <div className="w-full md:w-1/2">
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">Categoría</h2>
-          <ul className="list-disc list-inside space-y-1 overflow-y-auto max-h-[220px] pr-1">
+          <h2 className="text-lg font-semibold text-[#20335C] mb-2">Categoría</h2>
+          <ul className="space-y-2 overflow-y-auto max-h-[220px] pr-1">
             {categorias.map((categoria) => (
-              <li key={categoria.id} className="p-2 bg-green-100 rounded-md">
-                <div>
-                  <strong>{categoria.nombre}</strong>
-                </div>
-                <div className="text-sm text-gray-700">
+              <li key={categoria.id} className="p-3 bg-red-50 border border-red-200 rounded-lg shadow-sm">
+                <div className="text-[#20335C] font-medium">{categoria.nombre}</div>
+                <div className="text-sm text-gray-600">
                   Grados: {obtenerGradosAsociados(categoria.grados)}
                 </div>
               </li>
@@ -128,52 +124,52 @@ const NivelCategoria = () => {
         </div>
       </div>
     </div>
-
-    {/* Formulario */}
-    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 pt-3 min-h-[260px]">
-      <div className="flex justify-center gap-4 mb-4">
+  
+    {/* FORMULARIO */}
+    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 pt-3 min-h-[250px]">
+      {/* Tabs */}
+      <div className="flex justify-center gap-4 mb-2">
         <button
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition ${
-            isNivel ? "bg-blue-900 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          className={`px-6 py-2 rounded-xl text-sm font-medium transition-all shadow-sm ${
+            isNivel
+              ? "bg-[#20335C] text-white"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
           }`}
           onClick={() => setIsNivel(true)}
         >
           Nivel
         </button>
         <button
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition ${
-            !isNivel ? "bg-blue-900 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          className={`px-6 py-2 rounded-xl text-sm font-medium transition-all shadow-sm ${
+            !isNivel
+              ? "bg-[#20335C] text-white"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
           }`}
           onClick={() => setIsNivel(false)}
         >
           Categoría
         </button>
       </div>
-
-      {/* Campos dinámicos */}
+  
+      {/* Campos */}
       {isNivel ? (
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del nivel</label>
             <input
               type="text"
-              placeholder="Ingrese el nombre del nivel"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className="w-full p-2 border rounded-md text-gray-800 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ingrese el nombre del nivel"
+              className="w-full p-2 border rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Grado</label>
             <select
               value={gradoSeleccionado}
-              onChange={(e) => {
-                const valorSeleccionado = parseInt(e.target.value);
-                console.log("Grado seleccionado (convertido):", valorSeleccionado);
-                setGradoSeleccionado(valorSeleccionado);
-              }}
-              className="w-full p-2 border rounded-md text-gray-800 bg-gray-100"
+              onChange={(e) => setGradoSeleccionado(parseInt(e.target.value))}
+              className="w-full p-2 border rounded-md bg-gray-100 text-gray-800"
             >
               <option value="">Seleccione un grado</option>
               {grados.data.map((grado) => (
@@ -186,57 +182,56 @@ const NivelCategoria = () => {
         </div>
       ) : (
         <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la categoría</label>
-          <input
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            placeholder="Ingrese el nombre de la categoría"
-            className="w-full p-2 border rounded-md text-gray-800 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      
-        <div className="flex gap-x-4">
-          <div className="w-1/2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Grado inicial</label>
-            <select
-              value={gradoInicio}
-              onChange={(e) => setGradoInicio(parseInt(e.target.value))}
-              className="w-full p-2 border rounded-md text-gray-800 bg-gray-100"
-            >
-              <option value="">Seleccione el grado inicial</option>
-              {grados.data.map((grado) => (
-                <option key={grado.id} value={grado.id}>
-                  {grado.nombre}
-                </option>
-              ))}
-            </select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la categoría</label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Ingrese el nombre de la categoría"
+              className="w-full p-2 border rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-      
-          <div className="w-1/2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Grado final</label>
-            <select
-              value={gradoFin}
-              onChange={(e) => setGradoFin(parseInt(e.target.value))}
-              className="w-full p-2 border rounded-md text-gray-800 bg-gray-100"
-            >
-              <option value="">Seleccione el grado final</option>
-              {grados.data.map((grado) => (
-                <option key={grado.id} value={grado.id}>
-                  {grado.nombre}
-                </option>
-              ))}
-            </select>
+          <div className="flex gap-4">
+            <div className="w-1/2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Grado inicial</label>
+              <select
+                value={gradoInicio}
+                onChange={(e) => setGradoInicio(parseInt(e.target.value))}
+                className="w-full p-2 border rounded-md bg-gray-100 text-gray-800"
+              >
+                <option value="">Seleccione el grado inicial</option>
+                {grados.data.map((grado) => (
+                  <option key={grado.id} value={grado.id}>
+                    {grado.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="w-1/2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Grado final</label>
+              <select
+                value={gradoFin}
+                onChange={(e) => setGradoFin(parseInt(e.target.value))}
+                className="w-full p-2 border rounded-md bg-gray-100 text-gray-800"
+              >
+                <option value="">Seleccione el grado final</option>
+                {grados.data.map((grado) => (
+                  <option key={grado.id} value={grado.id}>
+                    {grado.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
-      </div>
       )}
-
-      <div className="flex justify-center mt-6">
+  
+      {/* Botón */}
+      <div className="flex justify-center mt-4">
         <button
           onClick={handleAddNivelCategoria}
-          className="bg-blue-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition"
+          className="bg-[#E63946] text-white px-8 py-2 rounded-xl text-sm font-semibold hover:bg-red-600 transition"
         >
           {isNivel ? "Agregar nivel" : "Agregar categoría"}
         </button>
