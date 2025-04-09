@@ -3,36 +3,77 @@ import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAreas } from '../../../service/areas.api';
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
-import { createConfiguracion } from '../../../service/configuraciones.api';
+import { createConfiguracion, getAreasByOlimpiada, getMapOfOlimpiada } from '../../../service/configuraciones.api';
 import { useParams } from 'react-router-dom';
-import { Loader2, Plus, X } from 'lucide-react';
 import Cargando from '../Cargando';
 import Error from '../Error';
 
 const ConfOlimpiada = () => {
   const queryClient = useQueryClient();
 
-  const {data: areasDisponibles, isLoading: isLoadingAreasDisponibles, error: errorAreasDisponibles} = useQuery({
+  const {data: areasCatalogo, isLoading: isLoadingAreasCatalogo, error: errorAreasCatalogo} = useQuery({
     queryKey: ['areas'],
     queryFn: getAreas,
   });
   
-  const {data: nivelesDisponibles, isLoading: isLoadingNivelesDisponibles, error: errorNivelesDisponibles} = useQuery({
+  const {data: nivelesCatalogo, isLoading: isLoadingNivelesCatalogo, error: errorNivelesCatalogo} = useQuery({
     queryKey: ['niveles_categorias'],
     queryFn: getNivelesCategorias,
   });
 
   const { id } = useParams();
+  const [areasDisponibles, setAreasDisponibles] = useState([]);
+  const [nivelesDisponibles, setNivelesDisponibles] = useState([]);
   const [areasSeleccionadas, setAreasSeleccionadas] = useState([]);
   const [areaActiva, setAreaActiva] = useState(null);
   const [nivelesPorArea, setNivelesPorArea] = useState({});
   const [error, setError] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const areasOlimpiada = await getAreasByOlimpiada(id);
+        setAreasSeleccionadas(areasOlimpiada.data || []);
+
+        const mapaOlimpiada = await getMapOfOlimpiada(id);
+        setNivelesPorArea(mapaOlimpiada.data || {});
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("Error al cargar los datos. Intenta nuevamente.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    if (id) {
+      fetchData();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (areasCatalogo) {
+      // Filtrar las áreas disponibles excluyendo las seleccionadas
+      const disponibles = areasCatalogo.data.filter(
+        (areaCatalogo) => !areasSeleccionadas.some((areaSeleccionada) => areaSeleccionada.id === areaCatalogo.id)
+      );
+      setAreasDisponibles(disponibles);
+    }
+  }, [areasCatalogo, areasSeleccionadas]);
+
+  // Sincronizar niveles disponibles con el catálogo de niveles
+  useEffect(() => {
+    if (nivelesCatalogo) {
+      setNivelesDisponibles(nivelesCatalogo.data); // Inicializa los niveles disponibles con el catálogo
+    }
+  }, [nivelesCatalogo]);
 
     
-  if (isLoadingNivelesDisponibles || isLoadingAreasDisponibles) return <Cargando/>;
-  if (errorNivelesDisponibles) return <Error error ={errorNivelesDisponibles}/>;
-  if (errorAreasDisponibles) return <Error error ={errorAreasDisponibles}/>;
+  if (isLoadingNivelesCatalogo || isLoadingAreasCatalogo || isLoading ) return <Cargando/>;
+  if (errorNivelesCatalogo) return <Error error ={errorNivelesCatalogo}/>;
+  if (errorAreasCatalogo) return <Error error ={errorAreasCatalogo}/>;
 
   const handleSeleccionarArea = (area) => setAreaActiva(area.id);
 
@@ -40,7 +81,7 @@ const ConfOlimpiada = () => {
 
     setAreasSeleccionadas([...areasSeleccionadas, area]);
 
-    setAreasDisponibles(areasDisponibles.data.filter((a) => a.id !== area.id));
+    setAreasDisponibles(areasDisponibles.filter((a) => a.id !== area.id));
 
     setNivelesPorArea({ ...nivelesPorArea, [area.id]: [] });
 
@@ -79,7 +120,7 @@ const ConfOlimpiada = () => {
   const handleQuitarNivel = (nivel) => {
     setNivelesPorArea({
       ...nivelesPorArea,
-      [areaActiva]: nivelesPorArea[areaActiva].filter((n) => n !== nivel.nombre),
+      [areaActiva]: nivelesPorArea[areaActiva].filter((n) => n.id !== nivel.id),
     });
   };
 
@@ -93,7 +134,7 @@ const ConfOlimpiada = () => {
           configuraciones.push({
             id_olimpiada: id,
             id_area: area.id,
-            id_nivel_categoria: nivelesDisponibles.data.find((n) => n.nombre === nivelNombre)?.id,
+            id_nivel_categoria: nivelesDisponibles.find((n) => n.nombre === nivelNombre)?.id,
           });
         });
       });
@@ -109,9 +150,6 @@ const ConfOlimpiada = () => {
 
   const areaActivaObj = areasSeleccionadas.find((a) => a.id === areaActiva);
   
-  console.log(areasSeleccionadas);
-  console.log(nivelesPorArea);
-  console.log(areaActiva);
   return (
     <div className="p-2 w-full h-[calc(100vh-80px)] bg-gray-50 overflow-hidden">
       
@@ -126,8 +164,8 @@ const ConfOlimpiada = () => {
             <h3 className="font-semibold text-gray-600 mb-2">Áreas disponibles</h3>
             <div className="flex flex-wrap gap-2">
 
-              {areasDisponibles.data.map((area) => (
-                <div key={area.id} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
+              {areasDisponibles.map((area) => (
+                <div key={`area-disponible-${area.id}`} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
 
                   <span>{area.nombre}</span>
 
@@ -149,7 +187,7 @@ const ConfOlimpiada = () => {
 
             <div className="flex flex-wrap gap-2">
               {areasSeleccionadas.map((area) => (
-                <div key={area.id} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
+                <div key={`area-seleccionada-${area.id}`} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
                   <span>{area.nombre}</span>
                   <button
                     onClick={() => handleQuitarArea(area)}
@@ -191,8 +229,8 @@ const ConfOlimpiada = () => {
           <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto h-full">
             <h3 className="font-semibold text-gray-600 mb-2">Niveles disponibles</h3>
             <div className="flex flex-wrap gap-2">
-              {nivelesDisponibles.data.map((nivel) => (
-                <div key={nivel.id} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
+              {nivelesDisponibles.map((nivel) => (
+                <div key={`nivel-diponible-${nivel.id}`} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
                   <span>{nivel.nombre}</span>
                   <button
                     onClick={() => handleAñadirNivel(nivel)}
@@ -213,15 +251,18 @@ const ConfOlimpiada = () => {
             </h3>
             <div className="flex flex-wrap gap-2">
               {nivelesPorArea[areaActiva]?.map((nivel) => (
-                <div key={nivel} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
-                  <span>{nivel}</span>
+                <>
+                {console.log(areaActiva)}
+                <div key={`${areaActiva}-${nivel.id}`} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
+                  <span>{nivel.nombre}</span>
                   <button
-                    onClick={() => handleQuitarNivel({ nombre: nivel })}
+                    onClick={() => handleQuitarNivel({ nombre: nivel.nombre })}
                     className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md text-sm"
                   >
                     Quitar
                   </button>
                 </div>
+                </>
               ))}
             </div>
 

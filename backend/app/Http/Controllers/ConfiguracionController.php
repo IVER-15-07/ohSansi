@@ -51,7 +51,9 @@ class ConfiguracionController extends Controller
             $areas = Configuracion::where('id_olimpiada', $idOlimpiada)
             ->with('area') // Carga la relación con el modelo Area
             ->get()
-            ->pluck('area')->unique('id'); // Extrae solo las áreas
+            ->pluck('area')
+            ->unique('id')
+            ->values(); // Extrae solo las áreas
             
             // Retornar una respuesta exitosa
             return response()->json([
