@@ -52,6 +52,7 @@ Route::get('/configuraciones/{idOlimpiada}/areas', [ConfiguracionController::cla
 
 Route::get('/configuraciones/{idOlimpiada}/mapa', [ConfiguracionController::class, 'obtenerMapaOlimpiada']);
 
+Route::delete('/configuraciones/{idOlimpiada}', [ConfiguracionController::class, 'eliminarConfiguracionesPorOlimpiada']);
 
 Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 

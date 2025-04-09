@@ -56,7 +56,7 @@ const Olympiad = () => {
                       {olimp.descripcion || "Sin descripción disponible"}
                     </p>
                     <div className="flex justify-between items-center mt-4 gap-3 text-sm font-medium">
-                      <button onClick={() => navigate(`/AdminLayout/Olympiad/${olimp.id}/configurar`)} 
+                      <button onClick={() => navigate(`/AdminLayout/Olympiad/${olimp.id}/configurar/${olimp.nombre}`)} 
                 className="flex items-center text-blue-600 hover:underline">
                         <Settings size={16} className="mr-1" /> Configurar
                       </button>

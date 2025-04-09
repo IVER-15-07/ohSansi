@@ -30,6 +30,16 @@ export const getMapOfOlimpiada = async (idOlimpiada) => {
   }
 }
 
+export const deleteConfigurationByOlimpiada = async (idOlimpiada) => {
+  try {
+    const response = await axiosInstance.delete(`/configuraciones/${idOlimpiada}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching configuraciones:", error);
+    throw error;
+  }
+}
+
 
 export const createConfiguracion = async (data) => {
   try {

@@ -148,4 +148,36 @@ class ConfiguracionController extends Controller
             ], 500);
         }
     }
+
+    
+    /**
+     * Eliminar todas las configuraciones de una olimpiada.
+     *
+     * @param int $idOlimpiada
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function eliminarConfiguracionesPorOlimpiada($idOlimpiada)
+    {
+        try {
+            // Eliminar las configuraciones asociadas a la olimpiada
+            $deleted = Configuracion::where('id_olimpiada', $idOlimpiada)->delete();
+
+            // Elimina la caché para que se actualice en la próxima consulta
+            Cache::forget('configuraciones');
+
+            // Retornar una respuesta exitosa
+            return response()->json([
+                'success' => true,
+                'message' => "Se eliminaron $deleted configuraciones asociadas a la olimpiada.",
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar errores y retornar una respuesta
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al eliminar las configuraciones: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    
 }

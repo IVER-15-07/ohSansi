@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAreas } from '../../../service/areas.api';
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
-import { createConfiguracion, getAreasByOlimpiada, getMapOfOlimpiada } from '../../../service/configuraciones.api';
+import { createConfiguracion, getAreasByOlimpiada, getMapOfOlimpiada, deleteConfigurationByOlimpiada} from '../../../service/configuraciones.api';
 import { useParams } from 'react-router-dom';
 import Cargando from '../Cargando';
 import Error from '../Error';
@@ -21,7 +21,7 @@ const ConfOlimpiada = () => {
     queryFn: getNivelesCategorias,
   });
 
-  const { id } = useParams();
+  const { id, nombreOlimpiada } = useParams();
   const [areasDisponibles, setAreasDisponibles] = useState([]);
   const [nivelesDisponibles, setNivelesDisponibles] = useState([]);
   const [areasSeleccionadas, setAreasSeleccionadas] = useState([]);
@@ -112,7 +112,7 @@ const ConfOlimpiada = () => {
     if (!actuales.includes(nivel.nombre)) {
       setNivelesPorArea({
         ...nivelesPorArea,
-        [areaActiva]: [...actuales, nivel.nombre],
+        [areaActiva]: [...actuales, nivel],
       });
     }
   };
@@ -120,21 +120,22 @@ const ConfOlimpiada = () => {
   const handleQuitarNivel = (nivel) => {
     setNivelesPorArea({
       ...nivelesPorArea,
-      [areaActiva]: nivelesPorArea[areaActiva].filter((n) => n.id !== nivel.id),
+      [areaActiva]: nivelesPorArea[areaActiva].filter((n) => n.nombre !== nivel.nombre),
     });
   };
 
   const handleGuardarConfiguracion = async () => {
     setIsAdding(true);
     try {
+      await deleteConfigurationByOlimpiada(id);
       const configuraciones = [];
       areasSeleccionadas.forEach((area) => {
         const niveles = nivelesPorArea[area.id] || [];
-        niveles.forEach((nivelNombre) => {
+        niveles.forEach((nivel) => {
           configuraciones.push({
             id_olimpiada: id,
             id_area: area.id,
-            id_nivel_categoria: nivelesDisponibles.find((n) => n.nombre === nivelNombre)?.id,
+            id_nivel_categoria: nivel.id,
           });
         });
       });
@@ -154,7 +155,7 @@ const ConfOlimpiada = () => {
     <div className="p-2 w-full h-[calc(100vh-80px)] bg-gray-50 overflow-hidden">
       
       <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 h-full">
-        <h2 className="text-xl font-bold text-gray-800">Configuración de la Olimpiada {id}</h2>
+        <h2 className="text-xl font-bold text-gray-800">Configuración de la Olimpiada {nombreOlimpiada}</h2>
 
         <div className="flex gap-4 flex-1 overflow-hidden">
 
