@@ -5,7 +5,7 @@ import Olympiad from "./pages/admin/Olympiad"
 import RegistroTutor from "./pages/RegistroTutor"
 
 import Datosgenerales from "./pages/admin/Datosgenerales"
-import Detalles from "./pages/admin/Detalles"
+
 import Areas from "./pages/admin/Areas"
 import NivelCategoria from "./pages/admin/NivelCategoria"
 import ConfOlimpiada from "./pages/admin/ConfOlimpiada"
@@ -20,14 +20,14 @@ function App() {
         <Route path="/AdminLayout" element={<AdminLayout />}>
           {/* Subrutas */}
           <Route path="Olympiad" element={<Olympiad />} />
+          <Route path="Olympiad/Datosgenerales" element={<Datosgenerales />} />
           <Route path="Olympiad/:id/configurar" element={<ConfOlimpiada />} />
           <Route path="Areas" element={<Areas />} />
           <Route path="NivelCategoria" element={<NivelCategoria />} />
         </Route>
 
-        <Route path="/Datosgenerales" element={<Datosgenerales />} />
-        <Route path="/Detalles" element={<Detalles />} />
-        <Route path="/ConfOlimpiada" element={<Olympiad />} />
+       
+       
 
         {/* Rutas del user */}
         <Route path="/registro-tutor" element={<RegistroTutor />} />
