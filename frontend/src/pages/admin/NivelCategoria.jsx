@@ -1,42 +1,29 @@
-import React from 'react'
-import { useState } from 'react'
-import { useEffect } from 'react'
+import React, { useState } from 'react'
+import { useQuery } from '@tanstack/react-query';
 import { getGrados } from '../../../service/grados.api'
 import { getNivelesCategorias, createNivelCategoria } from '../../../service/niveles_categorias.api'
 
 
 const NivelCategoria = () => {
-  const [grados, setGrados] = useState([]);
-  const [nivelCategoria, setNivelCategoria] = useState([]);
+  const {data: nivelCategoria, isLoading: isLoadingNivelesCategorias, error: errorNivelesCategorias} = useQuery({
+    queryKey: ['niveles_categorias'],
+    queryFn: getNivelesCategorias,
+  });
+
+  const {data: grados, isLoading: isLoadingGrados, error: errorGrados} = useQuery({
+    queryKey: ['grados'],
+    queryFn: getGrados,
+  });
+
   const [isNivel, setIsNivel] = useState(true);
   const [nombre, setNombre] = useState("");
   const [gradoSeleccionado, setGradoSeleccionado] = useState("");
   const [gradoInicio, setGradoInicio] = useState("");
   const [gradoFin, setGradoFin] = useState("");
 
-  useEffect(() => {
-    cargarGrados();
-    cargarNivelesCategorias();
-  }, []);
-
-  const cargarGrados = async () => {
-    try {
-      const response = await getGrados();
-      setGrados(response.data);
-    } catch (error) {
-      console.error("Error al cargar grados:", error);
-    }
-  };
-
-  const cargarNivelesCategorias = async () => {
-    try {
-      const response = await getNivelesCategorias();
-      console.log("Datos cargados desde el backend:", response.data); // Verifica los datos
-      setNivelCategoria(response.data);
-    } catch (error) {
-      console.error("Error al cargar niveles/categorías:", error);
-    }
-  };
+  if (isLoadingNivelesCategorias || isLoadingGrados) return <div>Loading...</div>;
+  if (errorNivelesCategorias) return <div>Error al cargar niveles/categorías: {errorNiveles.message}</div>;
+  if (errorGrados) return <div>Error al cargar grados: {errorGrados.message}</div>;
 
   const handleAddNivelCategoria = async () => {
     if (nombre.trim() === "") {
@@ -89,8 +76,8 @@ const NivelCategoria = () => {
     }
   };
 
-  const niveles = nivelCategoria.filter((item) => item.esNivel);
-  const categorias = nivelCategoria.filter((item) => !item.esNivel);
+  const niveles = nivelCategoria.data.filter((item) => item.esNivel);
+  const categorias = nivelCategoria.data.filter((item) => !item.esNivel);
 
   const obtenerGradosAsociados = (grados) => {
     if (!grados || grados.length === 0) {
@@ -189,7 +176,7 @@ const NivelCategoria = () => {
               className="w-full p-2 border rounded-md text-gray-800 bg-gray-100"
             >
               <option value="">Seleccione un grado</option>
-              {grados.map((grado) => (
+              {grados.data.map((grado) => (
                 <option key={grado.id} value={grado.id}>
                   {grado.nombre}
                 </option>
@@ -219,7 +206,7 @@ const NivelCategoria = () => {
               className="w-full p-2 border rounded-md text-gray-800 bg-gray-100"
             >
               <option value="">Seleccione el grado inicial</option>
-              {grados.map((grado) => (
+              {grados.data.map((grado) => (
                 <option key={grado.id} value={grado.id}>
                   {grado.nombre}
                 </option>
@@ -235,7 +222,7 @@ const NivelCategoria = () => {
               className="w-full p-2 border rounded-md text-gray-800 bg-gray-100"
             >
               <option value="">Seleccione el grado final</option>
-              {grados.map((grado) => (
+              {grados.data.map((grado) => (
                 <option key={grado.id} value={grado.id}>
                   {grado.nombre}
                 </option>

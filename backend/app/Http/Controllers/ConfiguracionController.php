@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Configuracion; 
 
 class ConfiguracionController extends Controller
@@ -17,8 +18,10 @@ class ConfiguracionController extends Controller
     public function obtenerConfiguraciones(Request $request)
     {
         try {
-            // Obtener todas las configuraciones con relaciones
-            $configuraciones = Configuracion::with(['olimpiada', 'area', 'nivel_categoria'])->get();
+            // Intenta obtener las configuraciones desde la caché
+            $configuraciones = Cache::remember('configuraciones', 3600, function () {
+                return Configuracion::with(['olimpiada', 'area', 'nivel_categoria'])->get(); // Consulta a la base de datos si no está en caché
+            });
             
             // Retornar una respuesta exitosa
             return response()->json([
@@ -59,6 +62,9 @@ class ConfiguracionController extends Controller
             $configuracion->id_nivel_categoria = $validated['id_nivel_categoria'];
             
             $configuracion->save();
+
+            // Elimina la caché para que se actualice en la próxima consulta
+            Cache::forget('configuraciones');
 
             // Retornar una respuesta exitosa
             return response()->json([
