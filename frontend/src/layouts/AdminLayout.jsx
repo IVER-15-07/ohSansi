@@ -1,39 +1,35 @@
 import React from 'react'
-import  {useState} from 'react'
-import Dashboard from '../pages/admin/Dashboard';
-import Create from '../pages/admin/Create';
-
+import { useState } from 'react'
+import  Sidebar from '../components/Sidebar'
+import {MenuIcon} from '../assets/Icons'
+import { Outlet } from 'react-router-dom';
 
 const AdminLayout = () => {
 
-  const [paginacion, setPaginacion] = useState("DASHBOARD");
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const renderComponent = () => { 
-    if(paginacion==='DASHBOARD'){
-      return <Dashboard/>
-    }else{
-      if(paginacion==='CREAR'){
-        return <Create/>
-      }
-
-    }
-
-  }
-
-  
   return (
-    <div className="flex">
-    {/* Sidebar */}
-    <div className="w-1/5 p-4 bg-gray-800 text-white h-screen">
-      <button onClick={() => setPaginacion('DASHBOARD')} className="block mb-4">Dashboard</button>
-      <button onClick={() => setPaginacion('CREAR')} className="block mb-4">Crear</button>
-    </div>
+    <div className="flex w-full">
+      {/* Sidebar */}
+      <Sidebar isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
 
-    {/* Main Content */}
-    <div className="w-4/5 p-4">
-      {renderComponent()}
+      {/* Main Content */}
+      <div className="flex-1 h-auto overflow-auto md:h-screen md:overflow-hidden">
+        <div className="pt-3 pl-4 pb-0">
+          <MenuIcon onClick={() => setIsCollapsed(!isCollapsed)} className="cursor-pointer" />
+
+        </div>
+
+        <div>
+
+        <Outlet />
+        
+        
+        </div>
+
+
+      </div>
     </div>
-  </div>
   )
 }
 
