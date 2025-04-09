@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query';
 import CrearOlimpiada from './CrearOlimpiada'
 import { getOlimpiadas } from "../../../service/olimpiadas.api";
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Outlet } from 'react-router-dom'
 import ConfOlimpiada from './ConfOlimpiada'
 import { Plus, Settings, Play, Archive, Trash2 } from 'lucide-react'
 import Cargando from '../Cargando';
@@ -36,7 +36,7 @@ const Olympiad = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-semibold text-gray-800">Olimpiadas Creadas</h2>
               <button
-                onClick={() => setAgregarOlimpiada(true)}
+                onClick={() => navigate("/AdminLayout/Olympiad/CrearOlimpiada")}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
               >
                 <Plus size={18} /> Agregar Olimpiada
@@ -94,6 +94,7 @@ const Olympiad = () => {
           </div>
         </div>
       )}
+          <Outlet />
     </div>
 
 

@@ -1,6 +1,6 @@
 "use client"
-import { useNavigate } from "react-router-dom"
-import Navbar from "../components/Navbar"
+import { useNavigate, Outlet } from "react-router-dom"
+
 import { Beaker, Brain, Calculator, Code, Rocket, Users } from "lucide-react"
 
 const Home = () => {
@@ -8,14 +8,13 @@ const Home = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Navbar />
-
+     
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-16">
         <div className="container mx-auto px-4 md:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Bienvenido a <span className="text-red-400">OhSansi</span>
+              Bienvenido a <span className="text-red-400">Oh! SanSi</span>
             </h1>
             <p className="text-xl md:text-2xl mb-8">Sistema de Olimpiadas STEM de la Universidad Mayor de San Simón</p>
             <div className="flex flex-wrap justify-center gap-4 mt-8">
@@ -136,6 +135,10 @@ const Home = () => {
             Registrarme Ahora
           </button>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 md:px-8 py-12">
+        <Outlet />
       </div>
 
       {/* Footer */}
