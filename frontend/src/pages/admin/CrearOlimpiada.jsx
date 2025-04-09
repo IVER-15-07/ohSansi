@@ -2,9 +2,12 @@ import React from 'react'
 import { useState } from 'react';
 import { createOlimpiada } from '../../../service/olimpiadas.api';
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+
 
 const CrearOlimpiada = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [nombre, setNombre] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
@@ -15,7 +18,8 @@ const CrearOlimpiada = () => {
   const [descripcion, setDescripcion] = useState("");
   const [urlMapa, setUrlMapa] = useState("");
   const [isAdding, setIsAdding] = useState(false);
-    
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Validaciones
@@ -23,12 +27,12 @@ const CrearOlimpiada = () => {
       alert("Por favor, complete todos los campos.");
       return;
     }
-    
+
     if (new Date(fechaInicio) > new Date(fechaFin)) {
       alert("La fecha de inicio no puede ser posterior a la fecha de finalización.");
       return;
     }
-    
+
     const nuevaOlimpiada = {
       nombre,
       descripcion,
@@ -39,15 +43,16 @@ const CrearOlimpiada = () => {
       inicio_inscripcion: inicioInscripcion, // Cambiado a "inicio_inscripcion"
       fin_inscripcion: finInscripcion,       // Cambiado a "fin_inscripcion"
     };
-    
+
     setIsAdding(true); // Cambia el estado a "cargando"
+
     try {
       const response = await createOlimpiada(nuevaOlimpiada);
-      
+
       alert("Olimpiada creada exitosamente.");
-      queryClient.invalidateQueries(['olimpiadas']); 
+      queryClient.invalidateQueries(['olimpiadas']);
       console.log("Olimpiada creada:", response);
-    
+
       // Limpia los campos del formulario
       setNombre("");
       setFechaInicio("");
@@ -61,18 +66,19 @@ const CrearOlimpiada = () => {
     } catch (error) {
       console.error("Error al crear la olimpiada:", error.response?.data || error.message);
       alert("Hubo un error al crear la olimpiada. Verifique los datos e intente nuevamente.");
-    }finally {
+    } finally {
       setIsAdding(false); // Cambia el estado a "no cargando"
     }
   };
-  
+
   return (
     <div className="w-full px-6 py-3 bg-gray-50 rounded-xl">
-      <h2 className="text-xl font-bold text-gray-700 mb-4">Datos generales de la Olimpiada</h2>
 
+      <h1 className="text-xl font-bold text-gray-700 mb-4">Datos generales de la Olimpiada</h1>
       <form
+        id="crear-olimpiada-form"
         onSubmit={handleSubmit} // Conecta la función de envío
-        className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 bg-white p-4 rounded-2xl shadow border border-gray-200 text-sm"
+        className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 bg-white p-6 rounded-2xl shadow border border-gray-200 text-sm"
       >
 
         {/* Nombre */}
@@ -164,23 +170,40 @@ const CrearOlimpiada = () => {
         </div>
 
         {/* Botón de envío */}
-        
-        <div className="col-span-2 flex justify-end">
-          <button
-            type="submit"
-            disabled={isAdding} // Desactiva el botón mientras se está cargando
-            className={`px-5 py-2 rounded-md text-sm font-medium transition ${
-              isAdding
-                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                : "bg-blue-900 text-white hover:bg-blue-800"
-            }`}
-          >
-            {isAdding ? "Cargando..." : "Crear Olimpiada"}
-          </button>
-        </div>
+
       </form>
+
+      <div className="flex justify-end mt-4 p-4 gap-6">
+
+        {/* Botón Cancelar */}
+        <button
+          type="button"
+          onClick={() => navigate('/AdminLayout/Olympiad')} // Cambiado a navigate
+          className="bg-blue-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition w-40 h-12 flex items-center justify-center"
+        >
+          Cancelar
+        </button>
+
+        {/* Botón Crear Olimpiada */}
+        <button
+          type="submit"
+          form="crear-olimpiada-form" // Conecta el botón al formulario por su ID
+          disabled={isAdding} // Desactiva el botón mientras se está cargando
+          className={`px-5 py-2 rounded-md text-sm font-medium transition ${
+            isAdding
+              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+              : "bg-blue-900 text-white hover:bg-blue-800"
+          }`}
+        >
+          {isAdding ? "Cargando..." : "Crear Olimpiada"}
+        </button>
+
+      </div>
+
+
+
     </div>
-    )
+  )
 }
 
 export default CrearOlimpiada
