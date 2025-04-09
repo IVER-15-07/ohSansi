@@ -10,7 +10,7 @@ export const getEncargados = async () => {
   }
 }
 
-export const createArea = async (data) => {
+export const createEncargado = async (data) => {
   try {
     const response = await axiosInstance.post("/encargados", data);
     return response.data;

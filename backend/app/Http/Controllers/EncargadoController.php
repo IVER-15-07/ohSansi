@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Encargado;
+use \Illuminate\Validation\ValidationException;
 
 class EncargadoController extends Controller
 {
@@ -76,6 +77,26 @@ class EncargadoController extends Controller
                 'message' => 'Encargado creado exitosamente', 
                 'data' => $encargado,
             ], 201);
+        }catch(ValidationException $e){
+                // Capturar errores de validación
+            $errors = $e->errors();
+            // Personalizar el mensaje de error
+            $errorMessages = [];
+            if (isset($errors['ci'])) {
+                $errorMessages[] = 'El número de carnet de identidad ya está registrado.';
+            }
+            if (isset($errors['telefono'])) {
+                $errorMessages[] = 'El número de teléfono ya está registrado.';
+            }
+            if (isset($errors['correo'])) {
+                $errorMessages[] = 'El correo electrónico ya está registrado.';
+            }
+
+            return response()->json([
+                'success' => false,
+                'status' => 'validation_error',
+                'message' => implode(' ', $errorMessages), // Combina los mensajes en una sola cadena
+            ], 422);
         }catch(\Exception $e){
             return response()->json([
                 'success' => false,

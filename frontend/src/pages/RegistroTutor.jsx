@@ -2,16 +2,17 @@
 
 import { useState } from "react"
 import { AlertCircle, CheckCircle, X } from "lucide-react"
+import { createEncargado } from "../../service/encargados.api"
 
 function RegistroTutor() {
   // Estado del formulario
   const [formData, setFormData] = useState({
-    fullName: "",
-    idNumber: "",
-    email: "",
-    phoneNumber: "",
-    birthDate: "",
-    relationship: "",
+    nombre: "",
+    apellido: "",
+    ci: "",
+    fecha_nacimiento: "",
+    telefono: "",
+    correo: "",
     termsAccepted: false,
   })
 
@@ -40,63 +41,67 @@ function RegistroTutor() {
     const newErrors = { ...errors }
 
     switch (name) {
-      case "fullName":
+      case "nombre":
         if (!value) {
-          newErrors.fullName = "El nombre completo es obligatorio"
+          newErrors.nombre = "El nombre del encargado es obligatorio"
         } else if (value.length > 100) {
-          newErrors.fullName = "El nombre no debe exceder los 100 caracteres"
+          newErrors.nombre = "El nombre no debe exceder los 100 caracteres"
         } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]+$/.test(value)) {
-          newErrors.fullName = "El nombre solo debe contener letras, números y espacios"
+          newErrors.nombre = "El nombre solo debe contener letras, números y espacios"
         } else {
-          delete newErrors.fullName
+          delete newErrors.nombre
         }
         break
 
-      case "idNumber":
+      case "apellido":
         if (!value) {
-          newErrors.idNumber = "El número de carnet es obligatorio"
+          newErrors.apellido = "El apellido del encargado es obligatorio"
+        } else if (value.length > 100) {
+          newErrors.apellido = "El apellido no debe exceder los 100 caracteres"
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]+$/.test(value)) {
+          newErrors.apellido = "El apellido solo debe contener letras, números y espacios"
+        } else {
+          delete newErrors.apellido
+        }
+        break
+
+      case "ci":
+        if (!value) {
+          newErrors.ci = "El número de carnet es obligatorio"
         } else if (!/^[a-zA-Z0-9 ]+$/.test(value)) {
-          newErrors.idNumber = "El carnet solo debe contener letras, números y espacios"
+          newErrors.ci = "El carnet solo debe contener letras, números y espacios"
         } else {
-          delete newErrors.idNumber
+          delete newErrors.ci
         }
         break
 
-      case "email":
+      case "correo":
         if (!value) {
-          newErrors.email = "El correo electrónico es obligatorio"
+          newErrors.correo = "El correo electrónico es obligatorio"
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          newErrors.email = "Ingrese un correo electrónico válido"
+          newErrors.correo = "Ingrese un correo electrónico válido"
         } else {
-          delete newErrors.email
+          delete newErrors.correo
         }
         break
 
-      case "phoneNumber":
+      case "telefono":
         if (!value) {
-          newErrors.phoneNumber = "El número de celular es obligatorio"
+          newErrors.telefono = "El número de celular es obligatorio"
         } else if (!/^[0-9]+$/.test(value)) {
-          newErrors.phoneNumber = "El número de celular solo debe contener números"
+          newErrors.telefono = "El número de celular solo debe contener números"
         } else {
-          delete newErrors.phoneNumber
+          delete newErrors.telefono
         }
         break
 
-      case "birthDate":
+      case "fecha_nacimiento":
         if (!value) {
-          newErrors.birthDate = "La fecha de nacimiento es obligatoria"
+          newErrors.fecha_nacimiento = "La fecha de nacimiento es obligatoria"
         } else if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(value)) {
-          newErrors.birthDate = "El formato debe ser dd/mm/aaaa"
+          newErrors.fecha_nacimiento = "El formato debe ser dd/mm/aaaa"
         } else {
-          delete newErrors.birthDate
-        }
-        break
-
-      case "relationship":
-        if (!value) {
-          newErrors.relationship = "La relación con el competidor es obligatoria"
-        } else {
-          delete newErrors.relationship
+          delete newErrors.fecha_nacimiento
         }
         break
 
@@ -129,12 +134,12 @@ function RegistroTutor() {
     })
 
     // Verificar campos obligatorios vacíos
-    if (!formData.fullName) newErrors.fullName = "El nombre completo es obligatorio"
-    if (!formData.idNumber) newErrors.idNumber = "El número de carnet es obligatorio"
-    if (!formData.email) newErrors.email = "El correo electrónico es obligatorio"
-    if (!formData.phoneNumber) newErrors.phoneNumber = "El número de celular es obligatorio"
-    if (!formData.birthDate) newErrors.birthDate = "La fecha de nacimiento es obligatoria"
-    if (!formData.relationship) newErrors.relationship = "La relación con el competidor es obligatoria"
+    if (!formData.nombre) newErrors.nombre = "El nombre(s) es obligatorio"
+    if (!formData.apellido) newErrors.apellido = "El apellido(s) es obligatorio"
+    if (!formData.ci) newErrors.ci = "El número de carnet es obligatorio"
+    if (!formData.correo) newErrors.correo = "El correo electrónico es obligatorio"
+    if (!formData.telefono) newErrors.telefono = "El número de celular es obligatorio"
+    if (!formData.fecha_nacimiento) newErrors.fecha_nacimiento = "La fecha de nacimiento es obligatoria"
     if (!formData.termsAccepted) newErrors.termsAccepted = "Debe aceptar los términos y condiciones"
 
     setErrors(newErrors)
@@ -153,34 +158,40 @@ function RegistroTutor() {
   // Manejador de confirmación
   const handleConfirm = async () => {
     setShowConfirmDialog(false)
+    const { termsAccepted, ...dataToSend } = formData // Quitamos el campo de terminos del formulario
 
-    // Simulación de verificación de duplicados
-    const isDuplicate = Math.random() < 0.2 // 20% de probabilidad de simular un duplicado
+    // Convertir la fecha de nacimiento a un objeto Date
+    const [day, month, year] = dataToSend.fecha_nacimiento.split("/");
+    dataToSend.fecha_nacimiento = new Date(`${year}-${month}-${day}`); // Formato ISO (aaaa-mm-dd)
+    try {
+      // Enviar el JSON sin el campo termsAccepted
+      await createEncargado(dataToSend);
 
-    if (isDuplicate) {
-      setErrorMessage("Ya existe un responsable registrado con este nombre completo.")
-      return
-    }
-
-    // Simulación de envío exitoso
-    // En un caso real, aquí iría la llamada a la API para guardar los datos
-    setTimeout(() => {
-      setShowSuccessAlert(true)
+      setShowSuccessAlert(true);
       setFormData({
-        fullName: "",
-        idNumber: "",
-        email: "",
-        phoneNumber: "",
-        birthDate: "",
-        relationship: "",
+        nombre: "",
+        apellido: "",
+        ci: "",
+        fecha_nacimiento: "",
+        telefono: "",
+        correo: "",
         termsAccepted: false,
-      })
-
+      });
+  
       // Ocultar mensaje de éxito después de 5 segundos
       setTimeout(() => {
-        setShowSuccessAlert(false)
-      }, 5000)
-    }, 1000)
+        setShowSuccessAlert(false);
+      }, 5000);
+    } catch (error) {
+      // Manejo de errores
+      console.error("Error al enviar los datos del encargado:", error);
+      // Verificar si es un error de conexión
+      if (!error.response) {
+        setErrorMessage("No se pudo conectar con el servidor. Por favor, revise su conexión a internet o intente más tarde.");
+      } else {
+        setErrorMessage(error.response.data.message || "Ocurrió un error al procesar la solicitud.");
+      }
+    }
   }
 
   return (
@@ -216,8 +227,7 @@ function RegistroTutor() {
                 <div>
                   <h3 className="font-medium">Registro exitoso</h3>
                   <p className="text-sm text-green-700">
-                    Sus datos han sido registrados correctamente. Se ha enviado un correo de confirmación con los
-                    siguientes pasos.
+                    Sus datos han sido registrados correctamente.
                   </p>
                 </div>
               </div>
@@ -230,130 +240,124 @@ function RegistroTutor() {
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nombre Completo */}
+              {/* Nombre(s) */}
               <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre Completo *
+                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre(s) *
                 </label>
                 <input
                   type="text"
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
+                  id="nombre"
+                  name="nombre"
+                  value={formData.nombre}
                   onChange={handleChange}
-                  placeholder="Ingrese su nombre completo"
+                  placeholder="Ingrese su nombre(s)"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.fullName ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                    errors.nombre ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
                   }`}
                 />
-                {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
+                {errors.nombre && <p className="mt-1 text-sm text-red-600">{errors.nombre}</p>}
+              </div>
+
+              {/* Apellido(s) */}
+              <div>
+                <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-1">
+                  Apellido(s) *
+                </label>
+                <input
+                  type="text"
+                  id="apellido"
+                  name="apellido"
+                  value={formData.apellido}
+                  onChange={handleChange}
+                  placeholder="Ingrese su apellido(s)"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                    errors.apellido ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                  }`}
+                />
+                {errors.apellido && <p className="mt-1 text-sm text-red-600">{errors.apellido}</p>}
               </div>
 
               {/* Número de Carnet */}
               <div>
-                <label htmlFor="idNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="ci" className="block text-sm font-medium text-gray-700 mb-1">
                   Número de Carnet de Identidad *
                 </label>
                 <input
                   type="text"
-                  id="idNumber"
-                  name="idNumber"
-                  value={formData.idNumber}
+                  id="ci"
+                  name="ci"
+                  value={formData.ci}
                   onChange={handleChange}
                   placeholder="Ingrese su número de carnet"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
                     errors.idNumber ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
                   }`}
                 />
-                {errors.idNumber && <p className="mt-1 text-sm text-red-600">{errors.idNumber}</p>}
+                {errors.ci && <p className="mt-1 text-sm text-red-600">{errors.ci}</p>}
               </div>
 
               {/* Correo Electrónico */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="correo" className="block text-sm font-medium text-gray-700 mb-1">
                   Correo Electrónico *
                 </label>
                 <input
                   type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
+                  id="correo"
+                  name="correo"
+                  value={formData.correo}
                   onChange={handleChange}
                   placeholder="ejemplo@correo.com"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.email ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                    errors.correo ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
                   }`}
                 />
-                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                {errors.correo && <p className="mt-1 text-sm text-red-600">{errors.correo}</p>}
               </div>
 
               {/* Número de Celular */}
               <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">
                   Número de Celular *
                 </label>
                 <input
                   type="text"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
+                  id="telefono"
+                  name="telefono"
+                  value={formData.telefono}
                   onChange={handleChange}
                   placeholder="Ingrese su número de celular"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.phoneNumber ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                    errors.telefono ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
                   }`}
                 />
-                {errors.phoneNumber && <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>}
+                {errors.telefono && <p className="mt-1 text-sm text-red-600">{errors.telefono}</p>}
               </div>
 
               {/* Fecha de Nacimiento */}
               <div>
-                <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="fecha_nacimiento" className="block text-sm font-medium text-gray-700 mb-1">
                   Fecha de Nacimiento *
                 </label>
                 <input
                   type="text"
-                  id="birthDate"
-                  name="birthDate"
-                  value={formData.birthDate}
+                  id="fecha_nacimiento"
+                  name="fecha_nacimiento"
+                  value={formData.fecha_nacimiento}
                   onChange={handleChange}
                   placeholder="dd/mm/aaaa"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.birthDate ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                    errors.fecha_nacimiento ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
                   }`}
                 />
-                {errors.birthDate && <p className="mt-1 text-sm text-red-600">{errors.birthDate}</p>}
-              </div>
-
-              {/* Relación con el Competidor */}
-              <div>
-                <label htmlFor="relationship" className="block text-sm font-medium text-gray-700 mb-1">
-                  Relación con el Competidor *
-                </label>
-                <select
-                  id="relationship"
-                  name="relationship"
-                  value={formData.relationship}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.relationship ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                  }`}
-                >
-                  <option value="" disabled>
-                    Seleccione una opción
-                  </option>
-                  <option value="padre">Padre</option>
-                  <option value="madre">Madre</option>
-                  <option value="apoderado">Apoderado Legal</option>
-                  <option value="tutor">Tutor</option>
-                </select>
-                {errors.relationship && <p className="mt-1 text-sm text-red-600">{errors.relationship}</p>}
-              </div>
+                {errors.fecha_nacimiento && <p className="mt-1 text-sm text-red-600">{errors.fecha_nacimiento}</p>}
+              </div> 
             </div>
 
             {/* Términos y Condiciones */}
             <div
-              className={`flex items-start space-x-3 rounded-md border p-4 ${
+              className={`flex items-start space-x-2 rounded-md border p-4 ${
                 errors.termsAccepted ? "border-red-300" : "border-gray-200"
               }`}
             >
