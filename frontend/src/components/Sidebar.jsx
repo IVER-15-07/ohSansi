@@ -21,7 +21,7 @@ const Sidebar = ({ isCollapsed }) => {
     <div
       className={`p-4 duration-500 ease-in-out flex flex-col justify-between shadow-2xl
     ${isCollapsed
-          ? 'w-[60px] h-[80vh] mt-4 mb-4 ml-4 rounded-2xl bg-gradient-to-b from-white via-blue-200 to-red-300'
+          ? ' w-[60px] h-[95vh] mt-4 mb-4 ml-4 rounded-2xl bg-gradient-to-b from-white via-blue-200 to-red-300'
           : 'w-1/5 h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-red-600'
         }`}
     >

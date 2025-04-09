@@ -18,11 +18,9 @@ function App() {
 
         {/* Rutas del admin */}
         <Route path="/AdminLayout" element={<AdminLayout />}>
-          {/* Subrutas */}
           <Route path="Olympiad" element={<Olympiad />} />
           <Route path="Olympiad/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
           <Route path="Olympiad/Datosgenerales" element={<Datosgenerales />} />
-          
           <Route path="Areas" element={<Areas />} />
           <Route path="NivelCategoria" element={<NivelCategoria />} />
         </Route>
