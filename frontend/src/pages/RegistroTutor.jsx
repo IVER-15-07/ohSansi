@@ -47,8 +47,8 @@ function RegistroTutor() {
           newErrors.nombre = "El nombre del encargado es obligatorio"
         } else if (value.length > 100) {
           newErrors.nombre = "El nombre no debe exceder los 100 caracteres"
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]+$/.test(value)) {
-          newErrors.nombre = "El nombre solo debe contener letras, números y espacios"
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(value)) {
+          newErrors.nombre = "El nombre solo debe contener letras y espacios"
         } else {
           delete newErrors.nombre
         }
@@ -59,8 +59,8 @@ function RegistroTutor() {
           newErrors.apellido = "El apellido del encargado es obligatorio"
         } else if (value.length > 100) {
           newErrors.apellido = "El apellido no debe exceder los 100 caracteres"
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]+$/.test(value)) {
-          newErrors.apellido = "El apellido solo debe contener letras, números y espacios"
+        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(value)) {
+          newErrors.apellido = "El apellido solo debe contener letras y espacios"
         } else {
           delete newErrors.apellido
         }
@@ -69,8 +69,8 @@ function RegistroTutor() {
       case "ci":
         if (!value) {
           newErrors.ci = "El número de carnet es obligatorio"
-        } else if (!/^[a-zA-Z0-9 ]+$/.test(value)) {
-          newErrors.ci = "El carnet solo debe contener letras, números y espacios"
+        } else if (!/^[a-zA-Z0-9]+$/.test(value)) {
+          newErrors.ci = "El carnet solo debe contener números y si es necesario letras del complemento"
         } else {
           delete newErrors.ci
         }
@@ -180,10 +180,10 @@ function RegistroTutor() {
         termsAccepted: false,
       });
   
-      // Ocultar mensaje de éxito después de 5 segundos
+      // Ocultar mensaje de éxito después de 6 segundos
       setTimeout(() => {
         setShowSuccessAlert(false);
-      }, 5000);
+      }, 6000);
     } catch (error) {
       // Manejo de errores
       console.error("Error al enviar los datos del encargado:", error);
@@ -389,14 +389,30 @@ function RegistroTutor() {
             <div className="flex justify-end">
               <button
                 type="submit"
-                disabled={!formData.termsAccepted || isAdding}
+                disabled={
+                  !formData.termsAccepted || 
+                  !formData.nombre || 
+                  !formData.apellido || 
+                  !formData.ci || 
+                  !formData.correo || 
+                  !formData.telefono || 
+                  !formData.fecha_nacimiento || 
+                  isAdding
+                }
                 className={`px-4 py-2 rounded-md text-white ${
-                  (formData.termsAccepted && !isAdding)
+                  formData.termsAccepted &&
+                  formData.nombre &&
+                  formData.apellido &&
+                  formData.ci &&
+                  formData.correo &&
+                  formData.telefono &&
+                  formData.fecha_nacimiento &&
+                  !isAdding
                     ? "bg-black hover:bg-gray-800 cursor-pointer"
                     : "bg-gray-400 cursor-not-allowed"
                 }`}
               >
-                {isAdding ? "Cargando...":"Guardar"}
+                {isAdding ? "Cargando..." : "Guardar"}
               </button>
             </div>
           </form>

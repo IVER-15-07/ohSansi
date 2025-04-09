@@ -6,12 +6,12 @@ import { AlertCircle, CheckCircle, X } from "lucide-react"
 function RegistrationForm() {
   // Estado del formulario
   const [formData, setFormData] = useState({
-    fullName: "",
+    Name: "",
+    LastName:"",
     idNumber: "",
     email: "",
     phoneNumber: "",
     birthDate: "",
-    relationship: "",
     termsAccepted: false,
   })
 
