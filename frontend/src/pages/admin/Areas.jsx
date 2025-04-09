@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAreas, createArea } from '../../../service/areas.api';
+import Cargando from '../Cargando';
+import Error from '../Error';
 
 const Areas = () => {
   const queryClient = useQueryClient();
 
-  const {data: areas, isLoading, error} = useQuery({
+  const {data: areas, isLoading, error: errorAreas} = useQuery({
     queryKey: ['areas'],
     queryFn: getAreas,
   });
 
   const [newArea, setNewArea] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (isLoading) return <Cargando/>;
+  if (errorAreas) return <Error error ={errorAreas} />;
 
   const handleAddArea = async () => {
     if (newArea.trim() !== "") {
+      setIsAdding(true); 
       try {
         const nuevaArea = await createArea({ nombre: newArea }); // Llama a la API para crear el área
         setNewArea(""); // Limpia el campo de entrada
@@ -33,6 +37,8 @@ const Areas = () => {
       } catch (error) {
         console.error("Error al agregar el área:", error);
         alert("Hubo un error al agregar el área. Inténtalo nuevamente.");
+      } finally {
+        setIsAdding(false); // Restablece el estado de carga
       }
     }
   };
@@ -83,9 +89,14 @@ const Areas = () => {
             <div className="flex justify-start">
               <button
                 onClick={handleAddArea}
-                className="bg-blue-900 text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-blue-800 transition"
+                disabled={isAdding} // Desactiva el botón mientras se está cargando
+                className={`px-5 py-2 rounded-md text-sm font-medium transition ${
+                  isAdding
+                    ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                    : "bg-blue-900 text-white hover:bg-blue-800"
+                }`}
               >
-                Agregar área
+                {isAdding ? "Cargando..." : "Agregar área"}
               </button>
             </div>
           </div>

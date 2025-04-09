@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getGrados } from '../../../service/grados.api'
 import { getNivelesCategorias, createNivelCategoria } from '../../../service/niveles_categorias.api'
+import Cargando from '../Cargando';
 
 
 const NivelCategoria = () => {
+  const queryClient = useQueryClient();
   const {data: nivelCategoria, isLoading: isLoadingNivelesCategorias, error: errorNivelesCategorias} = useQuery({
     queryKey: ['niveles_categorias'],
     queryFn: getNivelesCategorias,
@@ -20,10 +22,11 @@ const NivelCategoria = () => {
   const [gradoSeleccionado, setGradoSeleccionado] = useState("");
   const [gradoInicio, setGradoInicio] = useState("");
   const [gradoFin, setGradoFin] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
 
-  if (isLoadingNivelesCategorias || isLoadingGrados) return <div>Loading...</div>;
-  if (errorNivelesCategorias) return <div>Error al cargar niveles/categorías: {errorNiveles.message}</div>;
-  if (errorGrados) return <div>Error al cargar grados: {errorGrados.message}</div>;
+  if (isLoadingNivelesCategorias || isLoadingGrados) return <Cargando/>;
+  if (errorNivelesCategorias) return <Error error={errorNivelesCategorias}/>;
+  if (errorGrados) return <Error error={errorGrados}/>;
 
   const handleAddNivelCategoria = async () => {
     if (nombre.trim() === "") {
@@ -53,26 +56,44 @@ const NivelCategoria = () => {
       esNivel: isNivel,
       grados: isNivel
         ? [gradoSeleccionado] // Para nivel, un solo grado
-        : grados
+        : grados.data
           .filter((grado) => grado.id >= gradoInicio && grado.id <= gradoFin) // Para categoría, rango de grados
           .map((grado) => grado.id),
     };
 
     console.log("Datos enviados al backend:", nuevoItem);
 
+    setIsAdding(true);
     try {
       const response = await createNivelCategoria(nuevoItem);
       console.log("Respuesta del backend:", response);
-      await cargarNivelesCategorias();
 
       setNombre("");
       setGradoSeleccionado("");
       setGradoInicio("");
       setGradoFin("");
+
+      // Actualiza la caché de React Query inmediatamente
+      queryClient.setQueryData(['niveles_categorias'], (oldData) => {
+        return {
+          ...oldData,
+          data: [...oldData.data, response.data], // Agrega la nueva área a la lista existente
+        };	
+      });
+
+      queryClient.invalidateQueries(['niveles_categorias']); // Invalida la consulta para actualizar la lista
       alert("Nivel o categoría agregado exitosamente.");
     } catch (error) {
-      console.error("Error al agregar nivel/categoría:", error.response?.data || error.message);
-      alert("Hubo un error al agregar el nivel o categoría. Verifique los datos e intente nuevamente.");
+      // Manejo de errores
+      console.error("Error al agregar nivel/categoria:", error);
+      // Verificar si es un error de conexión
+      if (!error.response) {
+        alert("No se pudo conectar con el servidor. Por favor, revise su conexión a internet o intente más tarde.");
+      } else {
+        alert(error.response.data.message || "Ocurrió un error al procesar la solicitud.");
+      }
+    }finally{
+      setIsAdding(false);
     }
   };
 
@@ -236,9 +257,14 @@ const NivelCategoria = () => {
       <div className="flex justify-center mt-6">
         <button
           onClick={handleAddNivelCategoria}
-          className="bg-blue-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition"
+          disabled={isAdding} // Desactiva el botón mientras se está cargando
+          className={`px-5 py-2 rounded-md text-sm font-medium transition ${
+            isAdding
+              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+              : "bg-blue-900 text-white hover:bg-blue-800 transition"
+          }`}
         >
-          {isNivel ? "Agregar nivel" : "Agregar categoría"}
+          {isAdding ? "Cargando..." : isNivel ? "Agregar nivel" : "Agregar categoría"}
         </button>
       </div>
     </div>

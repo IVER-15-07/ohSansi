@@ -23,6 +23,7 @@ function RegistroTutor() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showSuccessAlert, setShowSuccessAlert] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
+  const [isAdding, setIsAdding] = useState(false)
 
   // Manejador de cambios en los inputs
   const handleChange = (e) => {
@@ -163,6 +164,7 @@ function RegistroTutor() {
     // Convertir la fecha de nacimiento a un objeto Date
     const [day, month, year] = dataToSend.fecha_nacimiento.split("/");
     dataToSend.fecha_nacimiento = new Date(`${year}-${month}-${day}`); // Formato ISO (aaaa-mm-dd)
+    setIsAdding(true)
     try {
       // Enviar el JSON sin el campo termsAccepted
       await createEncargado(dataToSend);
@@ -191,6 +193,8 @@ function RegistroTutor() {
       } else {
         setErrorMessage(error.response.data.message || "Ocurrió un error al procesar la solicitud.");
       }
+    }finally {
+      setIsAdding(false)
     }
   }
 
@@ -385,14 +389,14 @@ function RegistroTutor() {
             <div className="flex justify-end">
               <button
                 type="submit"
-                disabled={!formData.termsAccepted}
+                disabled={!formData.termsAccepted || isAdding}
                 className={`px-4 py-2 rounded-md text-white ${
-                  formData.termsAccepted
+                  (formData.termsAccepted && !isAdding)
                     ? "bg-black hover:bg-gray-800 cursor-pointer"
                     : "bg-gray-400 cursor-not-allowed"
                 }`}
               >
-                Guardar
+                {isAdding ? "Cargando...":"Guardar"}
               </button>
             </div>
           </form>

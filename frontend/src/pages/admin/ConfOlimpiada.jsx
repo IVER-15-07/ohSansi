@@ -6,6 +6,8 @@ import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
 import { createConfiguracion } from '../../../service/configuraciones.api';
 import { useParams } from 'react-router-dom';
 import { Loader2, Plus, X } from 'lucide-react';
+import Cargando from '../Cargando';
+import Error from '../Error';
 
 const ConfOlimpiada = () => {
   const queryClient = useQueryClient();
@@ -25,6 +27,7 @@ const ConfOlimpiada = () => {
   const [areaActiva, setAreaActiva] = useState(null);
   const [nivelesPorArea, setNivelesPorArea] = useState({});
   const [error, setError] = useState(null);
+  const [isAdding, setIsAdding] = useState(false);
 
 
   const handleSeleccionarArea = (area) => setAreaActiva(area.id);
@@ -66,6 +69,7 @@ const ConfOlimpiada = () => {
   };
 
   const handleGuardarConfiguracion = async () => {
+    setIsAdding(true);
     try {
       const configuraciones = [];
       areasSeleccionadas.forEach((area) => {
@@ -83,13 +87,15 @@ const ConfOlimpiada = () => {
     } catch (error) {
       console.error(error);
       setError('Error al guardar configuraciones. Intenta nuevamente.');
+    }finally{
+      setIsAdding(false);
     }
   };
 
   
-  if (isLoadingNivelesDisponibles || isLoadingAreasDisponibles) return <div>Cargando Datos...</div>;
-  if (errorNivelesDisponibles) return <div>Error al cargar niveles/categorías: {errorNivelesDisponibles.message}</div>;
-  if (errorAreasDisponibles) return <div className='text-red-600'>Error al cargar areas: {errorAreasDisponibles.message}</div>;
+  if (isLoadingNivelesDisponibles || isLoadingAreasDisponibles) return <Cargando/>;
+  if (errorNivelesDisponibles) return <Error error ={errorNivelesDisponibles}/>;
+  if (errorAreasDisponibles) return <Error error ={errorAreasDisponibles}/>;
 
   const areaActivaObj = areasSeleccionadas.find((a) => a.id === areaActiva);
   return (
@@ -200,9 +206,14 @@ const ConfOlimpiada = () => {
         {error && <p className="text-red-600">{error}</p>}
         <button
           onClick={handleGuardarConfiguracion}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+          disabled={isAdding} // Desactiva el botón mientras se está cargando
+          className={`px-5 py-2 rounded-md text-sm font-medium transition ${
+            isAdding
+              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+              : "bg-blue-900 text-white hover:bg-blue-800 transition"
+            }`}
         >
-          Guardar Configuración
+          {isAdding ? "Cargando..." : "Guardar Configuración"}
         </button>
       </div>
     </div>

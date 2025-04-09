@@ -5,10 +5,11 @@ import { getOlimpiadas } from "../../../service/olimpiadas.api";
 import { useNavigate } from 'react-router-dom'
 import ConfOlimpiada from './ConfOlimpiada'
 import { Plus, Settings, Play, Archive, Trash2 } from 'lucide-react'
-
+import Cargando from '../Cargando';
+import Error from '../Error';
 
 const Olympiad = () => {
-  const {data: olimpiadas, isLoading, error} = useQuery({
+  const {data: olimpiadas, isLoading, error: errorOlimpiadas} = useQuery({
     queryKey: ['olimpiadas'],
     queryFn: getOlimpiadas,
   });
@@ -17,8 +18,8 @@ const Olympiad = () => {
   const [AgregarOlimpiada, setAgregarOlimpiada] = useState(false)
   const [isConfOlimpiada, setIsConfOlimpiada] = useState(false)
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (isLoading) return <Cargando/>;
+  if (errorOlimpiadas) return <Error error ={errorOlimpiadas} />;
 
   return (
 
