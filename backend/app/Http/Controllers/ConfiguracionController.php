@@ -38,6 +38,73 @@ class ConfiguracionController extends Controller
         }
     }
 
+    /**
+     * Obtenemos todas las areas asociadas a una olimpiada en una configuración
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function obtenerAreasPorOlimpiada($idOlimpiada)
+    {
+        try {
+            // Obtener las configuraciones filtradas por id_olimpiada y cargar las áreas relacionadas
+            $areas = Configuracion::where('id_olimpiada', $idOlimpiada)
+            ->with('area') // Carga la relación con el modelo Area
+            ->get()
+            ->pluck('area')
+            ->unique('id')
+            ->values(); // Extrae solo las áreas
+            
+            // Retornar una respuesta exitosa
+            return response()->json([
+                'success' => true,
+                'data' => $areas,
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar errores y retornar una respuesta
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error las areas de la olimpiada: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    /**
+     * Obtenemos un mapa con todas las areas que componen a una olimpiada y sus respectivos niveles/categorias
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function obtenerMapaOlimpiada($idOlimpiada)
+    {
+        try {
+            // Obtener las configuraciones filtradas por id_olimpiada y cargar las relaciones necesarias
+            $configuraciones = Configuracion::where('id_olimpiada', $idOlimpiada)
+                ->with(['area', 'nivel_categoria']) // Carga las relaciones con Area y NivelCategoria
+                ->get();
+
+            // Agrupar las configuraciones por área y mapear los niveles/categorías
+            $resultado = $configuraciones->groupBy('area.id')->map(function ($items) {
+                return $items->pluck('nivel_categoria')->unique('id')->values();
+            });
+
+            // Retornar una respuesta exitosa
+            return response()->json([
+                'success' => true,
+                'data' => $resultado,
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar errores y retornar una respuesta
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al obtener las áreas y niveles/categorías: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     
     /**
      * Almacenar una nueva configuración. 
@@ -81,4 +148,36 @@ class ConfiguracionController extends Controller
             ], 500);
         }
     }
+
+    
+    /**
+     * Eliminar todas las configuraciones de una olimpiada.
+     *
+     * @param int $idOlimpiada
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function eliminarConfiguracionesPorOlimpiada($idOlimpiada)
+    {
+        try {
+            // Eliminar las configuraciones asociadas a la olimpiada
+            $deleted = Configuracion::where('id_olimpiada', $idOlimpiada)->delete();
+
+            // Elimina la caché para que se actualice en la próxima consulta
+            Cache::forget('configuraciones');
+
+            // Retornar una respuesta exitosa
+            return response()->json([
+                'success' => true,
+                'message' => "Se eliminaron $deleted configuraciones asociadas a la olimpiada.",
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar errores y retornar una respuesta
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al eliminar las configuraciones: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    
 }

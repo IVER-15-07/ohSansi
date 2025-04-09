@@ -17,6 +17,8 @@ const CrearOlimpiada = () => {
   const [costo, setCosto] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [urlMapa, setUrlMapa] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,6 +44,8 @@ const CrearOlimpiada = () => {
       fin_inscripcion: finInscripcion,       // Cambiado a "fin_inscripcion"
     };
 
+    setIsAdding(true); // Cambia el estado a "cargando"
+
     try {
       const response = await createOlimpiada(nuevaOlimpiada);
 
@@ -62,6 +66,8 @@ const CrearOlimpiada = () => {
     } catch (error) {
       console.error("Error al crear la olimpiada:", error.response?.data || error.message);
       alert("Hubo un error al crear la olimpiada. Verifique los datos e intente nuevamente.");
+    } finally {
+      setIsAdding(false); // Cambia el estado a "no cargando"
     }
   };
 
@@ -163,6 +169,7 @@ const CrearOlimpiada = () => {
           />
         </div>
 
+        {/* Botón de envío */}
 
       </form>
 
@@ -181,13 +188,21 @@ const CrearOlimpiada = () => {
         <button
           type="submit"
           form="crear-olimpiada-form" // Conecta el botón al formulario por su ID
-          className="bg-blue-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition w-40 h-12 flex items-center justify-center"
+          disabled={isAdding} // Desactiva el botón mientras se está cargando
+          className={`px-5 py-2 rounded-md text-sm font-medium transition ${
+            isAdding
+              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+              : "bg-blue-900 text-white hover:bg-blue-800"
+          }`}
         >
-          Crear Olimpiada
+          {isAdding ? "Cargando..." : "Crear Olimpiada"}
         </button>
 
       </div>
-    </div >
+
+
+
+    </div>
   )
 }
 

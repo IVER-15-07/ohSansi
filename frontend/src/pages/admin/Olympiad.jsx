@@ -5,10 +5,15 @@ import { getOlimpiadas } from "../../../service/olimpiadas.api";
 import { useNavigate } from 'react-router-dom'
 import ConfOlimpiada from './ConfOlimpiada'
 import { Plus, Settings, Play, Archive, Trash2 } from 'lucide-react'
-
+import Cargando from '../Cargando';
+import Error from '../Error';
 
 const Olympiad = () => {
+<<<<<<< HEAD
   const { data: olimpiadas, isLoading, error } = useQuery({
+=======
+  const {data: olimpiadas, isLoading, error: errorOlimpiadas} = useQuery({
+>>>>>>> configurarOlimpiada
     queryKey: ['olimpiadas'],
     queryFn: getOlimpiadas,
   });
@@ -17,8 +22,8 @@ const Olympiad = () => {
   const [AgregarOlimpiada, setAgregarOlimpiada] = useState(false)
   const [isConfOlimpiada, setIsConfOlimpiada] = useState(false)
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (isLoading) return <Cargando/>;
+  if (errorOlimpiadas) return <Error error ={errorOlimpiadas} />;
 
   return (
 
@@ -43,6 +48,7 @@ const Olympiad = () => {
                 </button>
               </div>
 
+<<<<<<< HEAD
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2">
                 {olimpiadas.data.length > 0 ? (
                   olimpiadas.data.map((olimp) => (
@@ -66,6 +72,30 @@ const Olympiad = () => {
                           <Archive size={16} className="mr-1" /> Archivar
                         </button>
                       </div>
+=======
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2">
+              {olimpiadas.data.length > 0 ? (
+                olimpiadas.data.map((olimp) => (
+                  <div
+                    key={olimp.id}
+                    className="border border-gray-300 rounded-xl p-4 bg-gray-50 shadow-sm hover:shadow-md transition"
+                  >
+                    <h3 className="text-lg font-bold text-gray-900">{olimp.nombre}</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {olimp.descripcion || "Sin descripción disponible"}
+                    </p>
+                    <div className="flex justify-between items-center mt-4 gap-3 text-sm font-medium">
+                      <button onClick={() => navigate(`/AdminLayout/Olympiad/${olimp.id}/configurar/${olimp.nombre}`)} 
+                className="flex items-center text-blue-600 hover:underline">
+                        <Settings size={16} className="mr-1" /> Configurar
+                      </button>
+                      <button className="flex items-center text-green-600 hover:underline">
+                        <Play size={16} className="mr-1" /> Iniciar
+                      </button>
+                      <button className="flex items-center text-gray-500 hover:underline">
+                        <Archive size={16} className="mr-1" /> Archivar
+                      </button>
+>>>>>>> configurarOlimpiada
                     </div>
                   ))
                 ) : (
