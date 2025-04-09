@@ -14,7 +14,7 @@ const AdminLayout = () => {
       <Sidebar isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
 
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 h-auto overflow-auto md:h-screen md:overflow-hidden">
         <div className="pt-3 pl-4 pb-0">
           <MenuIcon onClick={() => setIsCollapsed(!isCollapsed)} className="cursor-pointer" />
 

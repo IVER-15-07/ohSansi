@@ -1,7 +1,5 @@
 @import "tailwindcss";
 @import "tailwindcss/utilities";
 
-body {
-    @apply overflow-hidden h-screen;
-}
+
 
