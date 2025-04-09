@@ -48,6 +48,10 @@ Route::get('/configuraciones', [ConfiguracionController::class, 'obtenerConfigur
 
 Route::post('/configuraciones', [ConfiguracionController::class, 'almacenarConfiguracion']);
 
+Route::get('/configuraciones/{idOlimpiada}/areas', [ConfiguracionController::class, 'obtenerAreasPorOlimpiada']);
+
+Route::get('/configuraciones/{idOlimpiada}/mapa', [ConfiguracionController::class, 'obtenerMapaOlimpiada']);
+
 
 Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 

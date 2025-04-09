@@ -29,24 +29,39 @@ const ConfOlimpiada = () => {
   const [error, setError] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
 
+    
+  if (isLoadingNivelesDisponibles || isLoadingAreasDisponibles) return <Cargando/>;
+  if (errorNivelesDisponibles) return <Error error ={errorNivelesDisponibles}/>;
+  if (errorAreasDisponibles) return <Error error ={errorAreasDisponibles}/>;
 
   const handleSeleccionarArea = (area) => setAreaActiva(area.id);
 
-  const handleAñadirArea = (area) => {
+  const handleAniadirArea = (area) => {
+
     setAreasSeleccionadas([...areasSeleccionadas, area]);
+
     setAreasDisponibles(areasDisponibles.data.filter((a) => a.id !== area.id));
+
     setNivelesPorArea({ ...nivelesPorArea, [area.id]: [] });
+
     if (!areaActiva) setAreaActiva(area.id);
   };
 
   const handleQuitarArea = (area) => {
+
     setAreasSeleccionadas(areasSeleccionadas.filter((a) => a.id !== area.id));
+
     setAreasDisponibles([...areasDisponibles, area]);
+
     const nuevosNiveles = { ...nivelesPorArea };
+
     delete nuevosNiveles[area.id];
+
     setNivelesPorArea(nuevosNiveles);
     if (areaActiva === area.id) {
+
       const nuevasAreas = areasSeleccionadas.filter((a) => a.id !== area.id);
+
       setAreaActiva(nuevasAreas.length > 0 ? nuevasAreas[0].id : null);
     }
   };
@@ -92,58 +107,69 @@ const ConfOlimpiada = () => {
     }
   };
 
-  
-  if (isLoadingNivelesDisponibles || isLoadingAreasDisponibles) return <Cargando/>;
-  if (errorNivelesDisponibles) return <Error error ={errorNivelesDisponibles}/>;
-  if (errorAreasDisponibles) return <Error error ={errorAreasDisponibles}/>;
-
   const areaActivaObj = areasSeleccionadas.find((a) => a.id === areaActiva);
+  
+  console.log(areasSeleccionadas);
+  console.log(nivelesPorArea);
+  console.log(areaActiva);
   return (
     <div className="p-2 w-full h-[calc(100vh-80px)] bg-gray-50 overflow-hidden">
-    <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 h-full">
-      <h2 className="text-xl font-bold text-gray-800">Configuración de la Olimpiada {id}</h2>
+      
+      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 h-full">
+        <h2 className="text-xl font-bold text-gray-800">Configuración de la Olimpiada {id}</h2>
 
-      <div className="flex gap-4 flex-1 overflow-hidden">
-        {/* Áreas disponibles */}
-        <div className="flex-1 overflow-y-auto rounded-2xl border border-gray-200 p-4">
-          <h3 className="font-semibold text-gray-600 mb-2">Áreas disponibles</h3>
-          <div className="flex flex-wrap gap-2">
-            {areasDisponibles.data.map((area) => (
-              <div key={area.id} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
-                <span>{area.nombre}</span>
-                <button
-                  onClick={() => handleAñadirArea(area)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-md text-sm"
-                >
-                  Añadir
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
+        <div className="flex gap-4 flex-1 overflow-hidden">
 
-        {/* Áreas seleccionadas */}
-        <div className="flex-1 overflow-y-auto rounded-2xl border border-gray-200 p-4">
-          <h3 className="font-semibold text-gray-600 mb-2">Áreas seleccionadas</h3>
-          <div className="flex flex-wrap gap-2">
-            {areasSeleccionadas.map((area) => (
-              <div key={area.id} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
-                <span>{area.nombre}</span>
-                <button
-                  onClick={() => handleQuitarArea(area)}
-                  className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md text-sm"
-                >
-                  Quitar
-                </button>
-              </div>
-            ))}
+          {/* Áreas disponibles */}
+          <div className="flex-1 overflow-y-auto rounded-2xl border border-gray-200 p-4">
+
+            <h3 className="font-semibold text-gray-600 mb-2">Áreas disponibles</h3>
+            <div className="flex flex-wrap gap-2">
+
+              {areasDisponibles.data.map((area) => (
+                <div key={area.id} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
+
+                  <span>{area.nombre}</span>
+
+                  <button
+                    onClick={() => handleAniadirArea(area)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-md text-sm"
+                  >
+                    Añadir
+                  </button>
+
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* Áreas seleccionadas */}
+          <div className="flex-1 overflow-y-auto rounded-2xl border border-gray-200 p-4">
+            <h3 className="font-semibold text-gray-600 mb-2">Áreas seleccionadas</h3>
+
+            <div className="flex flex-wrap gap-2">
+              {areasSeleccionadas.map((area) => (
+                <div key={area.id} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
+                  <span>{area.nombre}</span>
+                  <button
+                    onClick={() => handleQuitarArea(area)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md text-sm"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              ))}
+            </div>
+
+          </div>
+
         </div>
-      </div>
 
       {/* Carrusel de áreas seleccionadas activas */}
       <div className="mt-2 overflow-x-auto whitespace-nowrap flex gap-2 pb-2">
+
         {areasSeleccionadas.map((area) => (
+
           <button
             key={area.id}
             className={`px-4 py-1 rounded-full text-sm font-medium transition whitespace-nowrap ${
@@ -181,6 +207,7 @@ const ConfOlimpiada = () => {
 
           {/* Niveles seleccionados */}
           <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto h-full">
+
             <h3 className="font-semibold text-gray-600 mb-2">
               Niveles de {areaActivaObj.nombre}
             </h3>
@@ -197,13 +224,17 @@ const ConfOlimpiada = () => {
                 </div>
               ))}
             </div>
+
           </div>
+
         </div>
       )}
 
       {/* Botón para guardar configuraciones */}
       <div className="flex justify-end gap-4 mt-4">
+
         {error && <p className="text-red-600">{error}</p>}
+
         <button
           onClick={handleGuardarConfiguracion}
           disabled={isAdding} // Desactiva el botón mientras se está cargando
@@ -214,6 +245,7 @@ const ConfOlimpiada = () => {
             }`}
         >
           {isAdding ? "Cargando..." : "Guardar Configuración"}
+
         </button>
       </div>
     </div>
