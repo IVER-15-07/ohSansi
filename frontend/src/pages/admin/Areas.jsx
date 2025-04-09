@@ -14,34 +14,53 @@ const Areas = () => {
 
   const [newArea, setNewArea] = useState('');
   const [isAdding, setIsAdding] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para el modal
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [errorMessage, setErrorMessage] = useState('');
 
   if (isLoading) return <Cargando />;
   if (errorAreas) return <Error error={errorAreas} />;
 
   const handleAddArea = async () => {
-    if (newArea.trim() !== '') {
-      setIsAdding(true);
-      try {
-        const nuevaArea = await createArea({ nombre: newArea }); // Llama a la API para crear el área
-        setNewArea(''); // Limpia el campo de entrada
-
-        // Actualiza la caché de React Query inmediatamente
-        queryClient.setQueryData(['areas'], (oldData) => {
-          return {
-            ...oldData,
-            data: [...oldData.data, nuevaArea.data], // Agrega la nueva área a la lista existente
-          };
-        });
-
-        queryClient.invalidateQueries(['areas']); // Invalida la consulta para actualizar la lista
-        alert('Área agregada exitosamente.');
-      } catch (error) {
-        console.error('Error al agregar el área:', error);
-        alert('Hubo un error al agregar el área. Inténtalo nuevamente.');
-      } finally {
-        setIsAdding(false); // Restablece el estado de carga
-      }
+    if (newArea.trim() === '') {
+      setErrorMessage('El campo de nombre del área es obligatorio.');
+      return;
+    }
+  
+    if (newArea.length > 50) {
+      setErrorMessage('El nombre del área no puede exceder los 50 caracteres.');
+      return;
+    }
+  
+    if (!/^[a-zA-Z0-9\s]+$/.test(newArea)) {
+      setErrorMessage('El nombre del área solo puede contener letras, números y espacios.');
+      return;
+    }
+  
+    const nombreExiste = areas.data.some(
+      (area) => area.nombre.toLowerCase() === newArea.trim().toLowerCase()
+    );
+  
+    if (nombreExiste) {
+      setErrorMessage('El nombre del área ya existe en el catálogo.');
+      return;
+    }
+  
+    setIsAdding(true);
+    try {
+      const nuevaArea = await createArea({ nombre: newArea });
+      setNewArea('');
+      setErrorMessage('');
+      queryClient.setQueryData(['areas'], (oldData) => ({
+        ...oldData,
+        data: [...oldData.data, nuevaArea.data],
+      }));
+      queryClient.invalidateQueries(['areas']);
+      alert('Área creada exitosamente.');
+    } catch (error) {
+      console.error('Error al agregar el área:', error);
+      setErrorMessage('Hubo un error al agregar el área. Inténtalo nuevamente.');
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -71,34 +90,42 @@ const Areas = () => {
 
       <div className="flex flex-col gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del área</label>
-          <input
-            type="text"
-            placeholder="Ingrese el nombre del área"
-            className="w-full p-2 border rounded-md text-gray-800 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={newArea}
-            onChange={(e) => setNewArea(e.target.value)}
-          />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del área</label>
+  <input
+    type="text"
+    placeholder="Ingrese el nombre del área"
+    className="w-full p-2 border rounded-md text-gray-800 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    value={newArea}
+    onChange={(e) => setNewArea(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter') handleAddArea(); // Ejecuta al presionar Enter
+    }}
+  />
+  {errorMessage && <p className="text-red-600 text-sm mt-1">{errorMessage}</p>}
         </div>
 
         <div className="flex justify-center">
-          <button
-            onClick={() => {
-              if (newArea.trim() === '') {
-                alert('Por favor, ingrese el nombre del área antes de continuar.');
-                return;
-              }
-              setIsModalOpen(true); // Abre el modal si el campo es válido
-            }}
-            disabled={isAdding} // Desactiva el botón mientras se está cargando
-            className={`px-5 py-2 rounded-md text-sm font-medium transition ${
-              isAdding
-                ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                : 'bg-blue-900 text-white hover:bg-blue-800'
-            }`}
-          >
-            {isAdding ? 'Cargando...' : 'Agregar área'}
-          </button>
+        <button
+  onClick={() => {
+    if (newArea.trim() === '') {
+      setErrorMessage('El campo de nombre del área es obligatorio.');
+      return;
+    }
+    if (newArea.length > 50) {
+      setErrorMessage('El nombre del área no puede exceder los 50 caracteres.');
+      return;
+    }
+    if (!/^[a-zA-Z0-9\s]+$/.test(newArea)) {
+      setErrorMessage('El nombre del área solo puede contener letras, números y espacios.');
+      return;
+    }
+    handleAddArea();
+    setIsModalOpen(false);
+  }}
+  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+>
+  Confirmar
+</button>
         </div>
       </div>
     </div>
