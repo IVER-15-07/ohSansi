@@ -248,31 +248,28 @@ const NivelCategoria = () => {
         )}
 
         <div className="flex justify-center mt-4">
-        <button
-    onClick={() => {
-      // Validar que todos los campos estén llenos
-      if (
-        nombre.trim() === "" ||
-        (isNivel && (!gradoSeleccionado || isNaN(gradoSeleccionado))) ||
-        (!isNivel && (!gradoInicio || !gradoFin || isNaN(gradoInicio) || isNaN(gradoFin) || gradoInicio > gradoFin))
-      ) {
-        alert("Por favor, complete todos los campos correctamente antes de continuar.");
-        return;
-      }
-      setIsModalOpen(true); // Abre el modal si los campos son válidos
-    }}
-    disabled={isAdding}
-    className={`bg-[#E63946] text-white px-8 py-2 rounded-xl text-sm font-semibold hover:bg-red-600 transition ${
-      isAdding
-        ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-        : "bg-blue-900 text-white hover:bg-blue-800 transition"
-    }`}
-  >
-    {isAdding ? "Cargando..." : isNivel ? "Agregar nivel" : "Agregar categoría"}
-  </button>
+          <button
+            onClick={() => {
+              // Validar que todos los campos estén llenos
+              if (
+                nombre.trim() === "" ||
+                (isNivel && (!gradoSeleccionado || isNaN(gradoSeleccionado))) ||
+                (!isNivel && (!gradoInicio || !gradoFin || isNaN(gradoInicio) || isNaN(gradoFin) || gradoInicio > gradoFin))
+              ) {
+                alert("Por favor, complete todos los campos correctamente antes de continuar.");
+                return;
+              }
+              setIsModalOpen(true); // Abre el modal si los campos son válidos
+            }}
+            disabled={isAdding}
+            className={`bg-[#E63946] text-white px-8 py-2 rounded-xl text-sm font-semibold hover:bg-red-600 transition ${isAdding
+                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                : "bg-blue-900 text-white hover:bg-blue-800 transition"
+              }`}
+          >
+            {isAdding ? "Cargando..." : isNivel ? "Agregar nivel" : "Agregar categoría"}
+          </button>
         </div>
-
-
       </div>
 
       {/* Modal */}
@@ -303,13 +300,7 @@ const NivelCategoria = () => {
           </div>
         </div>
       )}
-
-
-
-
-
     </div>
-
   )
 }
 
