@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getAreas } from '../../../service/areas.api';
+
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
 import { getAreasByOlimpiada, getMapOfOlimpiada, deleteConfigurationByOlimpiada, createConfiguracion } from '../../../service/configuraciones.api';
 import Cargando from '../Cargando';

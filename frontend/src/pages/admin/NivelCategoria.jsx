@@ -7,6 +7,7 @@ import Cargando from '../Cargando';
 
 const NivelCategoria = () => {
   const queryClient = useQueryClient();
+  
   const { data: nivelCategoria, isLoading: isLoadingNivelesCategorias, error: errorNivelesCategorias } = useQuery({
     queryKey: ['niveles_categorias'],
     queryFn: getNivelesCategorias,
