@@ -30,6 +30,7 @@ function App() {
           <Route path="Areas" element={<Areas />} />
           <Route path="NivelCategoria" element={<NivelCategoria />} />
         </Route>
+
       </Routes>
     </div>
   )
