@@ -1,6 +1,10 @@
 import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
 const RegistrosPostulantes = () => {
+  const { idEncargado, idOlimpiada } = useParams();
+  const navigate = useNavigate();
+
   // Datos simulados de postulantes
   const [postulantes, setPostulantes] = useState([
     {
@@ -22,6 +26,23 @@ const RegistrosPostulantes = () => {
       habilitado: true,
     },
   ]);
+
+  const handleRegistrarPostulante = () => {
+    navigate(`/RegistrarPostulante/${idEncargado}/${idOlimpiada}`);
+  };
+
+  const handleRegistrarListaPostulantes = () => {
+    navigate(`/RegistrarListaPostulantes/${idEncargado}/${idOlimpiada}`);
+  };
+
+  const handleOrdenesPago = () => {
+    navigate(`/OrdenesDePago/${idEncargado}/${idOlimpiada}`);
+  };
+
+  const handleValidarComprobante = () => {
+    navigate(`/ValidarComprobante/${idEncargado}/${idOlimpiada}`);
+  };
+  
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -74,20 +95,34 @@ const RegistrosPostulantes = () => {
 
       <div className="mt-6 space-y-4">
         <div className="flex justify-end gap-4"> 
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-            Registrar Postulante
+            <button 
+              onClick={handleRegistrarPostulante}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Registrar Postulante
             </button>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-            Registrar una Lista de Postulantes
+
+            <button 
+              onClick={handleRegistrarListaPostulantes}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Registrar una Lista de Postulantes
             </button>
         </div>
         
         <div className="flex mt-20 justify-center gap-20"> 
-            <button className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-            Órdenes de Pago
+            <button 
+              onClick={handleOrdenesPago}
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            >
+              Órdenes de Pago
             </button>
-            <button className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-            Validar Comprobante de Pago
+
+            <button 
+              onClick={handleValidarComprobante}
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            >
+              Validar Comprobante de Pago
             </button>
         </div>
         

@@ -7,7 +7,10 @@ import UserLayout from "./layouts/UserLayout"
 import IdentificarEncargado from "./pages/public/IdentificarEncargado"
 import SeleccionarOlimpiada from "./pages/public/SeleccionarOlimpiada"
 import RegistrosPostulantes from "./pages/public/RegistrosPostulantes"
-
+import OrdenesDePago from "./pages/public/OrdenesDePago"
+import ValidarComprobante from "./pages/public/ValidarComprobante"
+import RegistrarListaPostulantes from "./pages/public/RegistrarListaPostulantes"
+import RegistrarPostulante from "./pages/public/RegistrarPostulante"
 
 import Areas from "./pages/admin/Areas"
 import NivelCategoria from "./pages/admin/NivelCategoria"
@@ -25,6 +28,10 @@ function App() {
           <Route index element={<Home />} /> {/* Página principal */}
           <Route path="RegistroEncargado" element={<RegistroTutor />} /> {/* Página de registro */}
           <Route path="/RegistrosPostulantes/:idEncargado/:idOlimpiada" element={<RegistrosPostulantes />} /> 
+          <Route path="/OrdenesDePago/:idEncargado/:idOlimpiada" element={<OrdenesDePago />} />
+          <Route path="/ValidarComprobante/:idEncargado/:idOlimpiada" element={<ValidarComprobante />} />
+          <Route path="/RegistrarListaPostulantes/:idEncargado/:idOlimpiada" element={<RegistrarListaPostulantes />} />
+          <Route path="/RegistrarPostulante/:idEncargado/:idOlimpiada" element={<RegistrarPostulante />} />
         </Route>
 
         {/* Layout para el admin */}
