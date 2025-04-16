@@ -2,9 +2,11 @@ import { Routes, Route } from "react-router-dom"
 import Home from "./pages/Home"
 import AdminLayout from "./layouts/AdminLayout"
 import Olympiad from "./pages/admin/Olympiad"
-import RegistroTutor from "./pages/RegistroTutor"
+import RegistroTutor from "./pages/public/RegistroTutor"
 import UserLayout from "./layouts/UserLayout"
-
+import IdentificarEncargado from "./pages/public/IdentificarEncargado"
+import SeleccionarOlimpiada from "./pages/public/SeleccionarOlimpiada"
+import RegistrosPostulantes from "./pages/public/RegistrosPostulantes"
 
 
 import Areas from "./pages/admin/Areas"
@@ -18,8 +20,11 @@ function App() {
         <Routes>
         {/* Layout para público */}
         <Route path="/" element={<UserLayout />}>
+          <Route path="IdentificarEncargado" element={<IdentificarEncargado />} /> {/* Página de identificación */}
+          <Route path="SeleccionarOlimpiada/:idEncargado" element={<SeleccionarOlimpiada />} /> {/* Página de error */}
           <Route index element={<Home />} /> {/* Página principal */}
-          <Route path="registro-tutor" element={<RegistroTutor />} /> {/* Página de registro */}
+          <Route path="RegistroEncargado" element={<RegistroTutor />} /> {/* Página de registro */}
+          <Route path="/RegistrosPostulantes/:idEncargado/:idOlimpiada" element={<RegistrosPostulantes />} /> 
         </Route>
 
         {/* Layout para el admin */}

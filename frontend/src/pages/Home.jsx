@@ -19,7 +19,7 @@ const Home = () => {
             <p className="text-xl md:text-2xl mb-8">Sistema de Olimpiadas STEM de la Universidad Mayor de San Simón</p>
             <div className="flex flex-wrap justify-center gap-4 mt-8">
               <button
-                onClick={() => navigate("/registro-tutor")}
+                onClick={() => navigate("/IdentificarEncargado")}
                 className="px-6 py-3 bg-red-600 text-white text-lg font-semibold rounded-lg shadow-md 
                           hover:bg-red-700 transition duration-300 flex items-center"
               >

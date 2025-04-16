@@ -18,7 +18,9 @@ class Olimpiada extends Model
         'costo',
         'ubicacion',
         'fecha_inicio',
-        'fecha_fin'
+        'fecha_fin',
+        'inicio_inscripcion',
+        'fin_inscripcion',
     ];
 
     // Relación uno a muchos con Configuracion

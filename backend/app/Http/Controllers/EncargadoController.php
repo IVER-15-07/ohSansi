@@ -39,6 +39,31 @@ class EncargadoController extends Controller
         }
     }
 
+    public function verificarEncargado($ci)
+    {
+        try {
+            $encargado = Encargado::where('ci', $ci)->first();
+
+            if ($encargado) {
+                return response()->json([
+                    'success' => true,
+                    'existe' => true,
+                    'id' => $encargado->id, // Devolver el ID del encargado
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'existe' => false,
+                    'id' => null, // No hay ID porque no existe
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al verificar el carnet: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 
     /**
      * Almacenar un nuevo encargado.

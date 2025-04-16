@@ -1,15 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { use, useState } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 import { AlertCircle, CheckCircle, X } from "lucide-react"
-import { createEncargado } from "../../service/encargados.api"
+import { createEncargado } from "../../../service/encargados.api"
 
 function RegistroTutor() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const CIinicial = location.state?.ci || ""; // Obtener el CI inicial del estado de la ubicación
   // Estado del formulario
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
-    ci: "",
+    ci: CIinicial,
     fecha_nacimiento: "",
     telefono: "",
     correo: "",
@@ -154,6 +158,7 @@ function RegistroTutor() {
     if (validateForm()) {
       setShowConfirmDialog(true)
     }
+
   }
 
   // Manejador de confirmación
@@ -167,9 +172,10 @@ function RegistroTutor() {
     setIsAdding(true)
     try {
       // Enviar el JSON sin el campo termsAccepted
-      await createEncargado(dataToSend);
-
+      const response = await createEncargado(dataToSend);
+      const idEncargado = response.data.id;
       setShowSuccessAlert(true);
+      /*
       setFormData({
         nombre: "",
         apellido: "",
@@ -178,11 +184,12 @@ function RegistroTutor() {
         telefono: "",
         correo: "",
         termsAccepted: false,
-      });
+      });*/
   
       // Ocultar mensaje de éxito después de 5 segundos
       setTimeout(() => {
         setShowSuccessAlert(false);
+        navigate(`/SeleccionarOlimpiada/${idEncargado}`);
       }, 5000);
     } catch (error) {
       // Manejo de errores
