@@ -9,7 +9,6 @@ const AdminLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false); // Para dispositivos móviles
 
-
   const handleMenuClick = () => {
     // Verifica si el dispositivo es móvil
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
