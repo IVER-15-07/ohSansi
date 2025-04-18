@@ -28,3 +28,13 @@ export const createOlimpiada = async (data) => {
         throw error;
     }
 }
+
+export const getOlimpiada = async (id) => {
+    try {
+        const response = await axiosInstance.get(`/olimpiadas/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching olimpiada:", error);
+        throw error;
+    }
+}
