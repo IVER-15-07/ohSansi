@@ -2,22 +2,17 @@ import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query';
 import CrearOlimpiada from './CrearOlimpiada'
 import { getOlimpiadas } from "../../../service/olimpiadas.api";
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Outlet } from 'react-router-dom'
 import ConfOlimpiada from './ConfOlimpiada'
 import { Plus, Settings, Play, Archive, Trash2 } from 'lucide-react'
 import Cargando from '../Cargando';
 import Error from '../Error';
 
 const Olympiad = () => {
-<<<<<<< HEAD
-  const { data: olimpiadas, isLoading, error } = useQuery({
-=======
-  const {data: olimpiadas, isLoading, error: errorOlimpiadas} = useQuery({
->>>>>>> configurarOlimpiada
+  const { data: olimpiadas, isLoading, error: errorOlimpiadas } = useQuery({
     queryKey: ['olimpiadas'],
     queryFn: getOlimpiadas,
   });
-
   const navigate = useNavigate()
   const [AgregarOlimpiada, setAgregarOlimpiada] = useState(false)
   const [isConfOlimpiada, setIsConfOlimpiada] = useState(false)
@@ -36,43 +31,18 @@ const Olympiad = () => {
         <div className="flex flex-col w-full px-6 py-4 gap-4">
           <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
 
-            {/* Olimpiadas Creadas */}
-            <section className="bg-white rounded-2xl shadow-md border border-gray-200 px-6 py-5 flex flex-col h-[48vh] ">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold text-gray-800">Olimpiadas Creadas</h2>
-                <button
-                  onClick={() => setAgregarOlimpiada(true)}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
-                >
-                  <Plus size={18} /> Agregar Olimpiada
-                </button>
-              </div>
+          {/* Olimpiadas Creadas */}
+          <section className="bg-white rounded-2xl shadow-md border border-gray-200 px-6 py-5 flex flex-col h-[48vh]">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold text-gray-800">Olimpiadas Creadas</h2>
+              <button
+                onClick={() => navigate("/AdminLayout/Olympiad/CrearOlimpiada")}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+              >
+                <Plus size={18} /> Agregar Olimpiada
+              </button>
+            </div>
 
-<<<<<<< HEAD
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2">
-                {olimpiadas.data.length > 0 ? (
-                  olimpiadas.data.map((olimp) => (
-                    <div
-                      key={olimp.id}
-                      className="border border-gray-300 rounded-xl p-4 bg-gray-50 shadow-sm hover:shadow-md transition"
-                    >
-                      <h3 className="text-lg font-bold text-gray-900">{olimp.nombre}</h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {olimp.descripcion || "Sin descripción disponible"}
-                      </p>
-                      <div className="flex justify-between items-center mt-4 gap-3 text-sm font-medium">
-                        <button onClick={() => navigate(`/AdminLayout/Olympiad/${olimp.id}/configurar`)}
-                          className="flex items-center text-blue-600 hover:underline">
-                          <Settings size={16} className="mr-1" /> Configurar
-                        </button>
-                        <button className="flex items-center text-gray-300 hover:underline">
-                          <Play size={16} className="mr-1" /> Iniciar
-                        </button>
-                        <button className="flex items-center text-gray-300 hover:underline">
-                          <Archive size={16} className="mr-1" /> Archivar
-                        </button>
-                      </div>
-=======
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2">
               {olimpiadas.data.length > 0 ? (
                 olimpiadas.data.map((olimp) => (
@@ -89,24 +59,24 @@ const Olympiad = () => {
                 className="flex items-center text-blue-600 hover:underline">
                         <Settings size={16} className="mr-1" /> Configurar
                       </button>
-                      <button className="flex items-center text-green-600 hover:underline">
+                      <button className="flex items-center text-gray-300 hover:underline">
                         <Play size={16} className="mr-1" /> Iniciar
                       </button>
-                      <button className="flex items-center text-gray-500 hover:underline">
+                      <button className="flex items-center text-gray-300 hover:underline">
                         <Archive size={16} className="mr-1" /> Archivar
                       </button>
->>>>>>> configurarOlimpiada
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500">No hay olimpiadas creadas aún.</p>
-                )}
-              </div>
-            </section>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">No hay olimpiadas creadas aún.</p>
+              )}
+            </div>
+          </section>
 
             {/* Olimpiadas Iniciadas */}
             <section className="bg-white rounded-2xl shadow-md border border-gray-200 px-6 py-5 flex flex-col h-[38vh]">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Olimpiadas Iniciadas</h2>
+              <h2 className="text-2xl font-semibold text-gray-300 mb-4">Olimpiadas Iniciadas</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2">
                 <div className="border border-gray-300 rounded-xl p-4 bg-gray-50 shadow-sm hover:shadow-md transition">
@@ -124,6 +94,7 @@ const Olympiad = () => {
           </div>
         </div>
       )}
+          <Outlet />
     </div>
 
 

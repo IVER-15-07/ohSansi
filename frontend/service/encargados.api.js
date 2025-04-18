@@ -19,3 +19,7 @@ export const createEncargado = async (data) => {
     throw error;
   }
 }
+
+export const verificarEncargado = async (ci) => {
+  return await axiosInstance.get(`/encargados/verificar/${ci}`);
+};

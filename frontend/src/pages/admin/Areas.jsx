@@ -10,10 +10,10 @@ const Areas = () => {
   const queryClient = useQueryClient()
   const inputRef = useRef(null)
 
-  const {
+  const { 
     data: areas,
     isLoading,
-    error: errorAreas,
+    error: errorAreas ,
   } = useQuery({
     queryKey: ["areas"],
     queryFn: getAreas,
@@ -89,6 +89,49 @@ const Areas = () => {
   }
 
   const handleAddArea = async () => {
+    if (newArea.trim() === '') {
+      setErrorMessage('El campo de nombre del área es obligatorio.');
+      return;
+    }
+
+    if (newArea.length > 50) {
+      setErrorMessage('El nombre del área no puede exceder los 50 caracteres.');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9\s]+$/.test(newArea)) {
+      setErrorMessage('El nombre del área solo puede contener letras, números y espacios.');
+      return;
+    }
+
+    // Normalizar el nombre antes de comparar
+    const normalizedNewArea = normalizeString(newArea);
+
+    const nombreExiste = areas.data.some(
+      (area) => normalizeString(area.nombre) === normalizedNewArea
+    );
+
+    if (nombreExiste) {
+      setErrorMessage('El nombre del área ya existe en el catálogo.');
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      const nuevaArea = await createArea({ nombre: newArea });
+      setNewArea('');
+      setErrorMessage('');
+      queryClient.setQueryData(['areas'], (oldData) => ({
+        ...oldData,
+        data: [...oldData.data, nuevaArea.data],
+      }));
+      queryClient.invalidateQueries(['areas']);
+      alert('Área creada exitosamente.');
+    } catch (error) {
+      console.error('Error al agregar el área:', error);
+      setErrorMessage('Hubo un error al agregar el área. Inténtalo nuevamente.');
+    } finally {
+      setIsAdding(false);
     setIsAdding(true)
     try {
       const nuevaArea = await createArea({ nombre: newArea })

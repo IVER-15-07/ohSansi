@@ -56,10 +56,14 @@ Route::delete('/configuraciones/{idOlimpiada}', [ConfiguracionController::class,
 
 Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 
+Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiadasActivas']);
+
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
 
 
 Route::get('/encargados', [EncargadoController::class, 'obtenerEncargados']);
+
+Route::get('/encargados/verificar/{ci}', [EncargadoController::class, 'verificarEncargado']);
 
 Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 
