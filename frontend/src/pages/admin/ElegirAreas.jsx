@@ -1,7 +1,15 @@
-import React from 'react'
-import { PlusCircle, XCircle,CheckCheck,X} from 'lucide-react';
+import React from 'react';
+import { PlusCircle, XCircle, CheckCheck, X } from 'lucide-react';
 
-const ElegirAreas = ({ catalogo, seleccionadas, setSeleccionadas, setNivelesPorArea }) => {
+const ElegirAreas = ({ catalogo = [], seleccionadas = [], setSeleccionadas, setNivelesPorArea }) => {
+    // Validar si el catálogo está vacío
+    if (!catalogo || catalogo.length === 0) {
+        return (
+            <div className="text-center text-gray-500">
+                No hay áreas disponibles para seleccionar.
+            </div>
+        );
+    }
 
     const disponibles = catalogo.filter(
         (area) => !seleccionadas.some((s) => s.id === area.id)
@@ -9,20 +17,17 @@ const ElegirAreas = ({ catalogo, seleccionadas, setSeleccionadas, setNivelesPorA
 
     const handleAdd = (area) => {
         setSeleccionadas([...seleccionadas, area]);
-        setNivelesPorArea(prev => ({ ...prev, [area.id]: [] }));
+        setNivelesPorArea((prev) => ({ ...prev, [area.id]: [] }));
     };
 
     const handleRemove = (area) => {
         setSeleccionadas(seleccionadas.filter((a) => a.id !== area.id));
-        setNivelesPorArea(prev => {
+        setNivelesPorArea((prev) => {
             const newState = { ...prev };
             delete newState[area.id];
             return newState;
         });
     };
-
-
-
 
     return (
         <div className="flex flex-col md:flex-row gap-4 overflow-hidden">
@@ -76,8 +81,7 @@ const ElegirAreas = ({ catalogo, seleccionadas, setSeleccionadas, setNivelesPorA
                 </div>
             </div>
         </div>
-
     );
 };
 
-export default ElegirAreas
+export default ElegirAreas;
