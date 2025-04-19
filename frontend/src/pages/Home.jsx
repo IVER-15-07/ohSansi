@@ -128,7 +128,7 @@ const Home = () => {
             Regístrate como tutor y comienza a inscribir a tus estudiantes en las olimpiadas STEM de la UMSS.
           </p>
           <button
-            onClick={() => navigate("/registro-tutor")}
+            onClick={() => navigate("/")}
             className="px-8 py-4 bg-white text-red-600 text-lg font-bold rounded-lg shadow-lg 
                       hover:bg-gray-100 transition duration-300"
           >
@@ -141,15 +141,7 @@ const Home = () => {
         <Outlet />
       </div>
 
-      {/* Footer */}
-      <footer className="bg-blue-900 text-white py-8 mt-auto">
-        <div className="container mx-auto px-4 md:px-8 text-center">
-          <p className="mb-2">© {new Date().getFullYear()} OhSansi - Universidad Mayor de San Simón</p>
-          <p className="text-blue-200 text-sm">
-            Sistema de Olimpiadas STEM para estudiantes del sistema educativo regular
-          </p>
-        </div>
-      </footer>
+  
     </div>
   )
 }
