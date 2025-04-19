@@ -16,6 +16,8 @@ import Areas from "./pages/admin/Areas"
 import NivelCategoria from "./pages/admin/NivelCategoria"
 import ConfOlimpiada from "./pages/admin/ConfOlimpiada"
 import CrearOlimpiada from "./pages/admin/CrearOlimpiada"
+import TestGetAreas from '../tests/components/TestGetAreas';
+
 
 function App() {
   return (

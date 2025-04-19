@@ -309,5 +309,6 @@ const Areas = () => {
     </div>
   ) 
 }
+}
 
 export default Areas
