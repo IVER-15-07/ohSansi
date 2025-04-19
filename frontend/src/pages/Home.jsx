@@ -24,7 +24,7 @@ const Home = () => {
                           hover:bg-red-700 transition duration-300 flex items-center"
               >
                 <Users className="mr-2 h-5 w-5" />
-                Inscribirme a una olimpiada
+                Inscribir a una olimpiada
               </button>
               <button
                 onClick={() => navigate("/AdminLayout")}

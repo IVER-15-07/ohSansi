@@ -17,8 +17,8 @@ class CrearTablaCampoInscripcion extends Migration
             $table->id();
             $table->string('nombre');
 
-            $table->foreignId('tipo_campo_id')->constrained('tipo_campo')->onDelete('cascade');
-            $table->foreignId('seccion_campo_id')->constrained('seccion_campo')->onDelete('cascade');
+            $table->foreignId('id_tipo_campo')->constrained('tipo_campo')->onDelete('cascade');
+            $table->foreignId('id_seccion_campo')->constrained('seccion_campo')->onDelete('cascade');
             
         });
     }

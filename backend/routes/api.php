@@ -14,6 +14,10 @@ use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\OlimpiadaController;
 
 use App\Http\Controllers\EncargadoController;
+
+use App\Http\Controllers\FormularioController;
+
+use App\Http\Controllers\RegistroController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -67,6 +71,11 @@ Route::get('/encargados/verificar/{ci}', [EncargadoController::class, 'verificar
 
 Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 
+
+Route::get('/formulario', [FormularioController::class, 'obtenerFormulario']);
+
+
+Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 
 

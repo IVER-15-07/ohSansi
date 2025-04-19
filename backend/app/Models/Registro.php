@@ -10,6 +10,7 @@ class Registro extends Model
     use HasFactory;
 
     protected $table = 'registro';
+    public $timestamps = false;
 
     public function encargado()
     {
