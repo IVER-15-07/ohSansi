@@ -17,8 +17,8 @@ class CrearTablaDatoInscripcion extends Migration
             $table->id();
             $table->string('valor');
 
-            $table->foreignId('campo_inscripcion_id')->constrained('campo_inscripcion')->onDelete('cascade');
-            $table->foreignId('registro_id')->constrained('registro')->onDelete('cascade');
+            $table->foreignId('id_campo_inscripcion')->constrained('campo_inscripcion')->onDelete('cascade');
+            $table->foreignId('id_registro')->constrained('registro')->onDelete('cascade');
         });
     }
 

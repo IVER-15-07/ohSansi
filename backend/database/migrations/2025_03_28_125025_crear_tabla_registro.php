@@ -16,9 +16,9 @@ class CrearTablaRegistro extends Migration
         Schema::create('registro', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('condiguracion_id')->constrained('configuracion')->onDelete('cascade');
-            $table->foreignId('encargado_id')->constrained('encargado')->onDelete('cascade');
-            $table->foreignId('pago_id')->constrained('pago')->onDelete('cascade');
+            $table->foreignId('id_configuracion')->nullable()->constrained('configuracion')->onDelete('cascade');
+            $table->foreignId('id_encargado')->constrained('encargado')->onDelete('cascade');
+            $table->foreignId('id_pago')->nullable()->constrained('pago')->onDelete('cascade');
         });
     }
 
