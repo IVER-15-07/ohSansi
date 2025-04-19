@@ -49,6 +49,11 @@ const OrdenesDePago = () => {
     );
   }
   
+  const fechaActual = new Date();
+  const dia = fechaActual.getDate();
+  const mes = fechaActual.toLocaleString('es-ES', { month: 'long' });
+  const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
+  const año = fechaActual.getFullYear();
 
   return (
     <div className="p-4">
@@ -61,7 +66,7 @@ const OrdenesDePago = () => {
         </h3>
 
         <p><strong>Emitido por la Unidad:</strong> {olimpiada.nombre}</p>
-        <p><strong>Señor:</strong> {encargado.nombre} &nbsp;&nbsp;&nbsp;&nbsp; <strong>NIT/CI:</strong> _____________</p>
+        <p><strong>Señor:</strong> {encargado.nombre} {encargado.apellido} &nbsp;&nbsp;&nbsp;&nbsp; <strong>NIT/CI:</strong> {encargado.ci} </p>
 
         <table width="100%" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
           <thead>
@@ -86,7 +91,7 @@ const OrdenesDePago = () => {
         <p style={{ textAlign: "right" }}>[  ]</p>
         <p><strong>Son:</strong> _____________________________________ Bolivianos.</p>
 
-        <p>Cochabamba, ____________ de __________________________ de __________</p>
+        <p>Cochabamba, {dia} de {mesCapitalizado} de {año}</p>
         <p><strong>Firma del responsable:</strong> ___________________________</p>
         <p><strong>Observaciones:</strong></p>
         <div style={{ border: "1px solid black", height: "60px", marginBottom: "20px" }}></div>
