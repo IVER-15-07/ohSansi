@@ -2,20 +2,28 @@
 import { useNavigate, Outlet } from "react-router-dom"
 
 import { Beaker, Brain, Calculator, Code, Rocket, Users } from "lucide-react"
+import logo from "../assets/logo.png"
+
 
 const Home = () => {
   const navigate = useNavigate()
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-     
+
       {/* Hero Section */}
+
+      <br />
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-16">
+
+      
         <div className="container mx-auto px-4 md:px-8">
+      
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Bienvenido a <span className="text-red-400">Oh! SanSi</span>
             </h1>
+            <img src={logo} alt="Logo" />
             <p className="text-xl md:text-2xl mb-8">Sistema de Olimpiadas STEM de la Universidad Mayor de San Simón</p>
             <div className="flex flex-wrap justify-center gap-4 mt-8">
               <button
@@ -82,6 +90,25 @@ const Home = () => {
           </div>
         </div>
 
+         {/* CTA Section */}
+      <div className="bg-gradient-to-r from-red-600 to-red-500 text-white py-12 mt-8">
+        <div className="container mx-auto px-4 md:px-8 text-center">
+          <h2 className="text-3xl font-bold mb-6">¿Listo para participar?</h2>
+          <p className="text-xl mb-8 max-w-3xl mx-auto">
+            Regístrate como tutor y comienza a inscribir a tus estudiantes en las olimpiadas STEM de la UMSS.
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="px-8 py-4 bg-white text-red-600 text-lg font-bold rounded-lg shadow-lg 
+                      hover:bg-gray-100 transition duration-300"
+          >
+            Registrarme Ahora
+          </button>
+        </div>
+      </div>
+      <br />
+
+
         {/* Features Section */}
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-blue-900 mb-10 text-center">¿Qué ofrece OhSansi?</h2>
@@ -120,28 +147,10 @@ const Home = () => {
         </div>
       </div>
 
-      {/* CTA Section */}
-      <div className="bg-gradient-to-r from-red-600 to-red-500 text-white py-12 mt-8">
-        <div className="container mx-auto px-4 md:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-6">¿Listo para participar?</h2>
-          <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Regístrate como tutor y comienza a inscribir a tus estudiantes en las olimpiadas STEM de la UMSS.
-          </p>
-          <button
-            onClick={() => navigate("/")}
-            className="px-8 py-4 bg-white text-red-600 text-lg font-bold rounded-lg shadow-lg 
-                      hover:bg-gray-100 transition duration-300"
-          >
-            Registrarme Ahora
-          </button>
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 md:px-8 py-12">
         <Outlet />
       </div>
 
-  
     </div>
   )
 }

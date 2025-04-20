@@ -16,6 +16,7 @@ import Areas from "./pages/admin/Areas"
 import NivelCategoria from "./pages/admin/NivelCategoria"
 import ConfOlimpiada from "./pages/admin/ConfOlimpiada"
 import CrearOlimpiada from "./pages/admin/CrearOlimpiada"
+import Versiones from "./pages/Versiones"
 
 function App() {
   return (
@@ -23,9 +24,10 @@ function App() {
         <Routes>
           {/* Layout para público */}
           <Route path="/" element={<UserLayout />}>
+            <Route index element={<Home />} /> {/* Página principal */}
+            <Route path="versiones" element={<Versiones />} /> 
             <Route path="IdentificarEncargado" element={<IdentificarEncargado />} /> {/* Página de identificación */}
             <Route path="SeleccionarOlimpiada/:idEncargado" element={<SeleccionarOlimpiada />} /> {/* Página de error */}
-            <Route index element={<Home />} /> {/* Página principal */}
             <Route path="RegistroEncargado" element={<RegistroTutor />} /> {/* Página de registro */}
             <Route path="/RegistrosPostulantes/:idEncargado/:idOlimpiada" element={<RegistrosPostulantes />} /> 
             <Route path="/OrdenesDePago/:idEncargado/:idOlimpiada" element={<OrdenesDePago />} />
