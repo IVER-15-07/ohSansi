@@ -39,7 +39,7 @@ const RegistrarPostulante = () => {
         });
         setFormValues(initialValues);
     }, [secciones]);
-    console.log(secciones);
+    console.log(JSON.stringify({ formValues }));
     
 
     // Manejo del cambio en inputs

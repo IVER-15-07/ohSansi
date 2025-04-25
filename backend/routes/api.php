@@ -74,6 +74,7 @@ Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 
 Route::get('/formulario', [FormularioController::class, 'obtenerFormulario']);
 
+Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
 
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
