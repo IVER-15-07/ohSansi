@@ -11,20 +11,23 @@ const ValidarComprobante = () => {
   const [textoExtraido, setTextoExtraido] = useState("");
   const [error, setError] = useState(false);
   const [cargando, setCargando] = useState(false);
+  const [monto, setMonto] = useState("");
   const inputRef = useRef(null);
 
   const extraerDatos = (texto) => {
     setTextoExtraido(texto);
-
+  
     const nombreMatch = texto.match(/Recibido de:\s*(.*)/i);
     const olimpiadaMatch = texto.match(/OLIMPIADA DE CIENCIAS:\s*(.*)/i);
+    const montoMatch = texto.match(/Total:\s*Bs\s+([\d.,]+)/i);
 
     setNombre(nombreMatch ? nombreMatch[1].trim() : "");
     setOlimpiada(olimpiadaMatch ? olimpiadaMatch[1].trim() : "");
-    setError(!nombreMatch || !olimpiadaMatch);
+    setMonto(montoMatch ? montoMatch[1].replace(",", ".") : "");
+    setError(!nombreMatch || !olimpiadaMatch || !montoMatch);
     setCargando(false);
   };
-
+  
   const handleArchivo = async (e) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
@@ -134,6 +137,10 @@ const ValidarComprobante = () => {
 
             {olimpiada && (
               <p><strong>Olimpiada:</strong> {olimpiada}</p>
+            )}
+
+            {monto && (
+                <p><strong>Monto pagado:</strong> {monto} Bs</p>
             )}
 
             {textoExtraido && (
