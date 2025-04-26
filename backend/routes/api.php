@@ -83,5 +83,6 @@ Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 
 
+Route::post('/registro/validarComprobante', [RegistroController::class, 'validarComprobante']);
 
 
