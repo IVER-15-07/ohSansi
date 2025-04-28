@@ -34,7 +34,7 @@ const IdentificarEncargado = () => {
     }
   };
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="pt-24 container mx-auto py-8 px-4">
     <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
       <h1 className="text-2xl font-bold text-center mb-6">Identificar Encargado</h1>
       <p className="text-gray-600 mb-4 text-center">
