@@ -31,7 +31,7 @@ function App() {
             <Route path="RegistroEncargado" element={<RegistroTutor />} /> {/* Página de registro */}
             <Route path="/RegistrosPostulantes/:idEncargado/:idOlimpiada" element={<RegistrosPostulantes />} /> 
             <Route path="/OrdenesDePago/:idEncargado/:idOlimpiada" element={<OrdenesDePago />} />
-            <Route path="/ValidarComprobante/:idEncargado/:idOlimpiada" element={<ValidarComprobante />} />
+            <Route path="/ValidarComprobante" element={<ValidarComprobante />} />
             <Route path="/RegistrarListaPostulantes/:idEncargado/:idOlimpiada" element={<RegistrarListaPostulantes />} />
             <Route path="RegistrarPostulante/:idEncargado/:idOlimpiada" element={<RegistrarPostulante />} />
           </Route>

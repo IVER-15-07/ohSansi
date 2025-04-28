@@ -130,4 +130,16 @@ class EncargadoController extends Controller
             ], 500);
         }
     }
+
+    public function obtenerEncargado($id)
+    {
+        $encargado = Encargado::find($id);
+
+        if (!$encargado) {
+            return response()->json(['message' => 'Encargado no encontrado'], 404);
+        }
+
+        return response()->json($encargado);
+    }
+    
 }

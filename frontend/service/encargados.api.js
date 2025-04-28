@@ -23,3 +23,13 @@ export const createEncargado = async (data) => {
 export const verificarEncargado = async (ci) => {
   return await axiosInstance.get(`/encargados/verificar/${ci}`);
 };
+
+export const getEncargado = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/encargados/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching encargado:", error);
+    throw error;
+  }
+}

@@ -64,6 +64,8 @@ Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiada
 
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
 
+Route::get('/olimpiadas/{id}', [OlimpiadaController::class, 'obtenerOlimpiada']);
+
 
 Route::get('/encargados', [EncargadoController::class, 'obtenerEncargados']);
 
@@ -71,12 +73,16 @@ Route::get('/encargados/verificar/{ci}', [EncargadoController::class, 'verificar
 
 Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 
+Route::get('/encargados/{id}', [EncargadoController::class, 'obtenerEncargado']);
 
 Route::get('/formulario', [FormularioController::class, 'obtenerFormulario']);
 
+Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
 
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 
+
+Route::post('/registro/validarComprobante', [RegistroController::class, 'validarComprobante']);
 
 

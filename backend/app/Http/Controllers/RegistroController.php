@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Registro;
+use App\Models\Encargado;
+use App\Models\Olimpiada;
+use App\Models\Pago;
 
 class RegistroController extends Controller
 {
@@ -43,4 +46,56 @@ class RegistroController extends Controller
         ], 500);
     }
     }
+
+
+    public function validarComprobante(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string',
+            'apellido' => 'required|string',
+            'olimpiada' => 'required|string',
+            'monto' => 'required|string',
+        ]);
+    
+        // Buscar encargado
+        $encargado = Encargado::where('nombre', 'ilike', $request->nombre)
+            ->where('apellido', 'ilike', $request->apellido)
+            ->first();
+    
+        if (!$encargado) {
+            return response()->json(['error' => 'Encargado no encontrado'], 404);
+        }
+    
+        // Buscar olimpiada
+        $olimpiada = Olimpiada::where('nombre', 'ilike', $request->olimpiada)->first();
+        if (!$olimpiada) {
+            return response()->json(['error' => 'Olimpiada no encontrada'], 404);
+        }
+    
+        // Buscar pago por monto y estado
+        $pago = Pago::where('monto', $request->monto)
+            ->where('estado', false)
+            ->first();
+    
+        if (!$pago) {
+            return response()->json(['error' => 'Pago no encontrado o ya validado'], 404);
+        }
+    
+        // Buscar registro con los tres IDs
+        $registro = Registro::where('id_encargado', $encargado->id)
+            ->where('id_configuracion', $olimpiada->id)
+            ->where('id_pago', $pago->id)
+            ->first();
+    
+        if (!$registro) {
+            return response()->json(['error' => 'Registro no encontrado con esos datos'], 404);
+        }
+    
+        return response()->json([
+            'success' => true,
+            'registro' => $registro,
+        ]);
+    }
+    
+
 }
