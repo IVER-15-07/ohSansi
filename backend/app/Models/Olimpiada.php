@@ -28,4 +28,10 @@ class Olimpiada extends Model
     {
         return $this->hasMany(Configuracion::class, 'id_olimpiada');
     }
+
+    public function registros()
+    {
+        return $this->hasMany(Registro::class, 'id_olimpiada');
+    }
+
 }
