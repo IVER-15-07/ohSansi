@@ -22,9 +22,9 @@ class Registro extends Model
         return $this->belongsTo(Pago::class, 'id_pago');
     }
     
-    public function configuracion()
+    public function olimpiada()
     {
-        return $this->belongsTo(Configuracion::class, 'id_configuracion');
+        return $this->belongsTo(Configuracion::class, 'id_olimpiada');
     }
 
     public function datos(){

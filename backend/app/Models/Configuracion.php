@@ -30,9 +30,4 @@ class Configuracion extends Model
         return $this->belongsTo(NivelCategoria::class, 'id_nivel_categoria');
     }
 
-    public function registros()
-    {
-        return $this->hasMany(Registro::class, 'id_configuracion');
-    }
-
 }
