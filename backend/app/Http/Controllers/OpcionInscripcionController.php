@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use App\Models\Configuracion; 
+use App\Models\OpcionInscripcion; 
 
-class ConfiguracionController extends Controller
+class OpcionInscripcionController extends Controller
 {
 
     /**
@@ -15,31 +15,31 @@ class ConfiguracionController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function obtenerConfiguraciones(Request $request)
+    public function obtenerOpcionesInscripcion(Request $request)
     {
         try {
             // Intenta obtener las configuraciones desde la caché
-            $configuraciones = Cache::remember('configuraciones', 3600, function () {
-                return Configuracion::with(['olimpiada', 'area', 'nivel_categoria'])->get(); // Consulta a la base de datos si no está en caché
+            $opciones_inscripcion = Cache::remember('opciones_inscripcion', 3600, function () {
+                return OpcionInscripcion::with(['olimpiada', 'area', 'nivel_categoria'])->get(); // Consulta a la base de datos si no está en caché
             });
             
             // Retornar una respuesta exitosa
             return response()->json([
                 'success' => true,
-                'data' => $configuraciones,
+                'data' => $opciones_inscripcion,
             ], 200);
         } catch (\Exception $e) {
             // Manejar errores y retornar una respuesta
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => 'Error al obtener las configuraciones: ' . $e->getMessage(),
+                'message' => 'Error al obtener las opciones de inscripcion: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Obtenemos todas las areas asociadas a una olimpiada en una configuración
+     * Obtenemos todas las areas asociadas a una olimpiada
      *
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -48,7 +48,7 @@ class ConfiguracionController extends Controller
     {
         try {
             // Obtener las configuraciones filtradas por id_olimpiada y cargar las áreas relacionadas
-            $areas = Configuracion::where('id_olimpiada', $idOlimpiada)
+            $areas = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)
             ->with('area') // Carga la relación con el modelo Area
             ->get()
             ->pluck('area')
@@ -65,7 +65,7 @@ class ConfiguracionController extends Controller
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => 'Error las areas de la olimpiada: ' . $e->getMessage(),
+                'message' => 'Error al obtnerner las areas de dicha olimpiada: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -80,13 +80,13 @@ class ConfiguracionController extends Controller
     public function obtenerMapaOlimpiada($idOlimpiada)
     {
         try {
-            // Obtener las configuraciones filtradas por id_olimpiada y cargar las relaciones necesarias
-            $configuraciones = Configuracion::where('id_olimpiada', $idOlimpiada)
-                ->with(['area', 'nivel_categoria']) // Carga las relaciones con Area y NivelCategoria
+            // Obtener las opciones de inscripcion filtradas por id_olimpiada y cargar las relaciones necesarias
+            $opciones_inscripcion= OpcionInscripcion::where('id_olimpiada', $idOlimpiada)
+                ->with(['area', 'nivel_categoria.grados']) // Carga las relaciones con Area y NivelCategoria
                 ->get();
 
             // Agrupar las configuraciones por área y mapear los niveles/categorías
-            $resultado = $configuraciones->groupBy('area.id')->map(function ($items) {
+            $resultado = $opciones_inscripcion->groupBy('area.id')->map(function ($items) {
                 return $items->pluck('nivel_categoria')->unique('id')->values();
             });
 
@@ -107,12 +107,12 @@ class ConfiguracionController extends Controller
 
     
     /**
-     * Almacenar una nueva configuración. 
+     * Almacenar una nueva opcion de inscripción. 
      *
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function almacenarConfiguracion(Request $request)
+    public function almacenarOpcionInscripcion(Request $request)
     {
         try {
             // Validar los datos enviados
@@ -123,28 +123,28 @@ class ConfiguracionController extends Controller
             ]);
 
             // Crear la configuración de forma controlada
-            $configuracion = new Configuracion();
-            $configuracion->id_olimpiada = $validated['id_olimpiada'];
-            $configuracion->id_area = $validated['id_area'];
-            $configuracion->id_nivel_categoria = $validated['id_nivel_categoria'];
+            $opcion_inscripcion = new OpcionInscripcion();
+            $opcion_inscripcion->id_olimpiada = $validated['id_olimpiada'];
+            $opcion_inscripcion->id_area = $validated['id_area'];
+            $opcion_inscripcion->id_nivel_categoria = $validated['id_nivel_categoria'];
             
-            $configuracion->save();
+            $opcion_inscripcion->save();
 
             // Elimina la caché para que se actualice en la próxima consulta
-            Cache::forget('configuraciones');
+            Cache::forget('opciones_inscripcion');
 
             // Retornar una respuesta exitosa
             return response()->json([
                 'success' => true,
-                'message' => 'Configuración creada exitosamente',
-                'data' => $configuracion,
+                'message' => 'Opcion de Inscripcion creada exitosamente',
+                'data' => $opcion_inscripcion,
             ], 201);
         } catch (\Exception $e) {
             // Manejar errores y retornar una respuesta
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => 'Error al crear la configuración: ' . $e->getMessage(),
+                'message' => 'Error al crear la opcion de inscripcion: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -156,26 +156,26 @@ class ConfiguracionController extends Controller
      * @param int $idOlimpiada
      * @return \Illuminate\Http\JsonResponse
      */
-    public function eliminarConfiguracionesPorOlimpiada($idOlimpiada)
+    public function eliminarOpcionesIncripcionPorOlimpiada($idOlimpiada)
     {
         try {
             // Eliminar las configuraciones asociadas a la olimpiada
-            $deleted = Configuracion::where('id_olimpiada', $idOlimpiada)->delete();
+            $deleted = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)->delete();
 
             // Elimina la caché para que se actualice en la próxima consulta
-            Cache::forget('configuraciones');
+            Cache::forget('opciones_inscripcion');
 
             // Retornar una respuesta exitosa
             return response()->json([
                 'success' => true,
-                'message' => "Se eliminaron $deleted configuraciones asociadas a la olimpiada.",
+                'message' => "Se eliminaron $deleted opciones de inscripcion asociadas a la olimpiada.",
             ], 200);
         } catch (\Exception $e) {
             // Manejar errores y retornar una respuesta
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => 'Error al eliminar las configuraciones: ' . $e->getMessage(),
+                'message' => 'Error al eliminar las opciones de inscripcion de dicha olimpiada: ' . $e->getMessage(),
             ], 500);
         }
     }

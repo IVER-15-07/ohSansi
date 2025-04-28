@@ -9,7 +9,7 @@ use App\Http\Controllers\NivelCategoriaController;
 
 use App\Http\Controllers\GradoController;
 
-use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\OpcionInscripcionController;
 
 use App\Http\Controllers\OlimpiadaController;
 
@@ -48,15 +48,16 @@ Route::post('/niveles_categorias/{id}/grados', [NivelCategoriaController::class,
 Route::get('/grados', [GradoController::class, 'obtenerGrados']);
 
 
-Route::get('/configuraciones', [ConfiguracionController::class, 'obtenerConfiguraciones']);
+Route::get('/opciones_inscripcion', [OpcionInscripcionController::class, 'obtenerOpcionesInscripcion']);
 
-Route::post('/configuraciones', [ConfiguracionController::class, 'almacenarConfiguracion']);
+Route::post('/opciones_inscripcion', [OpcionInscripcionController::class, 'almacenarOpcionInscripcion']);
 
-Route::get('/configuraciones/{idOlimpiada}/areas', [ConfiguracionController::class, 'obtenerAreasPorOlimpiada']);
+Route::get('/opciones_inscripcion/{idOlimpiada}/areas', [OpcionInscripcionController::class, 'obtenerAreasPorOlimpiada']);
 
-Route::get('/configuraciones/{idOlimpiada}/mapa', [ConfiguracionController::class, 'obtenerMapaOlimpiada']);
+Route::get('/opciones_inscripcion/{idOlimpiada}/mapa', [OpcionInscripcionController::class, 'obtenerMapaOlimpiada']);
 
-Route::delete('/configuraciones/{idOlimpiada}', [ConfiguracionController::class, 'eliminarConfiguracionesPorOlimpiada']);
+Route::delete('/opciones_inscripcion/{idOlimpiada}', [OpcionInscripcionController::class, 'eliminarOpcionesIncripcionPorOlimpiada']);
+
 
 Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 
