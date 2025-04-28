@@ -21,7 +21,11 @@ export const getOlimpiadasActivas = async () => {
 }
 export const createOlimpiada = async (data) => {
     try {
-        const response = await axiosInstance.post("/olimpiadas", data);
+        const response = await axiosInstance.post("/olimpiadas", data, {
+            headers: {
+                'Content-Type': 'multipart/form-data', // Asegúrate de que este encabezado esté configurado
+            },
+        });
         return response.data;
     } catch (error) {
         console.error("Error creating olimpiada:", error);
