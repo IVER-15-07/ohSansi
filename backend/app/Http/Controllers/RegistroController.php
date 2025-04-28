@@ -83,7 +83,7 @@ class RegistroController extends Controller
     
         // Buscar registro con los tres IDs
         $registro = Registro::where('id_encargado', $encargado->id)
-            ->where('id_configuracion', $olimpiada->id)
+            ->where('id_olimpiada', $olimpiada->id)
             ->where('id_pago', $pago->id)
             ->first();
     

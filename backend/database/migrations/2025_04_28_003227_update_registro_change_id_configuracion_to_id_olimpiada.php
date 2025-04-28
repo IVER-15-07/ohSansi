@@ -6,27 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 class UpdateRegistroChangeIdConfiguracionToIdOlimpiada extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
-        Schema::table('id_olimpiada', function (Blueprint $table) {
-            //
+        Schema::table('registro', function (Blueprint $table) {
+            $table->dropForeign(['id_configuracion']);
+            $table->dropColumn('id_configuracion');
+            $table->foreignId('id_olimpiada')->nullable()->constrained('olimpiada')->onDelete('cascade');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
-        Schema::table('id_olimpiada', function (Blueprint $table) {
-            //
+        Schema::table('registro', function (Blueprint $table) {
+            // Si se quiere revertir
+            $table->dropForeign(['id_olimpiada']);
+            $table->dropColumn('id_olimpiada');
+
+            $table->foreignId('id_configuracion')->nullable()->constrained('configuracion')->onDelete('cascade');
         });
     }
 }
