@@ -12,10 +12,12 @@ class Pago extends Model
     protected $table = 'pago';
 
     protected $fillable = [
-        'codigo',
-        'fecha',
         'monto',
-        'estado'
+        'fecha_generado',
+        'concepto',
+        'orden',
+        'comprobante',
+        'fecha_pago'
     ];
 
     public function registros()

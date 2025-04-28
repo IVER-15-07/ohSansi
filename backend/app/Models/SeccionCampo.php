@@ -18,4 +18,8 @@ class SeccionCampo extends Model
     public function campos_inscripcion(){
         return $this->hasMany(CampoInscripcion::class, 'id_seccion_campo');
     }
+
+    public function olimpiada(){
+        return $this->belongsTo(Olimpiada::class, 'id_olimpiada');
+    }
 }

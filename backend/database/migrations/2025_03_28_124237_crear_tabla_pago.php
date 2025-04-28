@@ -15,10 +15,12 @@ class CrearTablaPago extends Migration
     {
         Schema::create('pago', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo');
-            $table->date('fecha');
-            $table->string('monto');
-            $table->boolean('estado');
+            $table->decimal('monto', 10, 2);
+            $table->date('fecha_generado');
+            $table->string('concepto');
+            $table->string('orden');
+            $table->string('comprobante')->nullable();
+            $table->date('fecha_pago')->nullable();
         });
     }
 

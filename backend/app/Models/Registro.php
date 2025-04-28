@@ -12,6 +12,15 @@ class Registro extends Model
     protected $table = 'registro';
     public $timestamps = false;
 
+    protected $fillable = [
+        'nombres',
+        'apellidos',
+        'ci',
+        'id_opcion_inscripcion',
+        'id_encargado',
+        'id_pago'
+    ];
+
     public function encargado()
     {
         return $this->belongsTo(Encargado::class, 'id_encargado');
