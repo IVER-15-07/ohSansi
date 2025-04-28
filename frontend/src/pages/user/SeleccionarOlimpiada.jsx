@@ -23,15 +23,15 @@ const SeleccionarOlimpiada = () => {
     const fechaActual = new Date();
     const inicioInscripcion = new Date(olimpiada.inicio_inscripcion);
     const finInscripcion = new Date(olimpiada.fin_inscripcion);
-
+  
     // Verificar si la fecha actual está fuera del rango de inscripción
-    if (fechaActual < inicioInscripcion || fechaActual > finInscripcion) {
-      setMensaje(
-        `Fuera del periodo de inscripción. Las inscripciones comienzan el ${inicioInscripcion.toLocaleDateString()} y terminan el ${finInscripcion.toLocaleDateString()}.`
-      );
-      return;
-    }
-
+   // if (fechaActual < inicioInscripcion || fechaActual > finInscripcion) {
+    //  setMensaje(
+     //   `Fuera del periodo de inscripción. Las inscripciones comienzan el ${inicioInscripcion.toLocaleDateString()} y terminan el ${finInscripcion.toLocaleDateString()}.`
+    //  );
+    //  return;
+   // }
+  
     navigate(`/RegistrosPostulantes/${idEncargado}/${olimpiada.id}`); 
   };
 

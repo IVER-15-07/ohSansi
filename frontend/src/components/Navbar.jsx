@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom'
 const Navbar = () => {
   const navigate = useNavigate()
   return (
-    <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-red-600 h-20 flex items-center justify-between px-6 shadow-lg">
+    <div className="bg-gradient-to-r fixed top-0 left-0 w-full z-50 from-blue-900 via-blue-800 to-red-600 h-20 flex items-center justify-between px-6 shadow-lg">
       {/* Logo y título alineados a la izquierda */}
       <div className="flex items-center gap-4 px-10">
         <img src={logo} alt="Logo" className="h-14 w-17" />
         <h1 className="text-white text-xl md:text-2xl font-semibold">
-          OLIMPIADAS DE CIENCIA Y TECNOLOGIA
+          Olimpiadas de Ciencia y Tecnologia
         </h1>
       </div>
 
