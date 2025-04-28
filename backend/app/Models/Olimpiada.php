@@ -14,13 +14,14 @@ class Olimpiada extends Model
     
     protected $fillable = [
         'nombre',
+        'convocatoria',
         'descripcion',
         'costo',
-        'ubicacion',
+        'max_areas',
         'fecha_inicio',
         'fecha_fin',
         'inicio_inscripcion',
-        'fin_inscripcion',
+        'fin_inscripcion'
     ];
 
     // Relación uno a muchos con Configuracion

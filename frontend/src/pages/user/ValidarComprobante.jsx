@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import Tesseract from "tesseract.js";
 import mammoth from "mammoth";
 import * as pdfjsLib from "pdfjs-dist";
+import SubirArchivo from "../../components/SubirArchivo";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
@@ -90,35 +91,16 @@ const ValidarComprobante = () => {
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", padding: "40px" }}>
-      <div style={{ width: "100%", maxWidth: "600px", textAlign: "center" }}>
-        <h2 style={{ marginBottom: "20px" }}>Validar Comprobante de Pago</h2>
-
-        <button
-          onClick={() => inputRef.current.click()}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#007BFF",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            marginBottom: "20px"
-          }}
-        >
-          Subir comprobante (.docx, .pdf, .jpg, .png)
-        </button>
-
-        <input
-          type="file"
-          accept=".docx,.pdf,.jpg,.jpeg,.png"
-          onChange={handleArchivo}
-          ref={inputRef}
-          style={{ display: "none" }}
-        />
-
+    <div>
+      <SubirArchivo
+        nombreArchivo="Subir Comprobante"
+        tipoArchivo="jpg"
+        handleArchivo={handleArchivo}
+        inputRef={inputRef}
+      />
+      <div>
         {cargando && (
-          <div style={{ margin: "20px", fontWeight: "bold", color: "#555" }}>
+          <div className="my-5 font-bold text-gray-600">
             ⏳ Procesando archivo, por favor espera...
           </div>
         )}
@@ -126,7 +108,7 @@ const ValidarComprobante = () => {
         {!cargando && (
           <>
             {error && (
-              <p style={{ color: "red", marginTop: "10px" }}>
+              <p className="text-red-500 mt-2">
                 ❌ No se encontraron los datos requeridos en el comprobante.
               </p>
             )}
@@ -144,9 +126,9 @@ const ValidarComprobante = () => {
             )}
 
             {textoExtraido && (
-              <details style={{ marginTop: "20px", textAlign: "left" }}>
-                <summary style={{ cursor: "pointer" }}>Ver texto completo extraído</summary>
-                <pre style={{ background: "#f4f4f4", padding: "10px", whiteSpace: "pre-wrap" }}>
+              <details className="mt-5 text-left">
+                <summary className="cursor-pointer">Ver texto completo extraído</summary>
+                <pre className="bg-gray-100 p-3 rounded-md whitespace-pre-wrap">
                   {textoExtraido}
                 </pre>
               </details>
@@ -154,6 +136,7 @@ const ValidarComprobante = () => {
           </>
         )}
       </div>
+
     </div>
   );
 };

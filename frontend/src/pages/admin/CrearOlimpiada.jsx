@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef} from 'react'
 import { useState } from 'react';
 import { createOlimpiada, getOlimpiadas } from '../../../service/olimpiadas.api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import SubirArchivo from '../../components/SubirArchivo';
 
 
 const CrearOlimpiada = () => {
@@ -14,13 +15,14 @@ const CrearOlimpiada = () => {
 
   const [datosFormulario, setDatosFormulario] = useState({
     nombre: '',
+    convocatoria: null,
+    descripcion: '',
+    costo: '',
+    max_areas: '',
     fechaInicio: '',
     fechaFin: '',
     inicioInscripcion: '',
     finInscripcion: '',
-    costo: '',
-    descripcion: '',
-    urlMapa: ''
   });
 
   const [errores, setErrores] = useState({});
@@ -31,6 +33,14 @@ const CrearOlimpiada = () => {
       .then(response => setOlimpiadas(response.data))
       .catch(error => console.error('Error al obtener olimpiadas:', error));
   }, []);
+
+  const handleArchivo = (e) => {
+    const archivo = e.target.files[0]; // Obtén el archivo seleccionado
+    setDatosFormulario((prev) => ({
+      ...prev,
+      convocatoria: archivo, // Actualiza el estado con el archivo
+    }));
+  };
 
   const normalizarTexto = (texto) =>
     texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -152,13 +162,14 @@ const CrearOlimpiada = () => {
 
     const nuevaOlimpiada = {
       nombre: datosFormulario.nombre,
+      convocatoria: datosFormulario.convocatoria,
       descripcion: datosFormulario.descripcion,
       costo: datosFormulario.costo,
-      ubicacion: datosFormulario.urlMapa,
+      max_areas: datosFormulario.max_areas,
       fecha_inicio: datosFormulario.fechaInicio,
       fecha_fin: datosFormulario.fechaFin,
       inicio_inscripcion: datosFormulario.inicioInscripcion,
-      fin_inscripcion: datosFormulario.finInscripcion
+      fin_inscripcion: datosFormulario.finInscripcion,
     };
 
     setAgregando(true);
@@ -191,6 +202,8 @@ const CrearOlimpiada = () => {
     </div>
   );
 
+  
+  console.log(datosFormulario);
   return (
     <div className="w-full px-6 py-3 bg-gray-50 rounded-xl">
       <h1 className="text-xl font-bold text-gray-700 mb-4">Datos generales de la Olimpiada</h1>
@@ -213,7 +226,7 @@ const CrearOlimpiada = () => {
         {campoFormulario('Inicio de inscripción', 'inicioInscripcion', 'date')}
         {campoFormulario('Fin de inscripción', 'finInscripcion', 'date')}
         {campoFormulario('Costo', 'costo', 'number', '00.00 Bs')}
-
+        {campoFormulario('Maxima Cantidad de Áreas por Persona', 'max_areas', 'number', "SIN MÁXIMO")}
         <div className="md:col-span-1">
           <label className="block font-medium text-gray-600 mb-1">Descripción</label>
           <textarea
@@ -228,7 +241,13 @@ const CrearOlimpiada = () => {
           {errores.descripcion && <p className="text-red-600 text-sm mt-1">{errores.descripcion}</p>}
         </div>
 
-        {campoFormulario('Ubicación (mapa)', 'urlMapa', 'text', 'Ingrese la URL del mapa', 2)}
+        <SubirArchivo
+          nombreArchivo="Subir la convocatoria de la olimpiada"
+          tipoArchivo="pdf"
+          handleArchivo={handleArchivo}
+          inputRef={useRef()}
+        />
+
       </form>
 
       <div className="flex justify-end mt-4 p-4 gap-6">
