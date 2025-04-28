@@ -20,7 +20,7 @@ const LayoutRegistro = () => {
 
   return (
     
-    <div className="flex h-screen">
+    <div className="pt-22 flex h-screen">
       {/* Sidebar */}
       <div className="w-1/4 bg-gray-100 border-r border-gray-300 p-4">
         <h2 className="text-xl font-bold mb-4">Navegación</h2>
