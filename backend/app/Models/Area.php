@@ -15,9 +15,9 @@ class Area extends Model
         'nombre'
     ];
 
-    // Relación uno a muchos con Configuracion
-    public function configuraciones()
+    // Un area puede tener ser de muchas opciones de inscripcion
+    public function opciones_inscripcion()
     {
-        return $this->hasMany(Configuracion::class, 'id_area');
+        return $this->hasMany(OpcionInscripcion::class, 'id_area');
     }
 }

@@ -24,10 +24,10 @@ class Olimpiada extends Model
         'fin_inscripcion'
     ];
 
-    // Relación uno a muchos con Configuracion
-    public function configuraciones()
+    // Una olimpiada puede tener ser de muchas opciones de inscripcion
+    public function opciones_inscripcion()
     {
-        return $this->hasMany(Configuracion::class, 'id_olimpiada');
+        return $this->hasMany(OpcionInscripcion::class, 'id_olimpiada');
     }
 
     public function registros()

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { CheckCheck,X} from 'lucide-react';
 
 const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorArea }) => {
-
+    console.log("Eligiendo Niveles", areas, nivelesCatalogo, nivelesPorArea);
     const [areaActiva, setAreaActiva] = useState(areas[0]?.id || null);
 
     const handleAñadir = (nivel) => {

@@ -12,6 +12,15 @@ class Registro extends Model
     protected $table = 'registro';
     public $timestamps = false;
 
+    protected $fillable = [
+        'nombres',
+        'apellidos',
+        'ci',
+        'id_opcion_inscripcion',
+        'id_encargado',
+        'id_pago'
+    ];
+
     public function encargado()
     {
         return $this->belongsTo(Encargado::class, 'id_encargado');
@@ -22,9 +31,9 @@ class Registro extends Model
         return $this->belongsTo(Pago::class, 'id_pago');
     }
     
-    public function configuracion()
+    public function opcion_inscripcion()
     {
-        return $this->belongsTo(Configuracion::class, 'id_configuracion');
+        return $this->belongsTo(OpcionInscripcion::class, 'id_opcion_inscripcion');
     }
 
     public function datos(){

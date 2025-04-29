@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Configuracion extends Model
+class OpcionInscripcion extends Model
 {
     use HasFactory;
 
-    protected $table = 'configuracion';
+    protected $table = 'opcion_inscripcion';
     public $timestamps = false;
     // Relación inversa con Olimpiada
     public function olimpiada()
