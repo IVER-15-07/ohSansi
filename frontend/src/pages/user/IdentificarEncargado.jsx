@@ -5,6 +5,7 @@ import RegistroTutor from "./RegistroTutor";
 import { useParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
+
 const IdentificarEncargado = () => {
   const [ci, setCi] = useState("");
   const { idEncargado } = useParams();
@@ -27,7 +28,7 @@ const IdentificarEncargado = () => {
       const response = await verificarEncargado(ci);
       if (response.data.existe) {
         // Si el carnet ya está registrado, redirigir a seleccionar olimpiada
-        navigate(`/registros/${response.data.id}`, { state: { idOlimpiada } });
+        navigate(`/registros/${response.data.id}/${ idOlimpiada }`);
 
         //navigate(`/RegistrosPostulantes/${idEncargado}/${olimpiada.id}`); 
       } else {

@@ -1,11 +1,16 @@
 import React from 'react'
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import RegistroPostulante from './RegistrarPostulante';
+import RegistrarListaPostulantes from './RegistrarListaPostulantes';
+import OrdenDePago from './OrdenesDePago';
+import ValidarComprobante from './ValidarComprobante';
+
 
 
 const LayoutRegistro = () => {
   const [currentStep, setCurrentStep] = useState(1); // Estado para controlar el paso actual
-  const navigate = useNavigate();
+  
   const { idEncargado, idOlimpiada } = useParams(); // Obtener ambos IDs desde la URL
 
 

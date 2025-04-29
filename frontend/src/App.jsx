@@ -6,11 +6,8 @@ import RegistroTutor from "./pages/user/RegistroTutor"
 import UserLayout from "./layouts/UserLayout"
 import IdentificarEncargado from "./pages/user/IdentificarEncargado"
 import SeleccionarOlimpiada from "./pages/user/SeleccionarOlimpiada"
-import RegistrosPostulantes from "./pages/user/RegistrosPostulantes"
-import OrdenesDePago from "./pages/user/OrdenesDePago"
-import ValidarComprobante from "./pages/user/ValidarComprobante"
-import RegistrarListaPostulantes from "./pages/user/RegistrarListaPostulantes"
-import RegistrarPostulante from "./pages/user/RegistrarPostulante"
+
+
 
 import Areas from "./pages/admin/Areas"
 import NivelCategoria from "./pages/admin/NivelCategoria"
@@ -25,28 +22,18 @@ function App() {
       <Routes>
         {/* Layout para público */}
         <Route path="/" element={<UserLayout />}>
-          <Route index element={<Home />} /> {/* Página principal */}
+          <Route index element={<Home />} /> 
           <Route path="versiones" element={<Versiones />} />
 
-          <Route path="registros" element={<LayoutRegistro />} />
-
-          <Route path="IdentificarEncargado" element={<IdentificarEncargado />} /> {/* Página de identificación */}
-          <Route path="SeleccionarOlimpiada/:idEncargado" element={<SeleccionarOlimpiada />} /> {/* Página de error */}
+      
+          <Route path="IdentificarEncargado" element={<IdentificarEncargado />} />
+          <Route path="SeleccionarOlimpiada/:idEncargado" element={<SeleccionarOlimpiada />} />
           <Route path="RegistroEncargado" element={<RegistroTutor />} />
+
+          <Route path="registros/:idEncargado/:idOlimpiada" element={<LayoutRegistro />} />
           
-           {/* Página de registro 
-          <Route path="/RegistrosPostulantes/:idEncargado/:idOlimpiada" element={<RegistrosPostulantes />} />
-          <Route path="/OrdenesDePago/:idEncargado/:idOlimpiada" element={<OrdenesDePago />} />
-          <Route path="/ValidarComprobante" element={<ValidarComprobante />} />
-          <Route path="/RegistrarListaPostulantes/:idEncargado/:idOlimpiada" element={<RegistrarListaPostulantes />} />
-          <Route path="RegistrarPostulante/:idEncargado/:idOlimpiada" element={<RegistrarPostulante />} />*/}
-
-
-          <Route path="/RegistrarPostulante/:idEncargado/:idOlimpiada" element={<LayoutRegistro />} />
-          <Route path="/RegistrarListaPostulantes/:idEncargado/:idOlimpiada" element={<LayoutRegistro />} />
-          <Route path="/OrdenesDePago/:idEncargado/:idOlimpiada" element={<LayoutRegistro />} />
-          <Route path="/ValidarComprobante/:idEncargado/:idOlimpiada" element={<LayoutRegistro />} />
         </Route>
+
 
         {/* Layout para el admin */}
         <Route path="/AdminLayout" element={<AdminLayout />}>
