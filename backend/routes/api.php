@@ -18,6 +18,8 @@ use App\Http\Controllers\EncargadoController;
 use App\Http\Controllers\FormularioController;
 
 use App\Http\Controllers\RegistroController;
+
+use App\Http\Controllers\PagoController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -80,10 +82,7 @@ Route::get('/formulario', [FormularioController::class, 'obtenerFormulario']);
 
 Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
 
+Route::get('/encargados/registros/{idEncargado}', [EncargadoController::class, 'obtenerConteoRegistros']);
+
+
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
-
-
-
-Route::post('/registro/validarComprobante', [RegistroController::class, 'validarComprobante']);
-
-
