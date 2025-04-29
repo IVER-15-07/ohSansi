@@ -5,7 +5,7 @@ import Olympiad from "./pages/admin/Olympiad"
 import RegistroTutor from "./pages/user/RegistroTutor"
 import UserLayout from "./layouts/UserLayout"
 import IdentificarEncargado from "./pages/user/IdentificarEncargado"
-import SeleccionarOlimpiada from "./pages/user/SeleccionarOlimpiada"
+
 
 
 
@@ -27,7 +27,7 @@ function App() {
 
       
           <Route path="IdentificarEncargado" element={<IdentificarEncargado />} />
-          <Route path="SeleccionarOlimpiada/:idEncargado" element={<SeleccionarOlimpiada />} />
+         
           <Route path="RegistroEncargado" element={<RegistroTutor />} />
 
           <Route path="registros/:idEncargado/:idOlimpiada" element={<LayoutRegistro />} />
