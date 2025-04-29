@@ -10,6 +10,7 @@ class Pago extends Model
     use HasFactory;
 
     protected $table = 'pago';
+    public $timestamps = false;
 
     protected $fillable = [
         'monto',

@@ -86,3 +86,6 @@ Route::get('/encargados/registros/{idEncargado}', [EncargadoController::class, '
 
 
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
+
+
+Route::post('/pagos', [PagoController::class, 'guardarPago']);
