@@ -1,15 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { getEncargado } from "../../../service/encargados.api";
+import { getEncargado, obtenerConteoRegistrosPorEncargado } from "../../../service/encargados.api";
 import { getOlimpiada } from "../../../service/olimpiadas.api";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { toWords } from "number-to-words"; // Importación corregida
 
 const OrdenesDePago = () => {
   const { idEncargado, idOlimpiada } = useParams();
-  console.log("idEncargado:", idEncargado, "idOlimpiada:", idOlimpiada);
   const [encargado, setEncargado] = useState(null);
   const [olimpiada, setOlimpiada] = useState(null);
+  const [conteoRegistros, setConteoRegistros] = useState(null);
   const pdfRef = useRef();
 
   useEffect(() => {
@@ -26,8 +27,14 @@ const OrdenesDePago = () => {
         setOlimpiada(res);
       })
       .catch(err => console.error("Error al obtener olimpiada:", err));
-  }, [idEncargado, idOlimpiada]);
   
+    obtenerConteoRegistrosPorEncargado(idEncargado)
+      .then(res => {
+        console.log("Conteo de registros:", res);
+        setConteoRegistros(res);
+      })
+      .catch(err => console.error("Error al obtener conteo de registros:", err));
+  }, [idEncargado, idOlimpiada]);
 
   const generarPDF = () => {
     const input = pdfRef.current;
@@ -41,64 +48,192 @@ const OrdenesDePago = () => {
     });
   };
 
-  if (!encargado || !olimpiada) {
+  const traducirNumeroALiteral = (numero) => {
+    const palabrasEnIngles = toWords(numero).toLowerCase();
+    const traducciones = {
+      zero: "cero",
+      one: "uno",
+      two: "dos",
+      three: "tres",
+      four: "cuatro",
+      five: "cinco",
+      six: "seis",
+      seven: "siete",
+      eight: "ocho",
+      nine: "nueve",
+      ten: "diez",
+      eleven: "once",
+      twelve: "doce",
+      thirteen: "trece",
+      fourteen: "catorce",
+      fifteen: "quince",
+      sixteen: "dieciséis",
+      seventeen: "diecisiete",
+      eighteen: "dieciocho",
+      nineteen: "diecinueve",
+      twenty: "veinte",
+      thirty: "treinta",
+      forty: "cuarenta",
+      fifty: "cincuenta",
+      sixty: "sesenta",
+      seventy: "setenta",
+      eighty: "ochenta",
+      ninety: "noventa",
+      hundred: "cien",
+      thousand: "mil",
+      million: "millón",
+      billion: "mil millones",
+    };
+  
+    // Reemplazar palabras en inglés por sus equivalentes en español
+    const palabrasEnEspañol = palabrasEnIngles
+      .split(" ")
+      .map((palabra) => traducciones[palabra] || palabra)
+      .join(" ");
+  
+    return palabrasEnEspañol.charAt(0).toUpperCase() + palabrasEnEspañol.slice(1);
+  };
+
+  if (!encargado || !olimpiada || !conteoRegistros) {
     return (
       <div>
         <h2>Cargando datos...</h2>
       </div>
     );
   }
-  
+
+  const totalRegistros = conteoRegistros.conteo_registros;
+  const costoPorUnidad = olimpiada.costo;
+  const importeTotal = totalRegistros * costoPorUnidad;
+  const detalleAreas = Object.entries(conteoRegistros.areas)
+    .map(([area, cantidad]) => `${area}: ${cantidad}`)
+    .join(", ");
+
+  const importeEnLiteral = traducirNumeroALiteral(importeTotal);
+
   const fechaActual = new Date();
   const dia = fechaActual.getDate();
-  const mes = fechaActual.toLocaleString('es-ES', { month: 'long' });
+  const mes = fechaActual.toLocaleString("es-ES", { month: "long" });
   const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
   const año = fechaActual.getFullYear();
 
   return (
     <div className="p-4">
-      <div ref={pdfRef} style={{ padding: "20px", backgroundColor: "#f5faff", border: "1px solid #ccc", borderRadius: "10px", maxWidth: "700px", margin: "auto" }}>
+      <div
+        ref={pdfRef}
+        style={{
+          padding: "20px",
+          backgroundColor: "#f5faff",
+          border: "1px solid #ccc",
+          borderRadius: "10px",
+          maxWidth: "700px",
+          margin: "auto",
+        }}
+      >
         <h3 style={{ textAlign: "center", fontWeight: "bold" }}>
-          Universidad Mayor de San Simón<br />
-          Facultad de Ciencias y Tecnología<br />
-          Secretaría Administrativa<br />
-          <span style={{ fontSize: "20px", display: "block", marginTop: "10px" }}>Orden de pago</span>
+          Universidad Mayor de San Simón
+          <br />
+          Facultad de Ciencias y Tecnología
+          <br />
+          Secretaría Administrativa
+          <br />
+          <span
+            style={{
+              fontSize: "20px",
+              display: "block",
+              marginTop: "10px",
+            }}
+          >
+            Orden de pago
+          </span>
         </h3>
 
-        <p><strong>Emitido por la Unidad:</strong> {olimpiada.nombre}</p>
-        <p><strong>Señor:</strong> {encargado.nombre} {encargado.apellido} &nbsp;&nbsp;&nbsp;&nbsp; <strong>NIT/CI:</strong> {encargado.ci} </p>
+        <p>
+          <strong>Emitido por la Unidad:</strong> {olimpiada.nombre}
+        </p>
+        <p>
+          <strong>Señor:</strong> {encargado.nombre} {encargado.apellido}{" "}
+          &nbsp;&nbsp;&nbsp;&nbsp; <strong>NIT/CI:</strong> {encargado.ci}{" "}
+        </p>
 
-        <table width="100%" style={{ borderCollapse: "collapse", marginTop: "10px" }}>
+        <table
+          width="100%"
+          style={{ borderCollapse: "collapse", marginTop: "10px" }}
+        >
           <thead>
             <tr>
-              <th style={{ border: "1px solid black", padding: "5px" }}>Cantidad</th>
-              <th style={{ border: "1px solid black", padding: "5px" }}>Concepto</th>
-              <th style={{ border: "1px solid black", padding: "5px" }}>Precio por unidad</th>
-              <th style={{ border: "1px solid black", padding: "5px" }}>Importe</th>
+              <th style={{ border: "1px solid black", padding: "5px" }}>
+                Cantidad
+              </th>
+              <th style={{ border: "1px solid black", padding: "5px" }}>
+                Concepto
+              </th>
+              <th style={{ border: "1px solid black", padding: "5px" }}>
+                Precio por unidad
+              </th>
+              <th style={{ border: "1px solid black", padding: "5px" }}>
+                Importe
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={{ border: "1px solid black", padding: "5px" }}> </td>
-              <td style={{ border: "1px solid black", padding: "5px" }}> </td>
-              <td style={{ border: "1px solid black", padding: "5px" }}> </td>
-              <td style={{ border: "1px solid black", padding: "5px" }}> </td>
+              <td style={{ border: "1px solid black", padding: "5px" }}>
+                {totalRegistros}
+              </td>
+              <td style={{ border: "1px solid black", padding: "5px" }}>
+                DECANATO OLIMPIADA DE CIENCIAS {olimpiada.nombre}
+                <br />
+                Detalle: Inscritos en las áreas de {detalleAreas}
+              </td>
+              <td style={{ border: "1px solid black", padding: "5px" }}>
+                {costoPorUnidad} Bs.
+              </td>
+              <td style={{ border: "1px solid black", padding: "5px" }}>
+                {importeTotal} Bs.
+              </td>
             </tr>
           </tbody>
         </table>
 
-        <p><strong>Nota:</strong> no vale como factura oficial</p>
-        <p style={{ textAlign: "right" }}>[  ]</p>
-        <p><strong>Son:</strong> _____________________________________ Bolivianos.</p>
+        <p>
+          <strong>Nota:</strong> no vale como factura oficial
+        </p>
+        <p style={{ textAlign: "right" }}>[ ]</p>
+        <p>
+          <strong>Son:</strong> {importeEnLiteral} Bolivianos.
+        </p>
 
-        <p>Cochabamba, {dia} de {mesCapitalizado} de {año}</p>
-        <p><strong>Firma del responsable:</strong> ___________________________</p>
-        <p><strong>Observaciones:</strong></p>
-        <div style={{ border: "1px solid black", height: "60px", marginBottom: "20px" }}></div>
+        <p>
+          Cochabamba, {dia} de {mesCapitalizado} de {año}
+        </p>
+        <p>
+          <strong>Firma del responsable:</strong> ___________________________
+        </p>
+        <p>
+          <strong>Observaciones:</strong>
+        </p>
+        <div
+          style={{
+            border: "1px solid black",
+            height: "60px",
+            marginBottom: "20px",
+          }}
+        ></div>
       </div>
 
       <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <button onClick={generarPDF} style={{ padding: "10px 20px", backgroundColor: "#007BFF", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+        <button
+          onClick={generarPDF}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: "#007BFF",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
           Descargar como PDF
         </button>
       </div>
