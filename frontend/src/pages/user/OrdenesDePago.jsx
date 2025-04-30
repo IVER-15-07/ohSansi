@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { getEncargado, obtenerConteoRegistrosPorEncargado } from "../../../service/encargados.api";
 import { getOlimpiada } from "../../../service/olimpiadas.api";
-import { guardarPago, obtenerIdPago, agregarPago } from "../../../service/pagos.api"; // Importar los servicios de pagos
+import { guardarPago, obtenerIdPago, agregarPago, obtenerOrdenDePago } from "../../../service/pagos.api"; // Importar el nuevo servicio
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { toWords } from "number-to-words";
@@ -13,6 +13,7 @@ const OrdenesDePago = () => {
   const [olimpiada, setOlimpiada] = useState(null);
   const [conteoRegistros, setConteoRegistros] = useState(null);
   const [sinRegistros, setSinRegistros] = useState(false); // Estado para manejar si no hay registros
+  const [ordenesDePago, setOrdenesDePago] = useState([]); // Estado para almacenar las órdenes de pago
   const pdfRef = useRef();
 
   useEffect(() => {
@@ -35,6 +36,14 @@ const OrdenesDePago = () => {
         console.log("Conteo de registros:", res);
         if (res.conteo_registros === 0) {
           setSinRegistros(true); // Si no hay registros, actualiza el estado
+          obtenerOrdenDePago({ id_encargado: idEncargado }) // Llamar al endpoint para obtener órdenes de pago
+            .then((response) => {
+              console.log("Órdenes de pago obtenidas:", response);
+              setOrdenesDePago(response.data); // Guardar las órdenes en el estado
+            })
+            .catch((error) => {
+              console.error("Error al obtener órdenes de pago:", error);
+            });
         } else {
           setConteoRegistros(res);
         }
@@ -87,63 +96,41 @@ const OrdenesDePago = () => {
     return palabrasEnEspañol.charAt(0).toUpperCase() + palabrasEnEspañol.slice(1);
   };
 
-  const generarPDF = async () => {
-    try {
-      const input = pdfRef.current;
-
-      // Generar el PDF
-      const canvas = await html2canvas(input);
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-
-      // Descargar el PDF generado
-      pdf.save("orden_de_pago.pdf");
-
-      // Convertir el PDF a un archivo Blob
-      const pdfBlob = pdf.output("blob");
-
-      // Crear un objeto FormData para enviar el PDF al servidor
-      const formData = new FormData();
-      formData.append("monto", importeTotal);
-      formData.append("fecha_generado", new Date().toISOString().split("T")[0]); // Formato AAAA-MM-DD
-      formData.append("concepto", `DECANATO OLIMPIADA DE CIENCIAS ${olimpiada.nombre}`);
-      formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
-
-      // Guardar el pago en el servidor
-      const guardarPagoResponse = await guardarPago(formData);
-      console.log("Pago guardado:", guardarPagoResponse);
-
-      // Obtener el ID del pago recién creado
-      const obtenerIdResponse = await obtenerIdPago({
-        monto: importeTotal,
-        fecha_generado: new Date().toISOString().split("T")[0],
-        concepto: `DECANATO OLIMPIADA DE CIENCIAS ${olimpiada.nombre}`,
-      });
-      console.log("ID del pago obtenido:", obtenerIdResponse);
-
-      const idPago = obtenerIdResponse.data.id;
-
-      // Asociar el ID del pago a los registros del encargado
-      const agregarPagoResponse = await agregarPago({
-        id_encargado: idEncargado,
-        id_pago: idPago,
-      });
-      console.log("Pago asociado a los registros:", agregarPagoResponse);
-
-      alert("PDF generado, descargado y pago registrado exitosamente.");
-    } catch (error) {
-      console.error("Error al generar el PDF o registrar el pago:", error);
-      alert("Ocurrió un error al generar el PDF o registrar el pago.");
-    }
-  };
-
   if (sinRegistros) {
     return (
       <div>
         <h2>No existen registros pendientes para generar una orden de pago.</h2>
+        {ordenesDePago.length > 0 ? (
+          <div>
+            <h3>Órdenes de Pago Existentes:</h3>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={{ border: "1px solid black", padding: "5px" }}>Monto</th>
+                  <th style={{ border: "1px solid black", padding: "5px" }}>Fecha Generado</th>
+                  <th style={{ border: "1px solid black", padding: "5px" }}>Concepto</th>
+                  <th style={{ border: "1px solid black", padding: "5px" }}>Orden</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ordenesDePago.map((orden) => (
+                  <tr key={orden.id_pago}>
+                    <td style={{ border: "1px solid black", padding: "5px" }}>{orden.monto} Bs.</td>
+                    <td style={{ border: "1px solid black", padding: "5px" }}>{orden.fecha_generado}</td>
+                    <td style={{ border: "1px solid black", padding: "5px" }}>{orden.concepto}</td>
+                    <td style={{ border: "1px solid black", padding: "5px" }}>
+                      <a href={orden.orden} target="_blank" rel="noopener noreferrer">
+                        Descargar
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p>No se encontraron órdenes de pago existentes.</p>
+        )}
       </div>
     );
   }

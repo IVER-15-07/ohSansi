@@ -132,4 +132,64 @@ class PagoController extends Controller
     }
     }
 
+    public function obtenerOrdenDePago(Request $request)
+    {
+    try {
+        // Validar el ID del encargado
+        $validated = $request->validate([
+            'id_encargado' => 'required|integer|exists:encargado,id',
+        ]);
+
+        // Obtener los id_pago asociados al id_encargado desde la tabla registro
+        $idPagos = DB::table('registro')
+            ->where('id_encargado', $validated['id_encargado'])
+            ->whereNotNull('id_pago') // Solo registros con id_pago no nulo
+            ->distinct() // Eliminar duplicados
+            ->pluck('id_pago');
+
+        if ($idPagos->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontraron pagos asociados al encargado.',
+            ], 404);
+        }
+
+        // Consultar la tabla pago para obtener las órdenes pendientes
+        $ordenesPendientes = DB::table('pago')
+            ->whereIn('id', $idPagos)
+            ->whereNull('fecha_pago') // Solo pagos con fecha_pago vacía
+            ->get(['id', 'orden', 'monto', 'fecha_generado', 'concepto']);
+
+        if ($ordenesPendientes->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontraron órdenes de pago pendientes.',
+            ], 404);
+        }
+
+        // Construir la respuesta con las rutas completas de las órdenes
+        $ordenes = $ordenesPendientes->map(function ($orden) {
+            return [
+                'id_pago' => $orden->id,
+                'monto' => $orden->monto,
+                'fecha_generado' => $orden->fecha_generado,
+                'concepto' => $orden->concepto,
+                'orden' => asset('storage/' . $orden->orden), // Generar URL completa
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $ordenes,
+        ], 200);
+    } catch (\Exception $e) {
+        // Manejar errores y retornar una respuesta
+        return response()->json([
+            'success' => false,
+            'status' => 'error',
+            'message' => 'Error al obtener las órdenes de pago: ' . $e->getMessage(),
+        ], 500);
+    }
+    }
+
 }

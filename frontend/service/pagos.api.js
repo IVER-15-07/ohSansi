@@ -48,3 +48,13 @@ export const agregarPago = async (data) => {
     throw error;
   }
 };
+
+export const obtenerOrdenDePago = async (data) => {
+  try {
+    const response = await axiosInstance.post("/pagos/obtenerOrden", data);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener las órdenes de pago:", error);
+    throw error;
+  }
+};
