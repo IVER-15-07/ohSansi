@@ -82,6 +82,9 @@ class SyncDatabaseCommand extends Command
             // Creamos una conexión temporal a la base de datos remota
             $remoteConn = $this->createRemoteConnection();
 
+            // Sincronizamos la estructura de la base de datos
+            $this->syncDatabaseStructure($remoteConn);
+
             // Sincronizamos cada tabla
             foreach ($this->tables as $table) {
                 $this->syncTable($remoteConn, $table);
@@ -130,13 +133,27 @@ class SyncDatabaseCommand extends Command
         $stmt = $remoteConn->prepare("SELECT * FROM {$table}");
         $stmt->execute();
         $remoteData = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         $this->info("  - Registros encontrados en remoto: " . count($remoteData));
 
         if (empty($remoteData)) {
             $this->warn("  - No hay datos para sincronizar en tabla {$table}. Omitiendo...");
             return;
         }
+
+        // Obtener las columnas de la tabla local
+        $localColumns = Schema::getColumnListing($table);
+
+        // Filtrar los datos remotos para incluir solo las columnas existentes en la tabla local
+        $filteredData = array_map(function ($row) use ($localColumns) {
+            return array_filter(
+                $row,
+                function ($key) use ($localColumns) {
+                    return in_array($key, $localColumns);
+                },
+                ARRAY_FILTER_USE_KEY
+            );
+        }, $remoteData);
 
         // 2. Eliminar datos existentes en la tabla local
         DB::table($table)->delete();
@@ -146,7 +163,7 @@ class SyncDatabaseCommand extends Command
         DB::statement('SET CONSTRAINTS ALL DEFERRED');
 
         // 4. Insertar datos remotos en la tabla local
-        $chunks = array_chunk($remoteData, 100); // Procesar en bloques de 100 registros
+        $chunks = array_chunk($filteredData, 100); // Procesar en bloques de 100 registros
         $insertedCount = 0;
 
         foreach ($chunks as $chunk) {
@@ -154,10 +171,104 @@ class SyncDatabaseCommand extends Command
             $insertedCount += count($chunk);
             $this->output->write("\r  - Insertando registros: {$insertedCount}/" . count($remoteData));
         }
-        
+
         $this->info("\n  - Sincronización completada para tabla {$table}");
-        
+
         // 5. Reactivar la verificación de claves foráneas
         DB::statement('SET CONSTRAINTS ALL IMMEDIATE');
+    }
+
+    protected function syncDatabaseStructure($remoteConn)
+    {
+        $this->info("Sincronizando estructura de la base de datos...");
+
+        // Obtener la lista de tablas de la base de datos remota
+        $stmt = $remoteConn->prepare("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+        $stmt->execute();
+        $remoteTables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        foreach ($remoteTables as $table) {
+            // Verificar si la tabla existe en la base de datos local
+            if (!Schema::hasTable($table)) {
+                $this->info("Creando tabla: {$table}");
+
+                // Obtener la estructura de la tabla remota
+                $stmt = $remoteConn->prepare("SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = :table");
+                $stmt->execute(['table' => $table]);
+                $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // Crear la tabla localmente
+                Schema::create($table, function ($tableBlueprint) use ($columns) {
+                    foreach ($columns as $column) {
+                        $this->addColumnToTable($tableBlueprint, $column);
+                    }
+                });
+
+                $this->info("Tabla {$table} creada exitosamente.");
+            } else {
+                $this->info("La tabla {$table} ya existe. Verificando columnas...");
+
+                // Verificar columnas
+                $stmt = $remoteConn->prepare("SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = :table");
+                $stmt->execute(['table' => $table]);
+                $remoteColumns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                $localColumns = Schema::getColumnListing($table);
+
+                foreach ($remoteColumns as $column) {
+                    if (!in_array($column['column_name'], $localColumns)) {
+                        $this->info("Agregando columna: {$column['column_name']} a la tabla {$table}");
+
+                        Schema::table($table, function ($tableBlueprint) use ($column) {
+                            $this->addColumnToTable($tableBlueprint, $column);
+                        });
+
+                        $this->info("Columna {$column['column_name']} agregada exitosamente.");
+                    }
+                }
+            }
+        }
+
+        $this->info("Estructura de la base de datos sincronizada exitosamente.");
+    }
+
+    protected function mapColumnType($remoteType)
+    {
+        // Mapear tipos de datos de PostgreSQL a tipos de Laravel
+        $map = [
+            'integer' => 'integer',
+            'bigint' => 'bigInteger',
+            'smallint' => 'smallInteger',
+            'serial' => 'increments',
+            'bigserial' => 'bigIncrements',
+            'varchar' => 'string', // varchar se mapeará a string con longitud predeterminada
+            'text' => 'text',
+            'boolean' => 'boolean',
+            'date' => 'date',
+            'timestamp' => 'timestamp',
+            'float' => 'float',
+            'double precision' => 'double',
+            'numeric' => 'decimal',
+        ];
+
+        return $map[$remoteType] ?? 'string';
+    }
+
+    protected function addColumnToTable($tableBlueprint, $column)
+    {
+        $type = $this->mapColumnType($column['data_type']);
+        $nullable = $column['is_nullable'] === 'YES';
+
+        // Manejar tipos de datos que requieren parámetros adicionales
+        if ($type === 'string' && isset($column['character_maximum_length'])) {
+            $length = $column['character_maximum_length'] ?? 255; // Longitud predeterminada
+            $columnDefinition = $tableBlueprint->addColumn($type, $column['column_name'], ['length' => $length]);
+        } else {
+            $columnDefinition = $tableBlueprint->addColumn($type, $column['column_name']);
+        }
+
+        if ($nullable) {
+            $columnDefinition->nullable();
+        }
     }
 }
