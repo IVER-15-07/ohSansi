@@ -2,9 +2,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { getEncargado, obtenerConteoRegistrosPorEncargado } from "../../../service/encargados.api";
 import { getOlimpiada } from "../../../service/olimpiadas.api";
+import { guardarPago, obtenerIdPago, agregarPago } from "../../../service/pagos.api"; // Importar los servicios de pagos
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { toWords } from "number-to-words"; // Importación corregida
+import { toWords } from "number-to-words";
 
 const OrdenesDePago = () => {
   const { idEncargado, idOlimpiada } = useParams();
@@ -35,18 +36,6 @@ const OrdenesDePago = () => {
       })
       .catch(err => console.error("Error al obtener conteo de registros:", err));
   }, [idEncargado, idOlimpiada]);
-
-  const generarPDF = () => {
-    const input = pdfRef.current;
-    html2canvas(input).then(canvas => {
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save("orden_de_pago.pdf");
-    });
-  };
 
   const traducirNumeroALiteral = (numero) => {
     const palabrasEnIngles = toWords(numero).toLowerCase();
@@ -84,14 +73,63 @@ const OrdenesDePago = () => {
       million: "millón",
       billion: "mil millones",
     };
-  
-    // Reemplazar palabras en inglés por sus equivalentes en español
+
     const palabrasEnEspañol = palabrasEnIngles
       .split(" ")
       .map((palabra) => traducciones[palabra] || palabra)
       .join(" ");
-  
+
     return palabrasEnEspañol.charAt(0).toUpperCase() + palabrasEnEspañol.slice(1);
+  };
+
+  const generarPDF = async () => {
+    try {
+      const input = pdfRef.current;
+
+      // Generar el PDF
+      const canvas = await html2canvas(input);
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      // Convertir el PDF a un archivo Blob
+      const pdfBlob = pdf.output("blob");
+
+      // Crear un objeto FormData para enviar el PDF al servidor
+      const formData = new FormData();
+      formData.append("monto", importeTotal);
+      formData.append("fecha_generado", new Date().toISOString().split("T")[0]); // Formato AAAA-MM-DD
+      formData.append("concepto", `DECANATO OLIMPIADA DE CIENCIAS ${olimpiada.nombre}`);
+      formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
+
+      // Guardar el pago en el servidor
+      const guardarPagoResponse = await guardarPago(formData);
+      console.log("Pago guardado:", guardarPagoResponse);
+
+      // Obtener el ID del pago recién creado
+      const obtenerIdResponse = await obtenerIdPago({
+        monto: importeTotal,
+        fecha_generado: new Date().toISOString().split("T")[0],
+        concepto: `DECANATO OLIMPIADA DE CIENCIAS ${olimpiada.nombre}`,
+      });
+      console.log("ID del pago obtenido:", obtenerIdResponse);
+
+      const idPago = obtenerIdResponse.data.id;
+
+      // Asociar el ID del pago a los registros del encargado
+      const agregarPagoResponse = await agregarPago({
+        id_encargado: idEncargado,
+        id_pago: idPago,
+      });
+      console.log("Pago asociado a los registros:", agregarPagoResponse);
+
+      alert("PDF generado y pago registrado exitosamente.");
+    } catch (error) {
+      console.error("Error al generar el PDF o registrar el pago:", error);
+      alert("Ocurrió un error al generar el PDF o registrar el pago.");
+    }
   };
 
   if (!encargado || !olimpiada || !conteoRegistros) {

@@ -88,7 +88,7 @@ Route::get('/encargados/registros/{idEncargado}', [EncargadoController::class, '
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 
-Route::post('/pagos', [PagoController::class, 'guardarPago']);
+Route::post('/pagos/guardarPago', [PagoController::class, 'guardarPago']);
 
 Route::post('/pagos/obtenerId', [PagoController::class, 'obtenerIdPago']);
 
