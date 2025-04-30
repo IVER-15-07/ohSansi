@@ -89,3 +89,7 @@ Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 
 Route::post('/pagos', [PagoController::class, 'guardarPago']);
+
+Route::post('/pagos/obtenerId', [PagoController::class, 'obtenerIdPago']);
+
+Route::post('/pagos/agregar', [PagoController::class, 'agregarPago']);

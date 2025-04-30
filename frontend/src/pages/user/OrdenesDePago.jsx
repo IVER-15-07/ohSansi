@@ -234,7 +234,7 @@ const OrdenesDePago = () => {
             cursor: "pointer",
           }}
         >
-          Descargar como PDF
+          Generar PDF
         </button>
       </div>
     </div>
