@@ -48,7 +48,7 @@ Route::post('/niveles_categorias/{id}/grados', [NivelCategoriaController::class,
 Route::get('/grados', [GradoController::class, 'obtenerGrados']);
 
 
-Route::get('/opciones_inscripcion', [OpcionInscripcionController::class, 'obtenerOpcionesInscripcion']);
+Route::get('/opciones_inscripcion/{idOlimpiada}', [OpcionInscripcionController::class, 'obtenerOpcionesInscripcion']);
 
 Route::post('/opciones_inscripcion', [OpcionInscripcionController::class, 'almacenarOpcionInscripcion']);
 
@@ -76,7 +76,7 @@ Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 
 Route::get('/encargados/{id}', [EncargadoController::class, 'obtenerEncargado']);
 
-Route::get('/formulario', [FormularioController::class, 'obtenerFormulario']);
+Route::get('/formulario/{idOlimpiada}', [FormularioController::class, 'obtenerFormulario']);
 
 Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
 
