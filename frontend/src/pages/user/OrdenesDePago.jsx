@@ -176,7 +176,7 @@ const OrdenesDePago = () => {
       <div
         ref={pdfRef}
         style={{
-          padding: "100px",
+          padding: "20px",
           backgroundColor: "#f5faff",
           border: "1px solid #ccc",
           borderRadius: "10px",
