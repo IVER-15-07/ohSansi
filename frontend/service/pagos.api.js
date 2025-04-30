@@ -58,3 +58,27 @@ export const obtenerOrdenDePago = async (data) => {
     throw error;
   }
 };
+
+export const obtenerPagoAsociado = async (data) => {
+  try {
+    const response = await axiosInstance.post("/pagos/obtenerPagoAsociado", data);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener el pago asociado:", error);
+    throw error;
+  }
+};
+
+export const validarComprobantePago = async (data) => {
+  try {
+    const response = await axiosInstance.post("/pagos/validarComprobantePago", data, {
+      headers: {
+        "Content-Type": "multipart/form-data", // Necesario para enviar archivos
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al validar el comprobante de pago:", error);
+    throw error;
+  }
+};
