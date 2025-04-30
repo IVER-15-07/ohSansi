@@ -31,9 +31,8 @@ const Home = () => {
   }, []);
 
   const handleSeleccionarOlimpiada = (olimpiada) => {
-    navigate(`/RegistroEncargado/${olimpiada.id}`);
+    navigate(`IdentificarEncargado`,{state: {idOlimpiada: olimpiada.id}});
   };
-
 
   if (error) return <Error error={error} />;
 
@@ -44,10 +43,10 @@ const Home = () => {
 
 
       <section className="bg-gradient-to-b from-blue-900 via-white to-red-600 py-16">
-        <div className="container mx-auto px-4 flex flex-col items-center gap-5">
+        <div className="container  flex flex-col items-center gap-5">
 
           {/* LOGO + INFORMACIÓN */}
-          <div className="flex flex-col md:flex-row items-center gap-10 w-full justify-center">
+          <div className="flex flex-col md:flex-row items-center gap-10 w-full px-10">
 
             {/* LOGO */}
             <div className="flex-shrink-0">
@@ -58,7 +57,7 @@ const Home = () => {
             <div className="flex flex-col items-center md:items-start text-center md:text-left gap-2 mt-20">
               <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900">
                 <Typewriter
-                  words={['Oh! SanSi']}
+                  words={['Oh! SanSi', 'Ciencia y Tecnologia']}
                   loop={0} // 0 = infinito
                   cursor
                   cursorStyle="_"

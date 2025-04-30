@@ -1,11 +1,11 @@
-"use client"
 
-import { use, useState } from "react"
+
+import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { AlertCircle, CheckCircle, X } from "lucide-react"
 import { createEncargado } from "../../../service/encargados.api"
 
-function RegistroTutor() {
+const RegistroTutor = ({ handleVolver }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const CIinicial = location.state?.ci || ""; // Obtener el CI inicial del estado de la ubicación
@@ -185,7 +185,7 @@ function RegistroTutor() {
         correo: "",
         termsAccepted: false,
       });*/
-  
+
       // Ocultar mensaje de éxito después de 5 segundos
       setTimeout(() => {
         setShowSuccessAlert(false);
@@ -200,13 +200,15 @@ function RegistroTutor() {
       } else {
         setErrorMessage(error.response.data.message || "Ocurrió un error al procesar la solicitud.");
       }
-    }finally {
+    } finally {
       setIsAdding(false)
     }
   }
 
+
+
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className=" container mx-auto py-8 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 md:p-8">
         <h1 className="text-2xl font-bold text-center mb-6">Registro de Responsable de Inscripción</h1>
         <p className="text-gray-600 mb-8 text-center">
@@ -263,9 +265,8 @@ function RegistroTutor() {
                   value={formData.nombre}
                   onChange={handleChange}
                   placeholder="Ingrese su nombre(s)"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.nombre ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.nombre ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                    }`}
                 />
                 {errors.nombre && <p className="mt-1 text-sm text-red-600">{errors.nombre}</p>}
               </div>
@@ -282,9 +283,8 @@ function RegistroTutor() {
                   value={formData.apellido}
                   onChange={handleChange}
                   placeholder="Ingrese su apellido(s)"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.apellido ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.apellido ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                    }`}
                 />
                 {errors.apellido && <p className="mt-1 text-sm text-red-600">{errors.apellido}</p>}
               </div>
@@ -301,9 +301,8 @@ function RegistroTutor() {
                   value={formData.ci}
                   onChange={handleChange}
                   placeholder="Ingrese su número de carnet"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.idNumber ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.idNumber ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                    }`}
                 />
                 {errors.ci && <p className="mt-1 text-sm text-red-600">{errors.ci}</p>}
               </div>
@@ -320,9 +319,8 @@ function RegistroTutor() {
                   value={formData.correo}
                   onChange={handleChange}
                   placeholder="ejemplo@correo.com"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.correo ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.correo ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                    }`}
                 />
                 {errors.correo && <p className="mt-1 text-sm text-red-600">{errors.correo}</p>}
               </div>
@@ -339,9 +337,8 @@ function RegistroTutor() {
                   value={formData.telefono}
                   onChange={handleChange}
                   placeholder="Ingrese su número de celular"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.telefono ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.telefono ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                    }`}
                 />
                 {errors.telefono && <p className="mt-1 text-sm text-red-600">{errors.telefono}</p>}
               </div>
@@ -358,19 +355,17 @@ function RegistroTutor() {
                   value={formData.fecha_nacimiento}
                   onChange={handleChange}
                   placeholder="dd/mm/aaaa"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                    errors.fecha_nacimiento ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.fecha_nacimiento ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+                    }`}
                 />
                 {errors.fecha_nacimiento && <p className="mt-1 text-sm text-red-600">{errors.fecha_nacimiento}</p>}
-              </div> 
+              </div>
             </div>
 
             {/* Términos y Condiciones */}
             <div
-              className={`flex items-start space-x-2 rounded-md border p-4 ${
-                errors.termsAccepted ? "border-red-300" : "border-gray-200"
-              }`}
+              className={`flex items-start space-x-2 rounded-md border p-4 ${errors.termsAccepted ? "border-red-300" : "border-gray-200"
+                }`}
             >
               <input
                 type="checkbox"
@@ -392,18 +387,27 @@ function RegistroTutor() {
               </div>
             </div>
 
+
             {/* Botón de Guardar */}
-            <div className="flex justify-end">
+            <div className="flex justify-between mt-6">
+              <button
+                type="button"
+                onClick={handleVolver}
+                className="px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700:bg-gray-500 mr-3"
+
+              >
+                Identificarte
+              </button>
+
               <button
                 type="submit"
                 disabled={!formData.termsAccepted || isAdding}
-                className={`px-4 py-2 rounded-md text-white ${
-                  (formData.termsAccepted && !isAdding)
-                    ? "bg-black hover:bg-gray-800 cursor-pointer"
-                    : "bg-gray-400 cursor-not-allowed"
-                }`}
+                className={`px-4 py-2 rounded-md text-white ${(formData.termsAccepted && !isAdding)
+                  ? "bg-black hover:bg-gray-800 cursor-pointer"
+                  : "bg-gray-400 cursor-not-allowed"
+                  }`}
               >
-                {isAdding ? "Cargando...":"Guardar"}
+                {isAdding ? "Cargando..." : "Guardar"}
               </button>
             </div>
           </form>
