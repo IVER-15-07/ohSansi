@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrearTablaConfiguracion extends Migration
+class CrearTablaOpcionInscripcion extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,14 @@ class CrearTablaConfiguracion extends Migration
      */
     public function up()
     {
-        Schema::create('configuracion', function (Blueprint $table) {
+        Schema::create('opcion_inscripcion', function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('id_olimpiada')->constrained('olimpiada')->onDelete('cascade');
             $table->foreignId('id_area')->constrained('area')->onDelete('cascade');
             $table->foreignId('id_nivel_categoria')->constrained('nivel_categoria')->onDelete('cascade');
+
+            $table->unique(['id_olimpiada', 'id_area', 'id_nivel_categoria'], 'unique_opcion_inscripcion');
         });
     }
 
@@ -29,6 +31,6 @@ class CrearTablaConfiguracion extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('configuracion');
+        Schema::dropIfExists('opcion_inscripcion');
     }
 }

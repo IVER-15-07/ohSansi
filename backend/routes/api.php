@@ -9,7 +9,7 @@ use App\Http\Controllers\NivelCategoriaController;
 
 use App\Http\Controllers\GradoController;
 
-use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\OpcionInscripcionController;
 
 use App\Http\Controllers\OlimpiadaController;
 
@@ -18,6 +18,8 @@ use App\Http\Controllers\EncargadoController;
 use App\Http\Controllers\FormularioController;
 
 use App\Http\Controllers\RegistroController;
+
+use App\Http\Controllers\PagoController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -48,15 +50,16 @@ Route::post('/niveles_categorias/{id}/grados', [NivelCategoriaController::class,
 Route::get('/grados', [GradoController::class, 'obtenerGrados']);
 
 
-Route::get('/configuraciones', [ConfiguracionController::class, 'obtenerConfiguraciones']);
+Route::get('/opciones_inscripcion', [OpcionInscripcionController::class, 'obtenerOpcionesInscripcion']);
 
-Route::post('/configuraciones', [ConfiguracionController::class, 'almacenarConfiguracion']);
+Route::post('/opciones_inscripcion', [OpcionInscripcionController::class, 'almacenarOpcionInscripcion']);
 
-Route::get('/configuraciones/{idOlimpiada}/areas', [ConfiguracionController::class, 'obtenerAreasPorOlimpiada']);
+Route::get('/opciones_inscripcion/{idOlimpiada}/areas', [OpcionInscripcionController::class, 'obtenerAreasPorOlimpiada']);
 
-Route::get('/configuraciones/{idOlimpiada}/mapa', [ConfiguracionController::class, 'obtenerMapaOlimpiada']);
+Route::get('/opciones_inscripcion/{idOlimpiada}/mapa', [OpcionInscripcionController::class, 'obtenerMapaOlimpiada']);
 
-Route::delete('/configuraciones/{idOlimpiada}', [ConfiguracionController::class, 'eliminarConfiguracionesPorOlimpiada']);
+Route::delete('/opciones_inscripcion/{idOlimpiada}', [OpcionInscripcionController::class, 'eliminarOpcionesIncripcionPorOlimpiada']);
+
 
 Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 
@@ -79,10 +82,14 @@ Route::get('/formulario', [FormularioController::class, 'obtenerFormulario']);
 
 Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
 
+Route::get('/encargados/registros/{idEncargado}', [EncargadoController::class, 'obtenerConteoRegistros']);
+
+
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 
+Route::post('/pagos/guardarPago', [PagoController::class, 'guardarPago']);
 
-Route::post('/registro/validarComprobante', [RegistroController::class, 'validarComprobante']);
+Route::post('/pagos/obtenerId', [PagoController::class, 'obtenerIdPago']);
 
-
+Route::post('/pagos/agregar', [PagoController::class, 'agregarPago']);

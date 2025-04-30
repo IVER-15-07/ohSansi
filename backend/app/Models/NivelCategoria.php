@@ -16,10 +16,10 @@ class NivelCategoria extends Model
         'esNivel'
     ];
 
-    // Relación uno a muchos con Configuracion
-    public function configuraciones()
+    // Un nivel_categoria puede ser parte de muchas opciones de inscripcion
+    public function opciones_inscripcion()
     {
-        return $this->hasMany(Configuracion::class, 'id_nivel_categoria');
+        return $this->hasMany(OpcionInscripcion::class, 'id_nivel_categoria');
     }
 
     // Relación muchos a muchos con Grado

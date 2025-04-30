@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getAreas } from '../../../service/areas.api';
 
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
-import { getAreasByOlimpiada, getMapOfOlimpiada, deleteConfigurationByOlimpiada, createConfiguracion } from '../../../service/configuraciones.api';
+import { getAreasByOlimpiada, getMapOfOlimpiada, deleteOpcionesInscripcionByOlimpiada, createOpcionInscripcion } from '../../../service/opciones_inscripcion.api';
 import Cargando from '../Cargando';
 import Error from '../Error';
 import ElegirAreas from './ElegirAreas';
@@ -18,6 +18,7 @@ const ConfOlimpiada = () => {
   const [nivelesPorArea, setNivelesPorArea] = useState({});
   const [error, setError] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);	
 
   const { data: areasCatalogo, isLoading: isLoadingAreas, error: errorAreas } = useQuery({
     queryKey: ['areas'],
@@ -31,6 +32,7 @@ const ConfOlimpiada = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const areasRes = await getAreasByOlimpiada(id);
         const mapaRes = await getMapOfOlimpiada(id);
@@ -39,6 +41,8 @@ const ConfOlimpiada = () => {
       } catch (e) {
         console.error(e);
         setError("Error al cargar los datos. Intenta nuevamente.");
+      }finally {	
+        setIsLoading(false);	
       }
     };
     if (id) fetchData();
@@ -47,7 +51,7 @@ const ConfOlimpiada = () => {
   const handleGuardarConfiguracion = async () => {
     setIsAdding(true);
     try {
-      await deleteConfigurationByOlimpiada(id);
+      await deleteOpcionesInscripcionByOlimpiada(id);
       const configuraciones = [];
 
       areasSeleccionadas.forEach((area) => {
@@ -61,21 +65,23 @@ const ConfOlimpiada = () => {
         });
       });
 
-      await Promise.all(configuraciones.map((config) => createConfiguracion(config)));
-      alert('Configuraciones guardadas exitosamente.');
+      await Promise.all(configuraciones.map((config) => createOpcionInscripcion(config)));
+      alert('Configuracion guardada exitosamente.');
     } catch (error) {
       console.error(error);
-      setError('Error al guardar configuraciones.');
+      setError('Error al guardar opciones de inscripcion.');
     } finally {
       setIsAdding(false);
     }
   };
 
-  if (isLoadingAreas || isLoadingNiveles) return <Cargando />;
+  if (isLoadingAreas || isLoadingNiveles || isLoading) return <Cargando />;
   if (errorAreas) return <Error error={errorAreas} />;
   if (errorNiveles) return <Error error={errorNiveles} />;
 
-
+  console.log("Areas Seleccionadas", areasSeleccionadas);
+  console.log("Niveles catalogo", nivelesCatalogo.data);
+  console.log("Niveles por area", nivelesPorArea);
   return (
     <div className="p-6 flex flex-col gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
     <div className="flex flex-col gap-4 h-full">

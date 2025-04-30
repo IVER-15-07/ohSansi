@@ -79,9 +79,10 @@ class OlimpiadaController extends Controller
             // Validar los datos enviados
             $validated = $request->validate([
                 'nombre' => 'required|string|max:255',
+                'convocatoria' => 'nullable|file|mimes:pdf|max:2048', 
                 'descripcion' => 'nullable|string|max:255',
                 'costo' => 'nullable|numeric',
-                'ubicacion' => 'nullable|string|max:255',
+                'max_areas' => 'nullable|integer',
                 'fecha_inicio' => [
                     'required',
                     'date',
@@ -93,7 +94,6 @@ class OlimpiadaController extends Controller
                     'after_or_equal:fecha_inicio', // Validar que la fecha de fin sea mayor o igual a la fecha de inicio
                     'after_or_equal:today', // Validar que la fecha de fin sea mayor o igual a hoy
                 ],
-                
                 'inicio_inscripcion' => [
                     'required',
                     'date',
@@ -112,9 +112,10 @@ class OlimpiadaController extends Controller
             // Crear la olimpiada de forma controlada
             $olimpiada = Olimpiada::create([
                 'nombre' => $validated['nombre'],
+                'convocatoria' => $validated['convocatoria'] ? $request->file('convocatoria')->store('convocatorias') : null, // Guardar el archivo de convocatoria
                 'descripcion' => $validated['descripcion'],
                 'costo' => $validated['costo'],
-                'ubicacion' => $validated['ubicacion'],
+                'max_areas' => $validated['max_areas'],
                 'fecha_inicio' => $validated['fecha_inicio'],
                 'fecha_fin' => $validated['fecha_fin'],
                 'inicio_inscripcion' => $validated['inicio_inscripcion'],
@@ -131,7 +132,26 @@ class OlimpiadaController extends Controller
                 'message' => 'Olimpiada creada exitosamente', 
                 'data' => $olimpiada,
             ], 201);
-        }catch(\Exception $e){
+        }catch (\Illuminate\Validation\ValidationException $e) {
+            // Capturar errores de validación
+            $errors = $e->errors();
+    
+            if (isset($errors['convocatoria'])) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'validation_error',
+                    'message' => 'Error con el archivo de convocatoria: ' . implode(' ', $errors['convocatoria']),
+                ], 422);
+            }
+    
+            return response()->json([
+                'success' => false,
+                'status' => 'validation_error',
+                'message' => 'Error de validación: ' . $e->getMessage(),
+                'errors' => $errors,
+            ], 422);
+
+        } catch(\Exception $e){
             return response()->json([
                 'success' => false,
                 'status' => 'error',
