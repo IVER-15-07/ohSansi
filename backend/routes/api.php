@@ -95,3 +95,7 @@ Route::post('/pagos/obtenerId', [PagoController::class, 'obtenerIdPago']);
 Route::post('/pagos/agregar', [PagoController::class, 'agregarPago']);
 
 Route::post('/pagos/obtenerOrden', [PagoController::class, 'obtenerOrdenDePago']);
+
+Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAsociado']);
+
+Route::post('/pagos/validarComprobantePago', [PagoController::class, 'validarComprobantePago']);
