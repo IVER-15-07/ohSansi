@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 
-function OpcionInscripcion({ opcionesInscripcion, handleOpcionInscripcion }) {
+function OpcionInscripcion({ opcionesInscripcion, handleOpcionInscripcion, maxAreas }) {
   const [selecciones, setSelecciones] = useState([]);
+  const [cantidadAreas, setCantidadAreas] = useState(0);
 
   const agregarArea = () => {
     setSelecciones((prev) => [
       ...prev,
-      { areaId: '', nivelCategoriaId: '' }, // Nueva selección vacía
+      { areaId: '', opcionInscripcionId: '' }, // Nueva selección vacía
     ]);
+    setCantidadAreas((prev) => prev + 1);
+    if (cantidadAreas + 1 >= maxAreas) {
+      alert(`Has alcanzado el máximo de ${maxAreas} áreas.`);
+    }
   };
 
   const actualizarSeleccion = (index, campo, valor) => {
@@ -18,12 +23,19 @@ function OpcionInscripcion({ opcionesInscripcion, handleOpcionInscripcion }) {
   };
 
   const eliminarSeleccion = (index) => {
+    setCantidadAreas((prev) => prev - 1); 
     const nuevasSelecciones = selecciones.filter((_, i) => i !== index);
     setSelecciones(nuevasSelecciones);
     handleOpcionInscripcion(nuevasSelecciones); // Notificar al padre
   };
 
-  console.log("Claves de opcionesInscripcion:", opcionesInscripcion[0]);
+  const obtenerAreasDisponibles = (seleccionActual) => {
+    const areasSeleccionadas = selecciones.map((s) => s.areaId).filter((id) => id !== seleccionActual);
+    return Object.keys(opcionesInscripcion).filter((areaId) => !areasSeleccionadas.includes(areaId));
+  };
+
+  console.log("Catalogo", opcionesInscripcion);
+  console.log("Selecciones", selecciones);
   return (
     <div className="space-y-6">
       {selecciones.map((seleccion, index) => (
@@ -41,8 +53,8 @@ function OpcionInscripcion({ opcionesInscripcion, handleOpcionInscripcion }) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Seleccione un área</option>
-              {Object.keys(opcionesInscripcion).map((areaId) => (
-                <option key={opcionesInscripcion[areaId].id} value={opcionesInscripcion[areaId].id}>
+              {obtenerAreasDisponibles(seleccion.areaId).map((areaId) => (
+                <option key={opcionesInscripcion[areaId].id} value={areaId}>
                   {opcionesInscripcion[areaId].nombre || `Área ${opcionesInscripcion[areaId].id}`}
                 </option>
               ))}
@@ -55,17 +67,17 @@ function OpcionInscripcion({ opcionesInscripcion, handleOpcionInscripcion }) {
               Nivel/Categoría
             </label>
             <select
-              value={seleccion.nivelCategoriaId}
+              value={seleccion.OpcionInscripcionId}
               onChange={(e) =>
-                actualizarSeleccion(index, 'nivelCategoriaId', e.target.value)
+                actualizarSeleccion(index, 'opcionInscripcionId', e.target.value)
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={!seleccion.areaId} // Deshabilitar si no se seleccionó un área
             >
               <option value="">Seleccione un nivel/categoría</option>
               {seleccion.areaId &&
-                opcionesInscripcion[seleccion.areaId].map((nivelCategoria) => (
-                  <option key={nivelCategoria.id} value={nivelCategoria.id}>
+                opcionesInscripcion[seleccion.areaId].niveles_categorias.map((nivelCategoria) => (
+                  <option key={nivelCategoria.id} value={nivelCategoria.id_opcion_inscripcion}>
                     {nivelCategoria.nombre}
                   </option>
                 ))}
@@ -87,7 +99,8 @@ function OpcionInscripcion({ opcionesInscripcion, handleOpcionInscripcion }) {
       <button
         type="button"
         onClick={agregarArea}
-        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+        className={`px-4 py-2 ${cantidadAreas>= maxAreas ? `bg-gray-400` : `bg-green-600 text-white rounded-md hover:bg-green-700`}`}
+        disabled={cantidadAreas >= maxAreas} // Deshabilitar si se alcanzó el máximo
       >
         Agregar Área
       </button>

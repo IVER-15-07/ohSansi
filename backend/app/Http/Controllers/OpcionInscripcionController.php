@@ -27,9 +27,15 @@ class OpcionInscripcionController extends Controller
             $resultado = $opciones_inscripcion->groupBy('area.id')->map(function ($items, $areaId) {
                 $areaNombre = $items->first()->area->nombre; // Obtener el nombre del área
                 return [
-                    'id' => $areaId,
-                    'nombre' => $areaNombre,
-                    'niveles_categorias' => $items->pluck('nivel_categoria')->unique('id')->values(),
+                    'id' => $areaId, // ID del área
+                    'nombre' => $areaNombre, // Nombre del área
+                    'niveles_categorias' => $items->map(function ($item) {
+                        return [
+                            'id_opcion_inscripcion' => $item->id, // ID de OpcionInscripcion
+                            'id_nivel_categoria' => $item->nivel_categoria->id,
+                            'nombre' => $item->nivel_categoria->nombre,
+                        ];
+                    })->unique('id_nivel_categoria')->values(),
                 ];
             })->values();
 

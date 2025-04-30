@@ -6,12 +6,18 @@ import { getFormulario } from "../../../service/formulario.api";
 import { getOpcionesInscripcion } from "../../../service/opciones_inscripcion.api";
 import Formulario from "./Formulario";
 import OpcionInscripcion from "./OpcionInscripcion";
+import DatosPostulante from "./DatosPostulante";
 const RegistrarPostulante = () => {
     const [secciones, setSecciones] = useState([]);
     const [opcionesInscripcion, setOpcionesInscripcion] = useState([]);
     const [seleccionesInscripcion, setSeleccionesInscripcion] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [errorFormulario, setErrorFormulario] = useState(null);
+    const [datosPostulante, setDatosPostulante] = useState({
+        nombres: '',
+        apellidos: '',
+        ci: '',
+      });
 
     const { idOlimpiada} = useParams();
 
@@ -62,34 +68,31 @@ const RegistrarPostulante = () => {
         e.preventDefault();
         // Enviar formValues al backend para guardarlo en dato_inscripcion
         // Por ejemplo:
-        fetch(`/api/save-form/${registroId || ""}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ formValues }),
-        })
-        .then((res) => res.json())
-        .then((respuesta) => {
-            console.log("Guardado con éxito", respuesta);
-        })
-        .catch((error) => console.error(error));
+        
+        
     };
 
     const handleOpcionInscripcion = (nuevasSelecciones) => {
       setSeleccionesInscripcion(nuevasSelecciones);
     };
-    console.log(JSON.stringify({ seleccionesInscripcion }));
+    console.log('SELECCIONES', JSON.stringify({ seleccionesInscripcion }));
     console.log(JSON.stringify({ opcionesInscripcion }));
+    console.log(JSON.stringify({ datosPostulante }));
     if (isLoading || secciones.length === 0) return <div>Cargando...</div>;
     if (errorFormulario) return <div>Error al cargar el formulario</div>;
-
     
     return (
       <div className="flex flex-col flex-grow min-h-0 bg-gray-100">
         <div className="flex-grow flex items-center justify-center overflow-y-auto">
           <div className="max-w-4xl w-full bg-white shadow-md rounded-lg p-6">
 
+            <h2 className="text-2xl font-bold mb-4">Formulario de Inscripción</h2>
+            <p className="text-gray-600 mb-4">Por favor, completa el formulario a continuación.</p>
+
+            <DatosPostulante
+              formValues={datosPostulante}
+              handleInputChange={(campo, valor) => setDatosPostulante({ ...datosPostulante, [campo]: valor })}
+            />
             <Formulario 
               secciones={secciones}
               formValues={formValues}
@@ -99,6 +102,7 @@ const RegistrarPostulante = () => {
             <OpcionInscripcion
               opcionesInscripcion={opcionesInscripcion}
               handleOpcionInscripcion={handleOpcionInscripcion}
+              maxAreas={2} // Cambia esto según tu lógica
             />
 
             <button
