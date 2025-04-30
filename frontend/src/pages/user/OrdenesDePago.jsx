@@ -12,6 +12,7 @@ const OrdenesDePago = () => {
   const [encargado, setEncargado] = useState(null);
   const [olimpiada, setOlimpiada] = useState(null);
   const [conteoRegistros, setConteoRegistros] = useState(null);
+  const [sinRegistros, setSinRegistros] = useState(false); // Estado para manejar si no hay registros
   const pdfRef = useRef();
 
   useEffect(() => {
@@ -32,7 +33,11 @@ const OrdenesDePago = () => {
     obtenerConteoRegistrosPorEncargado(idEncargado)
       .then(res => {
         console.log("Conteo de registros:", res);
-        setConteoRegistros(res);
+        if (res.conteo_registros === 0) {
+          setSinRegistros(true); // Si no hay registros, actualiza el estado
+        } else {
+          setConteoRegistros(res);
+        }
       })
       .catch(err => console.error("Error al obtener conteo de registros:", err));
   }, [idEncargado, idOlimpiada]);
@@ -94,6 +99,9 @@ const OrdenesDePago = () => {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
+      // Descargar el PDF generado
+      pdf.save("orden_de_pago.pdf");
+
       // Convertir el PDF a un archivo Blob
       const pdfBlob = pdf.output("blob");
 
@@ -125,12 +133,20 @@ const OrdenesDePago = () => {
       });
       console.log("Pago asociado a los registros:", agregarPagoResponse);
 
-      alert("PDF generado y pago registrado exitosamente.");
+      alert("PDF generado, descargado y pago registrado exitosamente.");
     } catch (error) {
       console.error("Error al generar el PDF o registrar el pago:", error);
       alert("Ocurrió un error al generar el PDF o registrar el pago.");
     }
   };
+
+  if (sinRegistros) {
+    return (
+      <div>
+        <h2>No existen registros pendientes para generar una orden de pago.</h2>
+      </div>
+    );
+  }
 
   if (!encargado || !olimpiada || !conteoRegistros) {
     return (
@@ -160,7 +176,7 @@ const OrdenesDePago = () => {
       <div
         ref={pdfRef}
         style={{
-          padding: "20px",
+          padding: "100px",
           backgroundColor: "#f5faff",
           border: "1px solid #ccc",
           borderRadius: "10px",
@@ -272,7 +288,7 @@ const OrdenesDePago = () => {
             cursor: "pointer",
           }}
         >
-          Generar PDF
+          Generar Orden de Pago
         </button>
       </div>
     </div>
