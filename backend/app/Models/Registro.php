@@ -21,6 +21,9 @@ class Registro extends Model
         'id_pago'
     ];
 
+    
+
+    
     public function encargado()
     {
         return $this->belongsTo(Encargado::class, 'id_encargado');

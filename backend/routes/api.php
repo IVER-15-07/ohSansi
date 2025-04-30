@@ -86,4 +86,5 @@ Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 Route::post('/registro/validarComprobante', [RegistroController::class, 'validarComprobante']);
 
-
+Route::post('/registro_lote', [RegistroController::class, 'crearRegistroDesdeExcel']);
+Route::get('/registro_lote', [RegistroController::class, 'obtenerRegistroDesdeExcel']);
