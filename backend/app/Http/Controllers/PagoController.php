@@ -57,44 +57,45 @@ class PagoController extends Controller
    
     public function obtenerIdPago(Request $request)
     {
-    try {
-        // Validar los datos enviados
-        $validated = $request->validate([
-            'monto' => 'required|numeric|min:0',
-            'fecha_generado' => 'required|date',
-            'concepto' => 'required|string|max:255',
-        ]);
-
-        // Buscar el ID del pago en la base de datos
-        $pago = DB::table('pago')
-            ->where('monto', $validated['monto'])
-            ->where('fecha_generado', $validated['fecha_generado'])
-            ->where('concepto', $validated['concepto'])
-            ->first();
-
-        // Verificar si se encontró el pago
-        if (!$pago) {
+        try {
+            // Validar los datos enviados
+            $validated = $request->validate([
+                'monto' => 'required|numeric|min:0',
+                'fecha_generado' => 'required|date',
+                'concepto' => 'required|string|max:255',
+            ]);
+    
+            // Buscar el último ID del pago en la base de datos que cumpla con los criterios
+            $pago = DB::table('pago')
+                ->where('monto', $validated['monto'])
+                ->where('fecha_generado', $validated['fecha_generado'])
+                ->where('concepto', $validated['concepto'])
+                ->orderBy('id', 'desc') // Ordenar por ID en orden descendente
+                ->first();
+    
+            // Verificar si se encontró el pago
+            if (!$pago) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pago no encontrado',
+                ], 404);
+            }
+    
+            // Retornar el ID del último pago encontrado
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $pago->id,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar errores y retornar una respuesta
             return response()->json([
                 'success' => false,
-                'message' => 'Pago no encontrado',
-            ], 404);
+                'status' => 'error',
+                'message' => 'Error al obtener el ID del pago: ' . $e->getMessage(),
+            ], 500);
         }
-
-        // Retornar el ID del pago
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $pago->id,
-            ],
-        ], 200);
-    } catch (\Exception $e) {
-        // Manejar errores y retornar una respuesta
-        return response()->json([
-            'success' => false,
-            'status' => 'error',
-            'message' => 'Error al obtener el ID del pago: ' . $e->getMessage(),
-        ], 500);
-    }
     }
 
     public function agregarPago(Request $request)
@@ -267,7 +268,7 @@ class PagoController extends Controller
     }
 
     public function validarComprobantePago(Request $request)
-{
+    {
     try {
         // Validar los datos enviados
         $validated = $request->validate([
@@ -315,6 +316,6 @@ class PagoController extends Controller
             'message' => 'Error al validar el comprobante de pago: ' . $e->getMessage(),
         ], 500);
     }
-}
+    }
 
 }

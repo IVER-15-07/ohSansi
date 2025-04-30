@@ -96,6 +96,59 @@ const OrdenesDePago = () => {
     return palabrasEnEspañol.charAt(0).toUpperCase() + palabrasEnEspañol.slice(1);
   };
 
+  const generarPDF = async () => {
+    try {
+      const input = pdfRef.current;
+
+      // Generar el PDF
+      const canvas = await html2canvas(input);
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      // Descargar el PDF generado
+      pdf.save("orden_de_pago.pdf");
+
+      // Convertir el PDF a un archivo Blob
+      const pdfBlob = pdf.output("blob");
+
+      // Crear un objeto FormData para enviar el PDF al servidor
+      const formData = new FormData();
+      formData.append("monto", importeTotal);
+      formData.append("fecha_generado", new Date().toISOString().split("T")[0]); // Formato AAAA-MM-DD
+      formData.append("concepto", `DECANATO OLIMPIADA DE CIENCIAS ${olimpiada.nombre}`);
+      formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
+
+      // Guardar el pago en el servidor
+      const guardarPagoResponse = await guardarPago(formData);
+      console.log("Pago guardado:", guardarPagoResponse);
+
+      // Obtener el ID del pago recién creado
+      const obtenerIdResponse = await obtenerIdPago({
+        monto: importeTotal,
+        fecha_generado: new Date().toISOString().split("T")[0],
+        concepto: `DECANATO OLIMPIADA DE CIENCIAS ${olimpiada.nombre}`,
+      });
+      console.log("ID del pago obtenido:", obtenerIdResponse);
+
+      const idPago = obtenerIdResponse.data.id;
+
+      // Asociar el ID del pago a los registros del encargado
+      const agregarPagoResponse = await agregarPago({
+        id_encargado: idEncargado,
+        id_pago: idPago,
+      });
+      console.log("Pago asociado a los registros:", agregarPagoResponse);
+
+      alert("PDF generado, descargado y pago registrado exitosamente.");
+    } catch (error) {
+      console.error("Error al generar el PDF o registrar el pago:", error);
+      alert("Ocurrió un error al generar el PDF o registrar el pago.");
+    }
+  };
+
   if (sinRegistros) {
     return (
       <div>
