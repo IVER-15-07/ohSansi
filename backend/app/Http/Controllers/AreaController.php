@@ -64,6 +64,4 @@ class AreaController extends Controller
             ], 500);
         }
     }
-
-    
 }
