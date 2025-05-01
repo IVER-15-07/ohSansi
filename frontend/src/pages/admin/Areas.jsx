@@ -4,6 +4,7 @@ import { getAreas, createArea } from '../../../service/areas.api';
 import Cargando from '../Cargando';
 import Error from '../Error';
 import Modal from '../../components/Modal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 const Areas = () => {
   const queryClient = useQueryClient();
@@ -112,31 +113,6 @@ const Areas = () => {
     }
   };
 
-  // Contenido personalizado para el modal de confirmación
-  const modalContent = (
-    <>
-      <h3 className="text-lg font-medium mb-2">Confirmar acción</h3>
-      <p className="text-gray-600 mb-6">
-        ¿Estás seguro de que deseas agregar el área <strong>{newArea}</strong>?
-      </p>
-      <div className="flex justify-end space-x-2">
-        <button
-          onClick={() => setIsModalOpen(false)}
-          className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-        >
-          Cancelar
-        </button>
-        <button 
-          onClick={handleAddArea}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-          disabled={isAdding}
-        >
-          {isAdding ? 'Añadiendo...' : 'Confirmar'}
-        </button>
-      </div>
-    </>
-  );
-
   return (
     <div className="p-6 flex flex-col gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
       {/* Lista de Áreas */}
@@ -195,13 +171,17 @@ const Areas = () => {
       </div>
 
       {/* Modal de Confirmación */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
-            {modalContent}
-          </div>
-        </div>
-      )}
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleAddArea}
+        title="Confirmar acción"
+        message={`¿Estás seguro de que deseas agregar el área ${newArea}?`}
+        confirmText="Confirmar"
+        cancelText="Cancelar"
+        isLoading={isAdding}
+        confirmButtonColor="blue"
+      />
       
       {/* Modal de Éxito */}
       {successMessage && (
