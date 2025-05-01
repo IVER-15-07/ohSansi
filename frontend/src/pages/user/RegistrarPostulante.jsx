@@ -52,7 +52,7 @@ const RegistrarPostulante = () => {
           setFormValues(initialValues);
           return;
         }
-        
+
         secciones.map((sec) => {
         sec.campos_inscripcion.map((campo) => {
             initialValues[campo.id] = campo.valor || "";
@@ -92,7 +92,9 @@ const RegistrarPostulante = () => {
             // Guardar los datos de inscripción relacionados con el registro
             await saveDatosInscripcion({formValues: formValues}, registro.id);
           }
+          alert("Inscripcion registrada con éxito");
         }catch (error) {
+          alert(error.response.data.message);
           console.error("Error al enviar el formulario:", error);
         }finally {
           setIsLoading(false);

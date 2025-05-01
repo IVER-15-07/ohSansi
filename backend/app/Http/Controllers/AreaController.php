@@ -38,14 +38,7 @@ class AreaController extends Controller
                 'nombre' => [
                     'required',
                     'string',
-                    'max:50',
-                    'regex:/^[a-zA-Z0-9\s]+$/',
-                    function ($attribute, $value, $fail) {
-                        
-                        if (\App\Models\Area::whereRaw('LOWER(nombre) = ?', [strtolower($value)])->exists()) {
-                            $fail('El nombre del área ya existe en el catálogo.');
-                        }
-                    },
+                    'max:50'
                 ],
             ]);
     
