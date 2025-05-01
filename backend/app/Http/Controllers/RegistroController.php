@@ -9,6 +9,8 @@ use App\Models\Olimpiada;
 use App\Models\Pago;
 use App\Models\DatoInscripcion;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Area;
+use App\Models\NivelCategoria;
 
 class RegistroController extends Controller
 {
@@ -99,66 +101,105 @@ class RegistroController extends Controller
         ]);
     }
 
-    public function crearRegistrosDesdeExcel(Request $request)
+    public function registrarListaPostulantes(Request $request)
     {
         try {
             // Validar los datos enviados
             $validated = $request->validate([
-                'registros' => 'required|array',
-                'registros.*.nombres' => 'required|string|max:255',
-                'registros.*.apellidos' => 'required|string|max:255',
-                'registros.*.ci' => 'required|string|max:20|unique:registro,ci',
-                'registros.*.id_opcion_inscripcion' => 'required|exists:opcion_inscripcion,id',
-                'registros.*.id_encargado' => 'required|exists:encargado,id',
-                'registros.*.datos' => 'nullable|array',
-                'registros.*.datos.*.id_campo_inscripcion' => 'required|exists:campo_inscripcion,id',
-                'registros.*.datos.*.valor' => 'required|string',
+                'id_encargado' => 'required|exists:encargado,id',
+                'id_opcion_inscripcion' => 'required|exists:opcion_inscripcion,id',
+                'id_olimpiada' => 'required|exists:olimpiada,id',
+                'postulantes' => 'required|array',
+                'postulantes.*.nombres' => 'required|string|max:255',
+                'postulantes.*.apellidos' => 'required|string|max:255',
+                'postulantes.*.ci' => 'required|string|max:20|unique:registro,ci',
+                'postulantes.*.area.nombre' => 'required|string|max:255',
+                'postulantes.*.area.categoria' => 'required|string|max:255',
+                'postulantes.*.datos_inscripcion' => 'required|array',
+                'postulantes.*.datos_inscripcion.*.id_seccion_campo' => 'required|exists:seccion_campo,id',
+                'postulantes.*.datos_inscripcion.*.campos' => 'required|array',
+                'postulantes.*.datos_inscripcion.*.campos.*.id_campo_inscripcion' => 'required|exists:campo_inscripcion,id',
+                'postulantes.*.datos_inscripcion.*.campos.*.valor' => 'required|string',
             ]);
-    
-            foreach ($validated['registros'] as $registroData) {
+
+            $idEncargado = $validated['id_encargado'];
+            $idOpcionInscripcion = $validated['id_opcion_inscripcion'];
+            $idOlimpiada = $validated['id_olimpiada'];
+
+            foreach ($validated['postulantes'] as $postulanteData) {
+                // Validar que el área pertenezca a la olimpiada
+                $area = Area::where('nombre', $postulanteData['area']['nombre'])
+                    ->whereHas('opciones_inscripcion', function ($query) use ($idOlimpiada) {
+                        $query->where('id_olimpiada', $idOlimpiada);
+                    })
+                    ->first();
+
+                if (!$area) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El área "' . $postulanteData['area']['nombre'] . '" no está asociada a la olimpiada especificada.',
+                    ], 422);
+                }
+
+                // Validar que la categoría o nivel pertenezca a la olimpiada
+                $categoriaONivel = NivelCategoria::where('nombre', $postulanteData['area']['categoria'])
+                    ->whereHas('opciones_inscripcion', function ($query) use ($idOlimpiada) {
+                        $query->where('id_olimpiada', $idOlimpiada);
+                    })
+                    ->where('esNivel', $postulanteData['area']['categoria'] === 'nivel' ? 't' : 'f') // Diferenciar nivel o categoría
+                    ->first();
+
+                if (!$categoriaONivel) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'La categoría o nivel "' . $postulanteData['area']['categoria'] . '" no está asociado(a) a la olimpiada especificada.',
+                    ], 422);
+                }
+
                 // Crear el registro del postulante
                 $registro = Registro::create([
-                    'nombres' => $registroData['nombres'],
-                    'apellidos' => $registroData['apellidos'],
-                    'ci' => $registroData['ci'],
-                    'id_opcion_inscripcion' => $registroData['id_opcion_inscripcion'],
-                    'id_encargado' => $registroData['id_encargado'],
+                    'nombres' => $postulanteData['nombres'],
+                    'apellidos' => $postulanteData['apellidos'],
+                    'ci' => $postulanteData['ci'],
+                    'id_opcion_inscripcion' => $idOpcionInscripcion,
+                    'id_encargado' => $idEncargado,
                     'id_pago' => null, // No se asocia ningún pago en este paso
+                    'id_area' => $area->id, // Asociar el área
+                    'id_categoria' => $categoria->id, // Asociar la categoría
                 ]);
-    
+
                 // Crear los datos de inscripción asociados
-                if (!empty($registroData['datos'])) {
-                    foreach ($registroData['datos'] as $dato) {
+                foreach ($postulanteData['datos_inscripcion'] as $seccion) {
+                    foreach ($seccion['campos'] as $campo) {
                         DatoInscripcion::create([
                             'id_registro' => $registro->id,
-                            'id_campo_inscripcion' => $dato['id_campo_inscripcion'],
-                            'valor' => $dato['valor'],
+                            'id_campo_inscripcion' => $campo['id_campo_inscripcion'],
+                            'valor' => $campo['valor'],
                         ]);
                     }
                 }
             }
-    
+
             return response()->json([
                 'success' => true,
-                'message' => 'Postulantes registrados exitosamente.',
+                'message' => 'Lista de postulantes registrada exitosamente.',
             ], 201);
         } catch (\Exception $e) {
+
             return response()->json([
                 'success' => false,
-                'status' => 'error',
-                'message' => 'Error al registrar los postulantes: ' . $e->getMessage(),
+                'message' => 'Error al registrar la lista de postulantes: ' . $e->getMessage(),
             ], 500);
         }
     }
 
 
 
-    public function obtenerRegistroDesdeExcel()
+    public function obtenerListaPostulantes()
     {
         try {
-
             $registros = Cache::remember('registros_excel', 3600, function () {
-                return Registro::with(['datos', 'encargado', 'opcion_Inscripcion'])->get();
+                return Registro::with(['datos', 'encargado', 'opcion_inscripcion'])->get();
             });
 
             return response()->json([
@@ -171,6 +212,27 @@ class RegistroController extends Controller
                 'success' => false,
                 'status' => 'error',
                 'message' => 'Error al obtener los registros: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function obtenerDatosInscripcion()
+    {
+        try {
+            $datosInscripcion = Cache::remember('dato_inscripcion', 3600, function () {
+                return DatoInscripcion::all();
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'datos obtenidos exitosamente.',
+                'data' => $datosInscripcion,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al obtener los datos de inscripción: ' . $e->getMessage(),
             ], 500);
         }
     }

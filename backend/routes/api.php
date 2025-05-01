@@ -18,6 +18,7 @@ use App\Http\Controllers\EncargadoController;
 use App\Http\Controllers\FormularioController;
 
 use App\Http\Controllers\RegistroController;
+use App\Http\Controllers\SeccionController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -86,5 +87,9 @@ Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 Route::post('/registro/validarComprobante', [RegistroController::class, 'validarComprobante']);
 
-Route::post('/registro_lote', [RegistroController::class, 'crearRegistroDesdeExcel']);
-Route::get('/registro_lote', [RegistroController::class, 'obtenerRegistroDesdeExcel']);
+Route::post('/registro_lote', [RegistroController::class, 'registrarListaPostulantes']);
+Route::get('/registro_lote', [RegistroController::class, 'obtenerListaPostulantes']);
+
+Route::get('/dato_inscripcion', [RegistroController::class, 'obtenerDatosInscripcion']);
+
+Route::get('/seccion', [SeccionController::class, 'obtenerSecciones']);

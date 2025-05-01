@@ -12,6 +12,9 @@ class OpcionInscripcion extends Model
     protected $table = 'opcion_inscripcion';
     public $timestamps = false;
     // Relación inversa con Olimpiada
+
+ 
+
     public function olimpiada()
     {
         return $this->belongsTo(Olimpiada::class, 'id_olimpiada');
