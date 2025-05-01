@@ -178,14 +178,20 @@ const CrearOlimpiada = () => {
       // Agregar campos opcionales solo si tienen valor
       if (datosFormulario.descripcion) {
         formData.append('descripcion', datosFormulario.descripcion);
+      } else {
+        formData.append('descripcion', ''); // Enviar cadena vacía en lugar de omitir
       }
       
       if (datosFormulario.costo) {
         formData.append('costo', datosFormulario.costo);
+      } else {
+        formData.append('costo', ''); // Enviar cadena vacía en lugar de omitir
       }
       
       if (datosFormulario.max_areas) {
         formData.append('max_areas', datosFormulario.max_areas);
+      } else {
+        formData.append('max_areas', ''); // Enviar cadena vacía en lugar de omitir
       }
       
       if (datosFormulario.inicioInscripcion) {
@@ -200,9 +206,12 @@ const CrearOlimpiada = () => {
         formData.append('fin_inscripcion', datosFormulario.fechaFin);
       }
       
-      // Agregar el archivo solo si existe
-      if (datosFormulario.convocatoria) {
+      // Agregar el archivo solo si existe y es un objeto File válido
+      if (datosFormulario.convocatoria && datosFormulario.convocatoria instanceof File) {
         formData.append('convocatoria', datosFormulario.convocatoria);
+      } else {
+        // Importante: NO enviamos un campo vacío para 'convocatoria' cuando no hay archivo
+        // Esto garantiza que el backend no intente procesar un archivo inexistente
       }
 
       await createOlimpiada(formData);
