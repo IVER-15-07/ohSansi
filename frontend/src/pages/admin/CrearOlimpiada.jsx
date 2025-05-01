@@ -1,10 +1,12 @@
-import React, { useEffect, useRef} from 'react'
+import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import { createOlimpiada, getOlimpiadas } from '../../../service/olimpiadas.api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import SubirArchivo from '../../components/SubirArchivo';
-
+import Modal from '../../components/Modal';
+import { format, parse } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const CrearOlimpiada = () => {
   const clienteQuery = useQueryClient();
@@ -12,6 +14,8 @@ const CrearOlimpiada = () => {
 
   const [olimpiadas, setOlimpiadas] = useState([]);
   const [agregando, setAgregando] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   const [datosFormulario, setDatosFormulario] = useState({
     nombre: '',
@@ -132,9 +136,14 @@ const CrearOlimpiada = () => {
     setErrores(nuevosErrores);
   };
 
+  const formatDate = (date) => {
+    return format(new Date(date), 'dd/MM/yyyy', { locale: es });
+  };
+
   const manejarCambio = (e) => {
     const { name, value } = e.target;
-    setDatosFormulario(prev => ({ ...prev, [name]: value }));
+    const formattedValue = name.includes('fecha') && value ? parse(value, 'yyyy-MM-dd', new Date()) : value;
+    setDatosFormulario((prev) => ({ ...prev, [name]: formattedValue }));
   };
 
   const manejarBlur = (e) => {
@@ -150,11 +159,12 @@ const CrearOlimpiada = () => {
 
   const manejarEnvio = async (e) => {
     e.preventDefault();
-    setErrorGeneral(''); // Limpia el mensaje de error general
+    setErrorGeneral('');
 
-    // Validar si el nombre ya existe
-    if (olimpiadas.some(o => normalizarTexto(o.nombre) === normalizarTexto(datosFormulario.nombre))) {
-      setErrorGeneral('El nombre de la olimpiada ya existe. Por favor, elija otro nombre.');
+    const nombreNormalizado = normalizarTexto(datosFormulario.nombre);
+    if (olimpiadas.some(o => normalizarTexto(o.nombre).includes(nombreNormalizado))) {
+      setModalMessage('El nombre de la olimpiada es demasiado similar a uno existente. Por favor, elija otro nombre.');
+      setShowModal(true);
       return;
     }
 
@@ -176,8 +186,8 @@ const CrearOlimpiada = () => {
     try {
       await createOlimpiada(nuevaOlimpiada);
       clienteQuery.invalidateQueries(['olimpiadas']);
-      alert('Olimpiada creada exitosamente.');
-      redirigir('/AdminLayout/Olympiad');
+      setModalMessage('Los datos obligatorios se registraron exitosamente.');
+      setShowModal(true);
     } catch (error) {
       console.error('Error al crear la olimpiada:', error);
     } finally {
@@ -185,13 +195,19 @@ const CrearOlimpiada = () => {
     }
   };
 
-  const campoFormulario = (etiqueta, nombreCampo, tipo = 'text', placeholder = '', colSpan = 1) => (
+  const campoFormulario = (etiqueta, nombreCampo, tipo = 'text', placeholder = '', colSpan = 1, obligatorio = false) => (
     <div className={`col-span-2 md:col-span-${colSpan}`}>
-      <label className="block font-medium text-gray-600 mb-1">{etiqueta}</label>
+      <label className="block font-medium text-gray-600 mb-1">
+        {etiqueta} {obligatorio && <span className="text-red-500">*</span>}
+      </label>
       <input
         type={tipo}
         name={nombreCampo}
-        value={datosFormulario[nombreCampo]}
+        value={
+          nombreCampo.includes('fecha') && datosFormulario[nombreCampo]
+            ? format(new Date(datosFormulario[nombreCampo]), 'dd/MM/yyyy')
+            : datosFormulario[nombreCampo]
+        }
         onChange={manejarCambio}
         onBlur={manejarBlur}
         placeholder={placeholder}
@@ -199,62 +215,67 @@ const CrearOlimpiada = () => {
           }`}
       />
       {errores[nombreCampo] && <p className="text-red-600 text-sm mt-1">{errores[nombreCampo]}</p>}
+      {!obligatorio && <p className="text-gray-500 text-sm">(opcional)</p>}
     </div>
   );
 
   
   console.log(datosFormulario);
   return (
-    <div className="w-full px-6 py-3 bg-gray-50 rounded-xl">
-      <h1 className="text-xl font-bold text-gray-700 mb-4">Datos generales de la Olimpiada</h1>
+    <div className="w-full h-screen md:h-auto overflow-y-auto md:overflow-hidden px-6 py-3 bg-gray-50 rounded-xl flex flex-col justify-between">
+      {showModal && <Modal message={modalMessage} onClose={() => setShowModal(false)} />}
+      <div>
+        <h1 className="text-xl font-bold text-gray-700 mb-4">Datos generales de la Olimpiada</h1>
 
-      {/* Mostrar mensaje de error general debajo del título */}
-      {errorGeneral && (
-        <div className="mb-4 text-red-600 bg-red-100 p-2 rounded-lg border border-red-300 text-sm">
-          {errorGeneral}
-        </div>
-      )}
+        {/* Mostrar mensaje de error general debajo del título */}
+        {errorGeneral && (
+          <div className="mb-4 text-red-600 bg-red-100 p-2 rounded-lg border border-red-300 text-sm">
+            {errorGeneral}
+          </div>
+        )}
 
-      <form
-        id="formulario-crear-olimpiada"
-        onSubmit={manejarEnvio}
-        className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 bg-white p-6 rounded-2xl shadow border border-gray-200 text-sm"
-      >
-        {campoFormulario('Nombre de la olimpiada', 'nombre', 'text', 'Ingrese el nombre', 2)}
-        {campoFormulario('Fecha de inicio', 'fechaInicio', 'date')}
-        {campoFormulario('Fecha de finalización', 'fechaFin', 'date')}
-        {campoFormulario('Inicio de inscripción', 'inicioInscripcion', 'date')}
-        {campoFormulario('Fin de inscripción', 'finInscripcion', 'date')}
-        {campoFormulario('Costo', 'costo', 'number', '00.00 Bs')}
-        {campoFormulario('Maxima Cantidad de Áreas por Persona', 'max_areas', 'number', "SIN MÁXIMO")}
-        <div className="md:col-span-1">
-          <label className="block font-medium text-gray-600 mb-1">Descripción</label>
-          <textarea
-            name="descripcion"
-            value={datosFormulario.descripcion}
-            onChange={manejarCambio}
-            onBlur={manejarBlur}
-            placeholder="Inserte la descripción"
-            className={`w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 h-24 resize-none ${errores.descripcion ? 'border-red-500 ring-red-300' : 'focus:ring-blue-500'
-              }`}
+        <form
+          id="formulario-crear-olimpiada"
+          onSubmit={manejarEnvio}
+          className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 bg-white p-4 rounded-xl shadow border border-gray-200 text-sm"
+        >
+          {campoFormulario('Nombre de la olimpiada', 'nombre', 'text', 'Ingrese el nombre', 2, true)}
+          {campoFormulario('Fecha de inicio', 'fechaInicio', 'date', '', 1, true)}
+          {campoFormulario('Fecha de finalización', 'fechaFin', 'date', '', 1, true)}
+          {campoFormulario('Inicio de inscripción', 'inicioInscripcion', 'date', '', 1)}
+          {campoFormulario('Fin de inscripción', 'finInscripcion', 'date', '', 1)}
+          {campoFormulario('Costo', 'costo', 'number', '00.00 Bs', 1)}
+          {campoFormulario('Maxima Cantidad de Áreas por Persona', 'max_areas', 'number', "SIN MÁXIMO", 1)}
+          <div className="md:col-span-1">
+            <label className="block font-medium text-gray-600 mb-1">Descripción</label>
+            <textarea
+              name="descripcion"
+              value={datosFormulario.descripcion}
+              onChange={manejarCambio}
+              onBlur={manejarBlur}
+              placeholder="Inserte la descripción"
+              className={`w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 h-20 resize-none ${errores.descripcion ? 'border-red-500 ring-red-300' : 'focus:ring-blue-500'
+                }`}
+            />
+            {errores.descripcion && <p className="text-red-600 text-sm mt-1">{errores.descripcion}</p>}
+            <p className="text-gray-500 text-sm">(opcional)</p>
+          </div>
+
+          <SubirArchivo
+            nombreArchivo="Subir la convocatoria de la olimpiada"
+            tipoArchivo="pdf"
+            handleArchivo={handleArchivo}
+            inputRef={useRef()}
           />
-          {errores.descripcion && <p className="text-red-600 text-sm mt-1">{errores.descripcion}</p>}
-        </div>
 
-        <SubirArchivo
-          nombreArchivo="Subir la convocatoria de la olimpiada"
-          tipoArchivo="pdf"
-          handleArchivo={handleArchivo}
-          inputRef={useRef()}
-        />
+        </form>
+      </div>
 
-      </form>
-
-      <div className="flex justify-end mt-4 p-4 gap-6">
+      <div className="flex justify-end mt-4 p-3 gap-4 bg-white rounded-lg shadow-md mb-6">
         <button
           type="button"
           onClick={() => redirigir('/AdminLayout/Olympiad')}
-          className="bg-blue-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition w-40 h-12 flex items-center justify-center"
+          className="bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition w-32 h-10 flex items-center justify-center"
         >
           Cancelar
         </button>
@@ -262,7 +283,7 @@ const CrearOlimpiada = () => {
           type="submit"
           form="formulario-crear-olimpiada"
           disabled={agregando}
-          className={`px-5 py-2 rounded-md text-sm font-medium transition ${agregando
+          className={`px-4 py-2 rounded-md text-sm font-medium transition ${agregando
             ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
             : 'bg-blue-900 text-white hover:bg-blue-800'
             }`}
@@ -270,6 +291,8 @@ const CrearOlimpiada = () => {
           {agregando ? 'Cargando...' : 'Crear Olimpiada'}
         </button>
       </div>
+
+      <footer className="w-full h-12 bg-blue-900 mt-6"></footer>
     </div>
   );
 };
