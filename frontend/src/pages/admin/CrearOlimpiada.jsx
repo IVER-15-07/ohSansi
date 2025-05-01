@@ -17,7 +17,7 @@ const CrearOlimpiada = () => {
 
   const [datosFormulario, setDatosFormulario] = useState({
     nombre: '',
-    convocatoria: null,
+    convocatoria: '',
     descripcion: '',
     costo: '',
     max_areas: '',
