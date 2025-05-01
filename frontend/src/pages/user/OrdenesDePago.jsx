@@ -198,7 +198,7 @@ const OrdenesDePago = () => {
 
   const totalRegistros = conteoRegistros.conteo_registros;
   const costoPorUnidad = olimpiada.costo;
-  const importeTotal = totalRegistros * costoPorUnidad;
+  const importeTotal = (totalRegistros * costoPorUnidad).toFixed(2);
   const detalleAreas = Object.entries(conteoRegistros.areas)
     .map(([area, cantidad]) => `${area}: ${cantidad}`)
     .join(", ");
