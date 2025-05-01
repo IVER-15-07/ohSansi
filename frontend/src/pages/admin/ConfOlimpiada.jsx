@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getAreas } from '../../../service/areas.api';
+import { ArrowLeft } from 'lucide-react';
 
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
 import { getAreasByOlimpiada, getMapOfOlimpiada, deleteOpcionesInscripcionByOlimpiada, createOpcionInscripcion } from '../../../service/opciones_inscripcion.api';
@@ -9,16 +10,21 @@ import Cargando from '../Cargando';
 import Error from '../Error';
 import ElegirAreas from './ElegirAreas';
 import ElegirNiveles from './ElegirNiveles';
+import ConfirmationModal from '../../components/ConfirmationModal';
+import Modal from '../../components/Modal';
 
 const ConfOlimpiada = () => {
   const { id, nombreOlimpiada } = useParams();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
 
   const [areasSeleccionadas, setAreasSeleccionadas] = useState([]);
   const [nivelesPorArea, setNivelesPorArea] = useState({});
   const [error, setError] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);	
+  const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const { data: areasCatalogo, isLoading: isLoadingAreas, error: errorAreas } = useQuery({
     queryKey: ['areas'],
@@ -48,8 +54,13 @@ const ConfOlimpiada = () => {
     if (id) fetchData();
   }, [id]);
 
+  const handleSaveClick = () => {
+    setShowConfirmModal(true);
+  };
+
   const handleGuardarConfiguracion = async () => {
     setIsAdding(true);
+    setShowConfirmModal(false);
     try {
       await deleteOpcionesInscripcionByOlimpiada(id);
       const configuraciones = [];
@@ -66,7 +77,7 @@ const ConfOlimpiada = () => {
       });
 
       await Promise.all(configuraciones.map((config) => createOpcionInscripcion(config)));
-      alert('Configuracion guardada exitosamente.');
+      setSuccessMessage('Configuración guardada exitosamente.');
     } catch (error) {
       console.error(error);
       setError('Error al guardar opciones de inscripcion.');
@@ -79,12 +90,19 @@ const ConfOlimpiada = () => {
   if (errorAreas) return <Error error={errorAreas} />;
   if (errorNiveles) return <Error error={errorNiveles} />;
 
-  console.log("Areas Seleccionadas", areasSeleccionadas);
-  console.log("Niveles catalogo", nivelesCatalogo.data);
-  console.log("Niveles por area", nivelesPorArea);
   return (
     <div className="p-6 flex flex-col gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
     <div className="flex flex-col gap-4 h-full">
+      
+      {/* Botón para volver a la vista de Olimpiada */}
+      <div className="flex items-center mb-2">
+        <button 
+          onClick={() => navigate('/AdminLayout/Olympiad')}
+          className="flex items-center text-blue-600 hover:underline"
+        >
+          <ArrowLeft size={16} className="mr-1" /> Volver a Olimpiadas
+        </button>
+      </div>
       
       {/* Contenido principal de la configuración */}
       <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 min-h-[460px] max-h-[540px] overflow-y-auto">
@@ -134,7 +152,7 @@ const ConfOlimpiada = () => {
   
         {step === 2 && (
           <button
-            onClick={handleGuardarConfiguracion}
+            onClick={handleSaveClick}
             disabled={isAdding}
             className={`px-5 py-2 rounded-md text-white ${
               isAdding
@@ -146,8 +164,29 @@ const ConfOlimpiada = () => {
           </button>
         )}
       </div>
+      
+      {/* Modal de confirmación */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleGuardarConfiguracion}
+        title="Confirmar acción"
+        message="¿Está seguro que desea guardar la configuración de la olimpiada? Esta acción establecerá las áreas y niveles/categorías disponibles para inscripción."
+        confirmText="Confirmar"
+        cancelText="Cancelar"
+        isLoading={isAdding}
+        confirmButtonColor="blue"
+      />
+      
+      {/* Modal de éxito */}
+      {successMessage && (
+        <Modal 
+          message={successMessage} 
+          onClose={() => setSuccessMessage('')} 
+        />
+      )}
   
-      {/* {error && <p className="text-red-600">{error}</p>} */}
+      {error && <p className="text-red-600 mt-2">{error}</p>}
     </div>
   </div>
   
