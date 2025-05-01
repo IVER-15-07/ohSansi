@@ -1,12 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef} from 'react'
 import { useState } from 'react';
 import { createOlimpiada, getOlimpiadas } from '../../../service/olimpiadas.api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import SubirArchivo from '../../components/SubirArchivo';
-import Modal from '../../components/Modal';
-import { format, parse } from 'date-fns';
-import { es } from 'date-fns/locale';
+import ConfirmationModal from '../../components/ConfirmationModal';
+
 
 const CrearOlimpiada = () => {
   const clienteQuery = useQueryClient();
@@ -14,8 +13,7 @@ const CrearOlimpiada = () => {
 
   const [olimpiadas, setOlimpiadas] = useState([]);
   const [agregando, setAgregando] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const [datosFormulario, setDatosFormulario] = useState({
     nombre: '',
@@ -39,6 +37,7 @@ const CrearOlimpiada = () => {
   }, []);
 
   const handleArchivo = (e) => {
+    e.stopPropagation(); // Evita que el evento se propague al formulario
     const archivo = e.target.files[0]; // Obtén el archivo seleccionado
     setDatosFormulario((prev) => ({
       ...prev,
@@ -47,7 +46,7 @@ const CrearOlimpiada = () => {
   };
 
   const normalizarTexto = (texto) =>
-    texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    texto && texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
   const validarCampo = (campo, valor) => {
     const nuevosErrores = { ...errores };
@@ -55,15 +54,17 @@ const CrearOlimpiada = () => {
 
     switch (campo) {
       case 'nombre':
-        if (!valor) {
+        if (!valor || valor.trim() === '') {
           nuevosErrores.nombre = 'El nombre es obligatorio.';
-        } else  {
+        } else if (/[!"#$%&/{}[\]*]/.test(valor)) {
+          nuevosErrores.nombre = 'El nombre no debe contener caracteres especiales como !"#$%&/{}[]*';
+        } else {
           delete nuevosErrores.nombre;
         }
         break;
 
       case 'fechaInicio':
-        if (!valor) {
+        if (!valor || valor.trim() === '') {
           nuevosErrores.fechaInicio = 'La fecha de inicio es obligatoria.';
         } else if (valor < hoy) {
           nuevosErrores.fechaInicio = 'La fecha de inicio no puede ser anterior a hoy.';
@@ -78,72 +79,35 @@ const CrearOlimpiada = () => {
         break;
 
       case 'fechaFin':
-        if (!valor) {
+        if (!valor || valor.trim() === '') {
           nuevosErrores.fechaFin = 'La fecha de fin es obligatoria.';
         } else if (datosFormulario.fechaInicio && valor < datosFormulario.fechaInicio) {
           nuevosErrores.fechaFin = 'La fecha de fin no puede ser anterior a la de inicio.';
+        } else if (datosFormulario.fechaInicio && valor === datosFormulario.fechaInicio) {
+          nuevosErrores.fechaFin = 'La fecha de fin debe ser al menos un día después de la fecha de inicio.';
         } else {
           delete nuevosErrores.fechaFin;
         }
         break;
 
-        case 'inicioInscripcion': {
-          const inicio = valor;
-          const fin = datosFormulario.finInscripcion;
-    
-          if (!inicio) {
-            nuevosErrores.inicioInscripcion = 'La fecha de inicio de inscripción es obligatoria.';
-          } else if (inicio < datosFormulario.fechaInicio || inicio > datosFormulario.fechaFin) {
-            nuevosErrores.inicioInscripcion = 'La fecha de inicio de inscripción debe estar dentro del rango de la olimpiada.';
-          } else if (fin && inicio > fin) {
-            nuevosErrores.inicioInscripcion = 'La fecha de inicio de inscripción no puede ser posterior a la fecha de fin de inscripción.';
-          } else {
-            delete nuevosErrores.inicioInscripcion;
-          }
-          break;
-        }
-    
-        case 'finInscripcion': {
-          const inicio = datosFormulario.inicioInscripcion;
-          const fin = valor;
-    
-          if (!fin) {
-            nuevosErrores.finInscripcion = 'La fecha de fin de inscripción es obligatoria.';
-          } else if (fin < datosFormulario.fechaInicio || fin > datosFormulario.fechaFin) {
-            nuevosErrores.finInscripcion = 'La fecha de fin de inscripción debe estar dentro del rango de la olimpiada.';
-          } else if (inicio && fin < inicio) {
-            nuevosErrores.finInscripcion = 'La fecha de fin de inscripción no puede ser anterior a la fecha de inicio de inscripción.';
-          } else {
-            delete nuevosErrores.finInscripcion;
-          }
-          break;
-        }
-
-      case 'costo':
-        if (!valor) nuevosErrores.costo = 'El costo es obligatorio.';
-        else delete nuevosErrores.costo;
-        break;
-
-      case 'descripcion':
-        if (!valor) nuevosErrores.descripcion = 'La descripción es obligatoria.';
-        else delete nuevosErrores.descripcion;
-        break;
-
+      // Los otros campos ya no son obligatorios
       default:
         break;
     }
 
     setErrores(nuevosErrores);
-  };
-
-  const formatDate = (date) => {
-    return format(new Date(date), 'dd/MM/yyyy', { locale: es });
+    return !nuevosErrores[campo]; // Retorna true si el campo es válido
   };
 
   const manejarCambio = (e) => {
     const { name, value } = e.target;
-    const formattedValue = name.includes('fecha') && value ? parse(value, 'yyyy-MM-dd', new Date()) : value;
-    setDatosFormulario((prev) => ({ ...prev, [name]: formattedValue }));
+    
+    // Limitación para la descripción (500 caracteres)
+    if (name === 'descripcion' && value.length > 500) {
+      return;
+    }
+    
+    setDatosFormulario(prev => ({ ...prev, [name]: value }));
   };
 
   const manejarBlur = (e) => {
@@ -152,147 +116,227 @@ const CrearOlimpiada = () => {
   };
 
   const validarFormularioCompleto = () => {
-    const campos = Object.keys(datosFormulario);
-    campos.forEach(campo => validarCampo(campo, datosFormulario[campo]));
-    return Object.keys(errores).length === 0;
+    // Solo validamos los campos obligatorios
+    const camposObligatorios = ['nombre', 'fechaInicio', 'fechaFin'];
+    let formularioValido = true;
+    
+    camposObligatorios.forEach(campo => {
+      const esValido = validarCampo(campo, datosFormulario[campo]);
+      if (!esValido) formularioValido = false;
+    });
+    
+    return formularioValido;
   };
 
   const manejarEnvio = async (e) => {
     e.preventDefault();
-    setErrorGeneral('');
+    setErrorGeneral(''); // Limpia el mensaje de error general
 
-    const nombreNormalizado = normalizarTexto(datosFormulario.nombre);
-    if (olimpiadas.some(o => normalizarTexto(o.nombre).includes(nombreNormalizado))) {
-      setModalMessage('El nombre de la olimpiada es demasiado similar a uno existente. Por favor, elija otro nombre.');
-      setShowModal(true);
+    // Verificar campos obligatorios antes de continuar
+    if (!datosFormulario.nombre || datosFormulario.nombre.trim() === '') {
+      setErrores(prev => ({ ...prev, nombre: 'El nombre es obligatorio.' }));
+      return;
+    }
+    
+    if (!datosFormulario.fechaInicio || datosFormulario.fechaInicio.trim() === '') {
+      setErrores(prev => ({ ...prev, fechaInicio: 'La fecha de inicio es obligatoria.' }));
+      return;
+    }
+    
+    if (!datosFormulario.fechaFin || datosFormulario.fechaFin.trim() === '') {
+      setErrores(prev => ({ ...prev, fechaFin: 'La fecha de fin es obligatoria.' }));
       return;
     }
 
-    if (!validarFormularioCompleto()) return;
+    // Validar si el nombre ya existe
+    if (olimpiadas.some(o => normalizarTexto(o.nombre) === normalizarTexto(datosFormulario.nombre))) {
+      setErrorGeneral('El nombre de la olimpiada ya existe. Por favor, elija otro nombre.');
+      return;
+    }
 
-    const nuevaOlimpiada = {
-      nombre: datosFormulario.nombre,
-      convocatoria: datosFormulario.convocatoria,
-      descripcion: datosFormulario.descripcion,
-      costo: datosFormulario.costo,
-      max_areas: datosFormulario.max_areas,
-      fecha_inicio: datosFormulario.fechaInicio,
-      fecha_fin: datosFormulario.fechaFin,
-      inicio_inscripcion: datosFormulario.inicioInscripcion,
-      fin_inscripcion: datosFormulario.finInscripcion,
-    };
+    // Validar campos obligatorios
+    if (!validarFormularioCompleto()) {
+      setErrorGeneral('Por favor, complete todos los campos obligatorios correctamente antes de continuar.');
+      return;
+    }
 
+    // Mostrar modal de confirmación si todo es válido
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmCrear = async () => {
+    setShowConfirmModal(false);
     setAgregando(true);
+    
     try {
-      await createOlimpiada(nuevaOlimpiada);
+      // Crear FormData para enviar datos incluyendo el archivo
+      const formData = new FormData();
+      formData.append('nombre', datosFormulario.nombre);
+      formData.append('fecha_inicio', datosFormulario.fechaInicio);
+      formData.append('fecha_fin', datosFormulario.fechaFin);
+      
+      // Agregar campos opcionales solo si tienen valor
+      if (datosFormulario.descripcion) {
+        formData.append('descripcion', datosFormulario.descripcion);
+      }
+      
+      if (datosFormulario.costo) {
+        formData.append('costo', datosFormulario.costo);
+      }
+      
+      if (datosFormulario.max_areas) {
+        formData.append('max_areas', datosFormulario.max_areas);
+      }
+      
+      if (datosFormulario.inicioInscripcion) {
+        formData.append('inicio_inscripcion', datosFormulario.inicioInscripcion);
+      } else {
+        formData.append('inicio_inscripcion', datosFormulario.fechaInicio);
+      }
+      
+      if (datosFormulario.finInscripcion) {
+        formData.append('fin_inscripcion', datosFormulario.finInscripcion);
+      } else {
+        formData.append('fin_inscripcion', datosFormulario.fechaFin);
+      }
+      
+      // Agregar el archivo solo si existe
+      if (datosFormulario.convocatoria) {
+        formData.append('convocatoria', datosFormulario.convocatoria);
+      }
+
+      await createOlimpiada(formData);
       clienteQuery.invalidateQueries(['olimpiadas']);
-      setModalMessage('Los datos obligatorios se registraron exitosamente.');
-      setShowModal(true);
+      alert('Olimpiada creada exitosamente.');
+      redirigir('/AdminLayout/Olympiad');
     } catch (error) {
       console.error('Error al crear la olimpiada:', error);
+      
+      // Mensaje de error más detallado si está disponible
+      if (error.response && error.response.data && error.response.data.message) {
+        setErrorGeneral(`Error al crear la olimpiada: ${error.response.data.message}`);
+      } else {
+        setErrorGeneral('Error al crear la olimpiada. Por favor, intente nuevamente.');
+      }
     } finally {
       setAgregando(false);
     }
   };
 
-  const campoFormulario = (etiqueta, nombreCampo, tipo = 'text', placeholder = '', colSpan = 1, obligatorio = false) => (
-    <div className={`col-span-2 md:col-span-${colSpan}`}>
-      <label className="block font-medium text-gray-600 mb-1">
+  const campoFormulario = (etiqueta, nombreCampo, tipo = 'text', placeholder = '', colSpan = 1, obligatorio = false, nota = null) => (
+    <div className={`col-span-1 md:col-span-${colSpan}`}>
+      <label className="block font-medium text-gray-600 mb-1 text-sm">
         {etiqueta} {obligatorio && <span className="text-red-500">*</span>}
       </label>
       <input
         type={tipo}
         name={nombreCampo}
-        value={
-          nombreCampo.includes('fecha') && datosFormulario[nombreCampo]
-            ? format(new Date(datosFormulario[nombreCampo]), 'dd/MM/yyyy')
-            : datosFormulario[nombreCampo]
-        }
+        value={datosFormulario[nombreCampo]}
         onChange={manejarCambio}
         onBlur={manejarBlur}
         placeholder={placeholder}
-        className={`w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 ${errores[nombreCampo] ? 'border-red-500 ring-red-300' : 'focus:ring-blue-500'
+        className={`w-full p-1.5 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-1 text-sm ${errores[nombreCampo] ? 'border-red-500 ring-red-300' : 'focus:ring-blue-500'
           }`}
       />
-      {errores[nombreCampo] && <p className="text-red-600 text-sm mt-1">{errores[nombreCampo]}</p>}
-      {!obligatorio && <p className="text-gray-500 text-sm">(opcional)</p>}
+      {errores[nombreCampo] && <p className="text-red-600 text-xs mt-1">{errores[nombreCampo]}</p>}
+      {!obligatorio && !errores[nombreCampo] && <p className="text-gray-400 text-xs mt-1">{nota || "Campo opcional"}</p>}
     </div>
   );
 
-  
-  console.log(datosFormulario);
   return (
-    <div className="w-full h-screen md:h-auto overflow-y-auto md:overflow-hidden px-6 py-3 bg-gray-50 rounded-xl flex flex-col justify-between">
-      {showModal && <Modal message={modalMessage} onClose={() => setShowModal(false)} />}
-      <div>
-        <h1 className="text-xl font-bold text-gray-700 mb-4">Datos generales de la Olimpiada</h1>
+    <div className="w-full px-4 py-3 bg-gray-50 rounded-xl max-h-[85vh] overflow-auto">
+      <h1 className="text-xl font-bold text-gray-700 mb-4 sticky top-0 bg-gray-50 pt-2 pb-2 z-10">Datos generales de la Olimpiada</h1>
 
-        {/* Mostrar mensaje de error general debajo del título */}
-        {errorGeneral && (
-          <div className="mb-4 text-red-600 bg-red-100 p-2 rounded-lg border border-red-300 text-sm">
-            {errorGeneral}
-          </div>
-        )}
+      {/* Mostrar mensaje de error general debajo del título */}
+      {errorGeneral && (
+        <div className="mb-4 text-red-600 bg-red-100 p-2 rounded-lg border border-red-300 text-sm">
+          {errorGeneral}
+        </div>
+      )}
 
+      <div className="flex flex-col">
         <form
           id="formulario-crear-olimpiada"
           onSubmit={manejarEnvio}
-          className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 bg-white p-4 rounded-xl shadow border border-gray-200 text-sm"
+          className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 bg-white p-4 rounded-2xl shadow border border-gray-200 text-sm"
         >
-          {campoFormulario('Nombre de la olimpiada', 'nombre', 'text', 'Ingrese el nombre', 2, true)}
+          {/* Campos obligatorios */}
+          {campoFormulario('Nombre de la olimpiada', 'nombre', 'text', 'Ingrese el nombre (sin caracteres especiales)', 3, true)}
           {campoFormulario('Fecha de inicio', 'fechaInicio', 'date', '', 1, true)}
           {campoFormulario('Fecha de finalización', 'fechaFin', 'date', '', 1, true)}
-          {campoFormulario('Inicio de inscripción', 'inicioInscripcion', 'date', '', 1)}
-          {campoFormulario('Fin de inscripción', 'finInscripcion', 'date', '', 1)}
-          {campoFormulario('Costo', 'costo', 'number', '00.00 Bs', 1)}
-          {campoFormulario('Maxima Cantidad de Áreas por Persona', 'max_areas', 'number', "SIN MÁXIMO", 1)}
-          <div className="md:col-span-1">
-            <label className="block font-medium text-gray-600 mb-1">Descripción</label>
+          
+          {/* Campos opcionales */}
+          <div className="col-span-1 md:col-span-3 mt-3 mb-1">
+            <h2 className="text-md font-semibold text-gray-700">Datos adicionales (opcionales)</h2>
+          </div>
+          
+          {campoFormulario('Inicio de inscripción', 'inicioInscripcion', 'date', '', 1, false, "Si se deja vacío, se usará la fecha de inicio")}
+          {campoFormulario('Fin de inscripción', 'finInscripcion', 'date', '', 1, false, "Si se deja vacío, se usará la fecha de finalización")}
+          {campoFormulario('Costo', 'costo', 'number', '00.00 Bs', 1, false, "Costo de la inscripción")}
+          {campoFormulario('Máxima Cantidad de Áreas por Persona', 'max_areas', 'number', "SIN MÁXIMO", 3, false, "Máximo de áreas que un participante puede inscribirse")}
+          
+          <div className="col-span-1 md:col-span-3">
+            <label className="block font-medium text-gray-600 mb-1 text-sm">Descripción (máx. 500 caracteres)</label>
             <textarea
               name="descripcion"
               value={datosFormulario.descripcion}
               onChange={manejarCambio}
               onBlur={manejarBlur}
               placeholder="Inserte la descripción"
-              className={`w-full p-2 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-2 h-20 resize-none ${errores.descripcion ? 'border-red-500 ring-red-300' : 'focus:ring-blue-500'
+              className={`w-full p-1.5 border rounded-lg bg-gray-100 text-gray-800 focus:outline-none focus:ring-1 h-20 resize-none text-sm ${errores.descripcion ? 'border-red-500 ring-red-300' : 'focus:ring-blue-500'
                 }`}
+              maxLength={500}
             />
-            {errores.descripcion && <p className="text-red-600 text-sm mt-1">{errores.descripcion}</p>}
-            <p className="text-gray-500 text-sm">(opcional)</p>
+            <p className="text-gray-400 text-xs mt-1">Campo opcional - Descripción breve de la olimpiada ({datosFormulario.descripcion ? datosFormulario.descripcion.length : 0}/500 caracteres)</p>
           </div>
 
-          <SubirArchivo
-            nombreArchivo="Subir la convocatoria de la olimpiada"
-            tipoArchivo="pdf"
-            handleArchivo={handleArchivo}
-            inputRef={useRef()}
-          />
-
+          <div className="col-span-1 md:col-span-3">
+            <SubirArchivo
+              nombreArchivo="Subir la convocatoria de la olimpiada"
+              tipoArchivo="pdf"
+              handleArchivo={handleArchivo}
+              inputRef={useRef()}
+              id="convocatoria-input" // Añadiendo un ID único
+            />
+            <p className="text-gray-400 text-xs mt-1">Campo opcional - Archivo PDF con la convocatoria oficial</p>
+          </div>
         </form>
+
+        {/* Botones siempre visibles */}
+        <div className="sticky bottom-0 flex justify-end mt-4 p-3 gap-4 bg-gray-50 rounded-b-xl border-t border-gray-200">
+          <button
+            type="button"
+            onClick={() => redirigir('/AdminLayout/Olympiad')}
+            className="bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            form="formulario-crear-olimpiada"
+            disabled={agregando}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition ${agregando
+              ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+              : 'bg-blue-900 text-white hover:bg-blue-800'
+              }`}
+          >
+            {agregando ? 'Cargando...' : 'Crear Olimpiada'}
+          </button>
+        </div>
       </div>
 
-      <div className="flex justify-end mt-4 p-3 gap-4 bg-white rounded-lg shadow-md mb-6">
-        <button
-          type="button"
-          onClick={() => redirigir('/AdminLayout/Olympiad')}
-          className="bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition w-32 h-10 flex items-center justify-center"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          form="formulario-crear-olimpiada"
-          disabled={agregando}
-          className={`px-4 py-2 rounded-md text-sm font-medium transition ${agregando
-            ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-            : 'bg-blue-900 text-white hover:bg-blue-800'
-            }`}
-        >
-          {agregando ? 'Cargando...' : 'Crear Olimpiada'}
-        </button>
-      </div>
-
-      <footer className="w-full h-12 bg-blue-900 mt-6"></footer>
+      {/* Modal de confirmación */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmCrear}
+        title="Confirmar creación de Olimpiada"
+        message="¿Está seguro que desea crear esta olimpiada con los datos ingresados?"
+        confirmText="Crear"
+        cancelText="Cancelar"
+        isLoading={agregando}
+        confirmButtonColor="blue"
+      />
     </div>
   );
 };
