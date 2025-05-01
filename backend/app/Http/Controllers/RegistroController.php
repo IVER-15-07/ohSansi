@@ -21,14 +21,21 @@ class RegistroController extends Controller
       try {
         // Validar los datos enviados
         $validated = $request->validate([
-            'id_encargado' => 'required|exists:encargado,id',
+            'nombres' => 'required|string|max:255',	
+            'apellidos' => 'required|string|max:255',
+            'ci' => 'required|string|max:255',
+            'id_opcion_inscripcion' => 'required|exists:opcion_inscripcion,id',
+            'id_encargado' => 'required|exists:encargado,id'
         ]);
 
         // Crear el registro
         $registro = new Registro();
+        $registro->nombres = $validated['nombres'];
+        $registro->apellidos = $validated['apellidos'];
+        $registro->ci = $validated['ci'];
+        $registro->id_opcion_inscripcion = $validated['id_opcion_inscripcion']; 
         $registro->id_encargado = $validated['id_encargado'];
-        $registro->id_configuracion = null; // Establecer id_configuracion como null
-        $registro->id_pago = null; // Establecer id_pago como null
+        $registro->id_pago = null; // Inicialmente no hay pago asociado
         $registro->save(); // Guardar el registro en la base de datos
 
         // Retornar una respuesta exitosa con los grados asociados

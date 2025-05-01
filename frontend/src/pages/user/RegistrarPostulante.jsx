@@ -1,12 +1,13 @@
 import React from "react";
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { getFormulario } from "../../../service/formulario.api";
+import { Await, useParams } from "react-router-dom";
+import { getFormulario, saveDatosInscripcion, createRegistro} from "../../../service/formulario.api";
 import { getOpcionesInscripcion } from "../../../service/opciones_inscripcion.api";
 import Formulario from "./Formulario";
 import OpcionInscripcion from "./OpcionInscripcion";
 import DatosPostulante from "./DatosPostulante";
+import Cargando from "../Cargando";
 const RegistrarPostulante = () => {
     const [secciones, setSecciones] = useState([]);
     const [opcionesInscripcion, setOpcionesInscripcion] = useState([]);
@@ -19,7 +20,7 @@ const RegistrarPostulante = () => {
         ci: '',
       });
 
-    const { idOlimpiada} = useParams();
+    const { idOlimpiada, idEncargado} = useParams();
 
     useEffect(() => {
         const fetchFormulario = async () => {
@@ -45,7 +46,13 @@ const RegistrarPostulante = () => {
     // Actualizar formValues cuando secciones cambien
     useEffect(() => {
         // Inicializar formValues con los valores que vengan de la BD
+        
         const initialValues = {};
+        if(secciones.length === 0){
+          setFormValues(initialValues);
+          return;
+        }
+        
         secciones.map((sec) => {
         sec.campos_inscripcion.map((campo) => {
             initialValues[campo.id] = campo.valor || "";
@@ -64,21 +71,42 @@ const RegistrarPostulante = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         // Enviar formValues al backend para guardarlo en dato_inscripcion
         // Por ejemplo:
-        
+        try {
+          setIsLoading(true);
+          for (const seleccion of seleccionesInscripcion) {
+            const data = {
+              ...datosPostulante,
+              id_encargado: idEncargado,
+              id_opcion_inscripcion: seleccion.opcionInscripcionId,
+            };
+      
+            // Esperar a que se cree el registro
+            const registroResponse = await createRegistro(data);
+            const registro = registroResponse.data;
+    
+            if(secciones.length === 0) continue;
+            // Guardar los datos de inscripción relacionados con el registro
+            await saveDatosInscripcion({formValues: formValues}, registro.id);
+          }
+        }catch (error) {
+          console.error("Error al enviar el formulario:", error);
+        }finally {
+          setIsLoading(false);
+          console.log("Formulario enviado con éxito");
+        }
         
     };
 
     const handleOpcionInscripcion = (nuevasSelecciones) => {
       setSeleccionesInscripcion(nuevasSelecciones);
     };
-    console.log('SELECCIONES', JSON.stringify({ seleccionesInscripcion }));
-    console.log(JSON.stringify({ opcionesInscripcion }));
+    
     console.log(JSON.stringify({ datosPostulante }));
-    if (isLoading || secciones.length === 0) return <div>Cargando...</div>;
+    if (isLoading) return <Cargando />;
     if (errorFormulario) return <div>Error al cargar el formulario</div>;
     
     return (
@@ -93,11 +121,14 @@ const RegistrarPostulante = () => {
               formValues={datosPostulante}
               handleInputChange={(campo, valor) => setDatosPostulante({ ...datosPostulante, [campo]: valor })}
             />
-            <Formulario 
+
+            {(secciones.length !== 0) ? 
+            (<Formulario 
               secciones={secciones}
               formValues={formValues}
               handleInputChange={handleInputChange}
-            />
+            /> ): null}
+            
 
             <OpcionInscripcion
               opcionesInscripcion={opcionesInscripcion}

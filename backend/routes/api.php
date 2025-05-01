@@ -80,6 +80,7 @@ Route::get('/formulario/{idOlimpiada}', [FormularioController::class, 'obtenerFo
 
 Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
 
+
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 

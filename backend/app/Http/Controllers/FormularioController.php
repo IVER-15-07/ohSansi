@@ -63,6 +63,7 @@ class FormularioController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
+                'request' => $request->all(),
                 'success' => false,
                 'status' => 'error',
                 'message' => 'Error al guardar los datos de inscripción: ' . $e->getMessage()
