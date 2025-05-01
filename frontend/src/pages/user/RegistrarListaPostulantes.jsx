@@ -1,10 +1,13 @@
-import React from "react";
+import React from 'react'
 
 const RegistrarListaPostulantes = () => {
+  return (
     <div>
-        Aquí se debe poder cargar una lista de postulantes en formato CSV o Excel para su registro.
-        Después del registro se debe de poder asociar un estudiante a una o más áreas de la olimpiada para su inscripción.
+
+        <h1>hola  a quie estara   lo de registrar una lista de estudiantes </h1>
+      
     </div>
+  )
 }
 
-export default RegistrarListaPostulantes;
+export default RegistrarListaPostulantes

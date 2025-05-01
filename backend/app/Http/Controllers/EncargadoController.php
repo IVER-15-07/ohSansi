@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Encargado;
 use \Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 
 class EncargadoController extends Controller
 {
@@ -142,4 +143,41 @@ class EncargadoController extends Controller
         return response()->json($encargado);
     }
     
+    public function obtenerConteoRegistros($idEncargado)
+{
+    try {
+        // Obtener los registros asociados al encargado donde id_pago sea null
+        $registros = DB::table('registro')
+            ->join('opcion_inscripcion', 'registro.id_opcion_inscripcion', '=', 'opcion_inscripcion.id')
+            ->join('area', 'opcion_inscripcion.id_area', '=', 'area.id')
+            ->where('registro.id_encargado', $idEncargado)
+            ->whereNull('registro.id_pago') // Filtrar registros donde id_pago sea null
+            ->select('area.nombre as nombre_area', DB::raw('COUNT(registro.id) as conteo'))
+            ->groupBy('area.nombre')
+            ->get();
+
+        // Calcular el conteo total de registros
+        $conteoTotal = $registros->sum('conteo');
+
+        // Formatear las áreas con sus conteos
+        $areas = $registros->mapWithKeys(function ($registro) {
+            return [$registro->nombre_area => $registro->conteo];
+        });
+
+        // Retornar una respuesta exitosa
+        return response()->json([
+            'id_encargado' => $idEncargado,
+            'conteo_registros' => $conteoTotal,
+            'areas' => $areas,
+        ], 200);
+    } catch (\Exception $e) {
+        // Manejar errores y retornar una respuesta
+        return response()->json([
+            'success' => false,
+            'status' => 'error',
+            'message' => 'Error al obtener el conteo de registros: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+
 }

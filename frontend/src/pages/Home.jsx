@@ -30,10 +30,9 @@ const Home = () => {
     fetchOlimpiadas();
   }, []);
 
-  const handleSeleccionarOlimpiada = () => {
-    navigate(`IdentificarEncargado`);
+  const handleSeleccionarOlimpiada = (olimpiada) => {
+    navigate(`IdentificarEncargado`,{state: {idOlimpiada: olimpiada.id}});
   };
-
 
   if (error) return <Error error={error} />;
 

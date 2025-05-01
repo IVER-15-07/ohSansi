@@ -2,13 +2,21 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { verificarEncargado } from "../../../service/encargados.api";
 import RegistroTutor from "./RegistroTutor";
+import { useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+
 
 const IdentificarEncargado = () => {
   const [ci, setCi] = useState("");
+  const { idEncargado } = useParams();
+  //const { idOlimpiada } = useParams(); // Obtener el id de la olimpiada desde los parámetros de la URL
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [mostrarRegistroTutor, setMostrarRegistroTutor] = useState(false); // Estado para alternar contenido
   const navigate = useNavigate();
+  const location = useLocation();
+  const idOlimpiada = location.state?.idOlimpiada; // Recibir el idOlimpiada desde el state
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,10 +28,13 @@ const IdentificarEncargado = () => {
       const response = await verificarEncargado(ci);
       if (response.data.existe) {
         // Si el carnet ya está registrado, redirigir a seleccionar olimpiada
-        navigate(`/SeleccionarOlimpiada/${response.data.id}`);
+        navigate(`/registros/${response.data.id}/${ idOlimpiada }`);
+
+        //navigate(`/RegistrosPostulantes/${idEncargado}/${olimpiada.id}`); 
       } else {
+        setError("No se pudo verificar el carnet. Intente nuevamente.");
         // Si no está registrado, redirigir a registro tutor
-        navigate("/RegistroEncargado", { state: { ci } });
+        //navigate("/RegistroEncargado", { state: { ci } });
       }
     } catch (error) {
       console.error("Error al verificar el carnet:", error);
@@ -34,12 +45,12 @@ const IdentificarEncargado = () => {
   };
 
   const handleRegistro = () => {
-    // Cambiar el estado para mostrar el componente RegistroTutor
+ 
     setMostrarRegistroTutor(true);
   };
 
   const handleVolver = () => {
-    setMostrarRegistroTutor(false); // Volver al componente IdentificarEncargado
+    setMostrarRegistroTutor(false); 
   };
 
 
