@@ -143,14 +143,15 @@ class EncargadoController extends Controller
         return response()->json($encargado);
     }
     
-    public function obtenerConteoRegistros($idEncargado)
-{
+    public function obtenerConteoRegistros($idEncargado, $idOlimpiada)
+    {
     try {
-        // Obtener los registros asociados al encargado donde id_pago sea null
+        // Obtener los registros asociados al encargado y a la olimpiada donde id_pago sea null
         $registros = DB::table('registro')
             ->join('opcion_inscripcion', 'registro.id_opcion_inscripcion', '=', 'opcion_inscripcion.id')
             ->join('area', 'opcion_inscripcion.id_area', '=', 'area.id')
             ->where('registro.id_encargado', $idEncargado)
+            ->where('opcion_inscripcion.id_olimpiada', $idOlimpiada) // Filtrar por id_olimpiada
             ->whereNull('registro.id_pago') // Filtrar registros donde id_pago sea null
             ->select('area.nombre as nombre_area', DB::raw('COUNT(registro.id) as conteo'))
             ->groupBy('area.nombre')
@@ -167,6 +168,7 @@ class EncargadoController extends Controller
         // Retornar una respuesta exitosa
         return response()->json([
             'id_encargado' => $idEncargado,
+            'id_olimpiada' => $idOlimpiada,
             'conteo_registros' => $conteoTotal,
             'areas' => $areas,
         ], 200);
@@ -178,6 +180,6 @@ class EncargadoController extends Controller
             'message' => 'Error al obtener el conteo de registros: ' . $e->getMessage(),
         ], 500);
     }
-}
+    }
 
 }

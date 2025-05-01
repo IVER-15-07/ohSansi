@@ -31,7 +31,7 @@ const OrdenesDePago = () => {
       })
       .catch(err => console.error("Error al obtener olimpiada:", err));
   
-    obtenerConteoRegistrosPorEncargado(idEncargado)
+    obtenerConteoRegistrosPorEncargado(idEncargado, idOlimpiada)
       .then(res => {
         console.log("Conteo de registros:", res);
         if (res.conteo_registros === 0) {

@@ -82,7 +82,7 @@ Route::get('/formulario', [FormularioController::class, 'obtenerFormulario']);
 
 Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
 
-Route::get('/encargados/registros/{idEncargado}', [EncargadoController::class, 'obtenerConteoRegistros']);
+Route::get('/encargados/registros/{idEncargado}/{idOlimpiada}', [EncargadoController::class, 'obtenerConteoRegistros']);
 
 
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
