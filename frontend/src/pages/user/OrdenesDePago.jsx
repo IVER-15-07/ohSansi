@@ -215,118 +215,81 @@ const OrdenesDePago = () => {
     <div className="p-4">
       <div
         ref={pdfRef}
-        style={{
-          padding: "20px",
-          backgroundColor: "#f5faff",
-          border: "1px solid #ccc",
-          borderRadius: "10px",
-          maxWidth: "700px",
-          margin: "auto",
-        }}
+        className="p-6 bg-blue-50 border border-gray-300 rounded-lg max-w-3xl mx-auto"
       >
-        <h3 style={{ textAlign: "center", fontWeight: "bold" }}>
+        <h3 className="text-center font-bold text-lg">
           Universidad Mayor de San Simón
           <br />
           Facultad de Ciencias y Tecnología
           <br />
           Secretaría Administrativa
           <br />
-          <span
-            style={{
-              fontSize: "20px",
-              display: "block",
-              marginTop: "10px",
-            }}
-          >
-            Orden de pago
-          </span>
+          <span className="text-xl block mt-2">Orden de pago</span>
         </h3>
-
-        <p>
+  
+        <p className="mt-4">
           <strong>Emitido por la Unidad:</strong> {olimpiada.nombre}
         </p>
-        <p>
+        <p className="mt-2">
           <strong>Señor:</strong> {encargado.nombre} {encargado.apellido}{" "}
-          &nbsp;&nbsp;&nbsp;&nbsp; <strong>NIT/CI:</strong> {encargado.ci}{" "}
+          <span className="ml-8">
+            <strong>NIT/CI:</strong> {encargado.ci}
+          </span>
         </p>
-
-        <table
-          width="100%"
-          style={{ borderCollapse: "collapse", marginTop: "10px" }}
-        >
+  
+        <table className="w-full border-collapse mt-4">
           <thead>
             <tr>
-              <th style={{ border: "1px solid black", padding: "5px" }}>
-                Cantidad
-              </th>
-              <th style={{ border: "1px solid black", padding: "5px" }}>
-                Concepto
-              </th>
-              <th style={{ border: "1px solid black", padding: "5px" }}>
-                Precio por unidad
-              </th>
-              <th style={{ border: "1px solid black", padding: "5px" }}>
-                Importe
-              </th>
+              <th className="border border-black p-2">Cantidad</th>
+              <th className="border border-black p-2">Concepto</th>
+              <th className="border border-black p-2">Precio por unidad</th>
+              <th className="border border-black p-2">Importe</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={{ border: "1px solid black", padding: "5px" }}>
+              <td className="border border-black p-2 text-center">
                 {totalRegistros}
               </td>
-              <td style={{ border: "1px solid black", padding: "5px" }}>
+              <td className="border border-black p-2">
                 DECANATO OLIMPIADA DE CIENCIAS {olimpiada.nombre}
                 <br />
                 Detalle: Inscritos en las áreas de {detalleAreas}
               </td>
-              <td style={{ border: "1px solid black", padding: "5px" }}>
+              <td className="border border-black p-2 text-center">
                 {costoPorUnidad} Bs.
               </td>
-              <td style={{ border: "1px solid black", padding: "5px" }}>
+              <td className="border border-black p-2 text-center">
                 {importeTotal} Bs.
               </td>
             </tr>
           </tbody>
         </table>
-
-        <p>
+  
+        <p className="mt-4">
           <strong>Nota:</strong> no vale como factura oficial
         </p>
-        <p style={{ textAlign: "right" }}>[ ]</p>
-        <p>
+        <p className="text-right">[ ]</p>
+        <p className="mt-2">
           <strong>Son:</strong> {importeEnLiteral} Bolivianos.
         </p>
-
-        <p>
+  
+        <p className="mt-4">
           Cochabamba, {dia} de {mesCapitalizado} de {año}
         </p>
-        <p>
+        <p className="mt-4">
           <strong>Firma del responsable:</strong> ___________________________
         </p>
-        <p>
+        <p className="mt-4">
           <strong>Observaciones:</strong>
         </p>
-        <div
-          style={{
-            border: "1px solid black",
-            height: "60px",
-            marginBottom: "20px",
-          }}
-        ></div>
+        <div className="border border-black h-16 mb-5"></div>
       </div>
-
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
+  
+      <div className="text-center mt-6">
         <button
           onClick={generarPDF}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#007BFF",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
         >
           Generar Orden de Pago
         </button>
