@@ -39,7 +39,7 @@ class AreaController extends Controller
                     'required',
                     'string',
                     'max:50',
-                    'regex:/^[a-zA-Z0-9\s]+$/',
+                    'regex:/^[a-zA-ZÁÉÍÓÚáéíóúÜüÑñ0-9\s]+$/',
                     function ($attribute, $value, $fail) {
                         
                         if (\App\Models\Area::whereRaw('LOWER(nombre) = ?', [strtolower($value)])->exists()) {
