@@ -1,8 +1,8 @@
 import axiosInstance from "../helpers/axios-config";
 
-export const getOpcionesInscripcion = async () => {
+export const getOpcionesInscripcion = async ($idOlimpiada) => {
   try {
-    const response = await axiosInstance.get("/opciones_inscripcion");
+    const response = await axiosInstance.get(`/opciones_inscripcion/${$idOlimpiada}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching opciones de inscripcion:", error);

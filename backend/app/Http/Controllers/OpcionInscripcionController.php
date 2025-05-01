@@ -10,33 +10,50 @@ class OpcionInscripcionController extends Controller
 {
 
     /**
-     * Obtener todas las configuraciones. 
+     * Obtenemos todas las opciones de inscripcion de una olimpiada
      *
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function obtenerOpcionesInscripcion(Request $request)
+    public function obtenerOpcionesInscripcion($idOlimpiada)
     {
         try {
-            // Intenta obtener las configuraciones desde la caché
-            $opciones_inscripcion = Cache::remember('opciones_inscripcion', 3600, function () {
-                return OpcionInscripcion::with(['olimpiada', 'area', 'nivel_categoria'])->get(); // Consulta a la base de datos si no está en caché
-            });
-            
+            // Obtener las opciones de inscripcion filtradas por id_olimpiada y cargar las relaciones necesarias
+            $opciones_inscripcion= OpcionInscripcion::where('id_olimpiada', $idOlimpiada)
+                ->with(['area', 'nivel_categoria.grados']) // Carga las relaciones con Area y NivelCategoria
+                ->get();
+
+            // Agrupar las configuraciones por área y mapear los niveles/categorías
+            $resultado = $opciones_inscripcion->groupBy('area.id')->map(function ($items, $areaId) {
+                $areaNombre = $items->first()->area->nombre; // Obtener el nombre del área
+                return [
+                    'id' => $areaId, // ID del área
+                    'nombre' => $areaNombre, // Nombre del área
+                    'niveles_categorias' => $items->map(function ($item) {
+                        return [
+                            'id_opcion_inscripcion' => $item->id, // ID de OpcionInscripcion
+                            'id_nivel_categoria' => $item->nivel_categoria->id,
+                            'nombre' => $item->nivel_categoria->nombre,
+                        ];
+                    })->unique('id_nivel_categoria')->values(),
+                ];
+            })->values();
+
             // Retornar una respuesta exitosa
             return response()->json([
                 'success' => true,
-                'data' => $opciones_inscripcion,
+                'data' => $resultado,
             ], 200);
         } catch (\Exception $e) {
             // Manejar errores y retornar una respuesta
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => 'Error al obtener las opciones de inscripcion: ' . $e->getMessage(),
+                'message' => 'Error al obtener las áreas y niveles/categorías: ' . $e->getMessage(),
             ], 500);
         }
     }
+
 
     /**
      * Obtenemos todas las areas asociadas a una olimpiada
@@ -104,7 +121,6 @@ class OpcionInscripcionController extends Controller
             ], 500);
         }
     }
-
     
     /**
      * Almacenar una nueva opcion de inscripción. 
