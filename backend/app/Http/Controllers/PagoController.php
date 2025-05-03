@@ -79,6 +79,159 @@ class PagoController extends Controller
         }
     }
 
+    public function generarDatosDeOrden(Request $request)
+    {
+        try {
+        // Validar los datos enviados
+        $validated = $request->validate([
+            'id_encargado' => 'required|integer|exists:encargado,id',
+            'id_olimpiada' => 'required|integer|exists:olimpiada,id',
+            'registros' => 'required|array|min:1',
+            'registros.*' => 'integer|exists:registro,id',
+        ]);
+
+        $idEncargado = $validated['id_encargado'];
+        $idOlimpiada = $validated['id_olimpiada'];
+        $registros = $validated['registros'];
+
+        // Obtener el ID del encargado y su información
+        $encargado = DB::table('encargado')->where('id', $idEncargado)->first();
+        if (!$encargado) {
+            return response()->json(['success' => false, 'message' => 'Encargado no encontrado.'], 404);
+        }
+
+        // Obtener el nombre de la olimpiada
+        $olimpiada = DB::table('olimpiada')->where('id', $idOlimpiada)->first();
+        if (!$olimpiada) {
+            return response()->json(['success' => false, 'message' => 'Olimpiada no encontrada.'], 404);
+        }
+
+        // Generar el ID de la orden de pago
+        $ultimoPago = DB::table('pago')->orderBy('id', 'desc')->first();
+        $idPago = $ultimoPago ? $ultimoPago->id + 1 : 1;
+
+        // Obtener los registros seleccionados
+        $detalles = DB::table('registro')
+            ->join('opcion_inscripcion', 'registro.id_opcion_inscripcion', '=', 'opcion_inscripcion.id')
+            ->join('area', 'opcion_inscripcion.id_area', '=', 'area.id')
+            ->join('nivel_categoria', 'opcion_inscripcion.id_nivel_categoria', '=', 'nivel_categoria.id')
+            ->whereIn('registro.id', $registros)
+            ->select(
+                'registro.nombres',
+                'registro.apellidos',
+                'area.nombre as nombre_area',
+                'nivel_categoria.nombre as nombre_nivel_categoria'
+            )
+            ->get();
+
+        // Generar el detalle concatenado
+        $detalle = $detalles->map(function ($item) {
+            return "inscripción: {$item->nombres} {$item->apellidos} - {$item->nombre_area} ({$item->nombre_nivel_categoria})";
+        })->join(', ');
+
+        // Calcular la cantidad, precio por unidad e importe total
+        $cantidad = count($registros);
+        $costoPorUnidad = $olimpiada->costo;
+        $importeTotal = $cantidad * $costoPorUnidad;
+
+        // Convertir el importe total a literal
+        $importeEnLiteral = $this->convertirNumeroALiteral($importeTotal);
+
+        // Obtener la fecha actual en formato aaaa-mm-dd
+        $fechaPago = now()->format('Y-m-d');
+
+        // Construir los datos de la orden de pago
+        $datosOrden = [
+            'id_pago' => $idPago,
+            'nombre_completo_encargado' => $encargado->nombre . ' ' . $encargado->apellido,
+            'ci_encargado' => $encargado->ci,
+            'nombre_olimpiada' => $olimpiada->nombre,
+            'cantidad' => $cantidad,
+            'concepto' => "Decanato - Olimpiada de Ciencias ({$olimpiada->nombre})",
+            'detalle' => $detalle,
+            'precio_por_unidad' => $costoPorUnidad,
+            'importe_total' => $importeTotal,
+            'importe_en_literal' => $importeEnLiteral,
+            'fecha_pago' => $fechaPago,
+        ];
+
+        // Retornar los datos generados
+        return response()->json([
+            'success' => true,
+            'data' => $datosOrden,
+        ], 200);
+        } catch (\Exception $e) {
+        // Manejar errores y retornar una respuesta
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al generar los datos de la orden de pago: ' . $e->getMessage(),
+        ], 500);
+        }
+    }
+
+    private function convertirNumeroALiteral($numero)
+    {
+        $formatter = new \NumberFormatter('es', \NumberFormatter::SPELLOUT);
+        return ucfirst($formatter->format($numero)) . ' Bolivianos';
+    }
+
+    public function guardarOrdenPago(Request $request)
+    {
+    try {
+        // Validar los datos enviados
+        $validated = $request->validate([
+            'id' => 'required|integer|unique:pago,id', // Validar que el ID sea único en la tabla pago
+            'monto' => 'required|numeric|min:0', // Validar que el monto sea un número positivo
+            'fecha_generado' => 'required|date', // Validar que sea una fecha válida
+            'concepto' => 'required|string|max:255', // Validar que el concepto sea un string
+            'orden' => 'required|file|mimes:pdf|max:2048', // Validar que sea un archivo PDF de máximo 2MB
+            'registros' => 'required|array|min:1', // Validar que se envíe un arreglo de registros
+            'registros.*' => 'integer|exists:registro,id', // Validar que los registros existan en la tabla registro
+        ]);
+
+        // Guardar el archivo PDF en el almacenamiento
+        $rutaOrden = $request->file('orden')->store('ordenes', 'public');
+
+        // Insertar los datos en la tabla pago
+        DB::table('pago')->insert([
+            'id' => $validated['id'],
+            'monto' => $validated['monto'],
+            'fecha_generado' => $validated['fecha_generado'],
+            'concepto' => $validated['concepto'],
+            'orden' => $rutaOrden,
+        ]);
+
+        // Actualizar la columna id_pago en la tabla registro para los registros seleccionados
+        DB::table('registro')
+            ->whereIn('id', $validated['registros'])
+            ->update(['id_pago' => $validated['id']]);
+
+        // Retornar una respuesta exitosa
+        return response()->json([
+            'success' => true,
+            'message' => 'Orden de pago guardada exitosamente y registros actualizados.',
+            'data' => [
+                'id' => $validated['id'],
+                'monto' => $validated['monto'],
+                'fecha_generado' => $validated['fecha_generado'],
+                'concepto' => $validated['concepto'],
+                'orden' => asset('storage/' . $rutaOrden), // Generar URL completa
+            ],
+        ], 201);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error de validación.',
+            'errors' => $e->errors(),
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al guardar la orden de pago: ' . $e->getMessage(),
+        ], 500);
+    }
+    }
+
     public function obtenerPagoAsociado(Request $request)
     {
         try {
@@ -203,5 +356,4 @@ class PagoController extends Controller
             ], 500);
         }
     }
-
 }
