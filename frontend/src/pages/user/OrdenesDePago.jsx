@@ -1,335 +1,226 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getEncargado, obtenerConteoRegistrosPorEncargado } from "../../../service/encargados.api";
-import { getOlimpiada } from "../../../service/olimpiadas.api";
-import { guardarPago, obtenerIdPago, agregarPago, obtenerOrdenDePago } from "../../../service/pagos.api"; // Importar el nuevo servicio
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { toWords } from "number-to-words";
+import autoTable from "jspdf-autotable";
+import { obtenerRegistros } from "../../../service/registros.api";
+import { generarDatosDeOrden, guardarOrdenPago, obtenerOrdenesDePago } from "../../../service/pagos.api";
 
 const OrdenesDePago = () => {
   const { idEncargado, idOlimpiada } = useParams();
-  const [encargado, setEncargado] = useState(null);
-  const [olimpiada, setOlimpiada] = useState(null);
-  const [conteoRegistros, setConteoRegistros] = useState(null);
-  const [sinRegistros, setSinRegistros] = useState(false); // Estado para manejar si no hay registros
-  const [ordenesDePago, setOrdenesDePago] = useState([]); // Estado para almacenar las órdenes de pago
-  const pdfRef = useRef();
+  const [registros, setRegistros] = useState([]);
+  const [registrosSeleccionados, setRegistrosSeleccionados] = useState([]);
+  const [ordenesDePago, setOrdenesDePago] = useState([]);
+  const [sinRegistros, setSinRegistros] = useState(false);
+  const [sinOrdenes, setSinOrdenes] = useState(false);
 
+  // Obtener registros pendientes al cargar el componente
   useEffect(() => {
-    getEncargado(idEncargado)
-      .then(res => {
-        console.log("Encargado:", res);
-        setEncargado(res);
-      })
-      .catch(err => console.error("Error al obtener encargado:", err));
-  
-    getOlimpiada(idOlimpiada)
-      .then(res => {
-        console.log("Olimpiada:", res);
-        setOlimpiada(res);
-      })
-      .catch(err => console.error("Error al obtener olimpiada:", err));
-  
-    obtenerConteoRegistrosPorEncargado(idEncargado, idOlimpiada)
-      .then(res => {
-        console.log("Conteo de registros:", res);
-        if (res.conteo_registros === 0) {
-          setSinRegistros(true); // Si no hay registros, actualiza el estado
-          obtenerOrdenDePago({ id_encargado: idEncargado }) // Llamar al endpoint para obtener órdenes de pago
-            .then((response) => {
-              console.log("Órdenes de pago obtenidas:", response);
-              setOrdenesDePago(response.data); // Guardar las órdenes en el estado
-            })
-            .catch((error) => {
-              console.error("Error al obtener órdenes de pago:", error);
-            });
+    obtenerRegistros(idEncargado, idOlimpiada)
+      .then((res) => {
+        if (res.data.length === 0) {
+          setSinRegistros(true);
         } else {
-          setConteoRegistros(res);
+          setRegistros(res.data);
         }
       })
-      .catch(err => console.error("Error al obtener conteo de registros:", err));
+      .catch((err) => console.error("Error al obtener registros:", err));
+
+    obtenerOrdenesDePago(idEncargado, idOlimpiada)
+      .then((res) => {
+        if (res.data.length === 0) {
+          setSinOrdenes(true);
+        } else {
+          setOrdenesDePago(res.data);
+        }
+      })
+      .catch((err) => console.error("Error al obtener órdenes de pago:", err));
   }, [idEncargado, idOlimpiada]);
 
-  const traducirNumeroALiteral = (numero) => {
-    const palabrasEnIngles = toWords(numero).toLowerCase();
-    const traducciones = {
-      zero: "cero",
-      one: "uno",
-      two: "dos",
-      three: "tres",
-      four: "cuatro",
-      five: "cinco",
-      six: "seis",
-      seven: "siete",
-      eight: "ocho",
-      nine: "nueve",
-      ten: "diez",
-      eleven: "once",
-      twelve: "doce",
-      thirteen: "trece",
-      fourteen: "catorce",
-      fifteen: "quince",
-      sixteen: "dieciséis",
-      seventeen: "diecisiete",
-      eighteen: "dieciocho",
-      nineteen: "diecinueve",
-      twenty: "veinte",
-      thirty: "treinta",
-      forty: "cuarenta",
-      fifty: "cincuenta",
-      sixty: "sesenta",
-      seventy: "setenta",
-      eighty: "ochenta",
-      ninety: "noventa",
-      hundred: "cien",
-      thousand: "mil",
-      million: "millón",
-      billion: "mil millones",
-    };
-
-    const palabrasEnEspañol = palabrasEnIngles
-      .split(" ")
-      .map((palabra) => traducciones[palabra] || palabra)
-      .join(" ");
-
-    return palabrasEnEspañol.charAt(0).toUpperCase() + palabrasEnEspañol.slice(1);
+  // Manejar selección de registros
+  const handleSeleccionarRegistro = (idRegistro) => {
+    setRegistrosSeleccionados((prevSeleccionados) =>
+      prevSeleccionados.includes(idRegistro)
+        ? prevSeleccionados.filter((id) => id !== idRegistro)
+        : [...prevSeleccionados, idRegistro]
+    );
   };
 
-  const generarPDF = async () => {
+  // Generar orden de pago
+  const generarOrdenDePago = async () => {
     try {
-      const input = pdfRef.current;
-
-      // Generar el PDF
-      const canvas = await html2canvas(input);
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-
-      // Descargar el PDF generado
-      pdf.save("orden_de_pago.pdf");
-
-      // Convertir el PDF a un archivo Blob
-      const pdfBlob = pdf.output("blob");
-
-      // Crear un objeto FormData para enviar el PDF al servidor
-      const formData = new FormData();
-      formData.append("monto", importeTotal);
-      formData.append("fecha_generado", new Date().toISOString().split("T")[0]); // Formato AAAA-MM-DD
-      formData.append("concepto", `DECANATO OLIMPIADA DE CIENCIAS ${olimpiada.nombre}`);
-      formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
-
-      // Guardar el pago en el servidor
-      const guardarPagoResponse = await guardarPago(formData);
-      console.log("Pago guardado:", guardarPagoResponse);
-
-      // Obtener el ID del pago recién creado
-      const obtenerIdResponse = await obtenerIdPago({
-        monto: importeTotal,
-        fecha_generado: new Date().toISOString().split("T")[0],
-        concepto: `DECANATO OLIMPIADA DE CIENCIAS ${olimpiada.nombre}`,
-      });
-      console.log("ID del pago obtenido:", obtenerIdResponse);
-
-      const idPago = obtenerIdResponse.data.id;
-
-      // Asociar el ID del pago a los registros del encargado
-      const agregarPagoResponse = await agregarPago({
+      // Llamar al endpoint para generar datos de la orden
+      const datosOrdenResponse = await generarDatosDeOrden({
         id_encargado: idEncargado,
-        id_pago: idPago,
+        id_olimpiada: idOlimpiada,
+        registros: registrosSeleccionados,
       });
-      console.log("Pago asociado a los registros:", agregarPagoResponse);
-
-      alert("PDF generado, descargado y pago registrado exitosamente.");
+  
+      const datosOrden = datosOrdenResponse.data;
+  
+      // Crear el PDF con el modelo proporcionado
+      const doc = new jsPDF();
+  
+      // Encabezado
+      doc.setFontSize(12);
+      doc.text("Universidad Mayor de San Simón", 10, 10);
+      doc.text("Facultad de ciencias y tecnología", 10, 15);
+      doc.text("Secretaría administrativa", 10, 20);
+      doc.setFontSize(16);
+      doc.text("Orden de pago", 105, 30, { align: "center" });
+  
+      // Número de orden
+      doc.setFontSize(12);
+      doc.text(`Nro Orden: ${datosOrden.id_pago}`, 160, 10);
+  
+      // Información del encargado
+      doc.text(`Emitido por la Unidad: ____________________________`, 10, 40);
+      doc.text(`Señor: ${datosOrden.nombre_completo_encargado}`, 10, 50);
+      doc.text(`NIT/CI: ${datosOrden.ci_encargado}`, 10, 60);
+  
+      // Tabla de detalles
+      doc.text("Por lo siguiente:", 10, 70);
+      autoTable(doc, {
+        startY: 75,
+        head: [["Cantidad", "Concepto", "Precio por unidad", "Importe"]],
+        body: [
+          [
+            datosOrden.cantidad,
+            datosOrden.concepto,
+            `${datosOrden.precio_por_unidad} Bs.`,
+            `${datosOrden.importe_total} Bs.`,
+          ],
+        ],
+      });
+  
+      // Nota y total en literal
+      doc.text("Nota: no vale como factura oficial", 10, doc.lastAutoTable.finalY + 10);
+      doc.text(`Son: ${datosOrden.importe_en_literal}`, 10, doc.lastAutoTable.finalY + 20);
+  
+      // Fecha y firma
+      doc.text(
+        `Cochabamba, ${new Date(datosOrden.fecha_pago).toLocaleDateString("es-ES", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}`,
+        10,
+        doc.lastAutoTable.finalY + 30
+      );
+      doc.text("Firma del responsable: ____________________________", 10, doc.lastAutoTable.finalY + 40);
+  
+      // Convertir el PDF a Blob
+      const pdfBlob = doc.output("blob");
+  
+      // Crear un objeto FormData para enviar el PDF generado al servidor
+      const formData = new FormData();
+      formData.append("id", datosOrden.id_pago);
+      formData.append("monto", datosOrden.importe_total);
+      formData.append("fecha_generado", datosOrden.fecha_pago);
+      formData.append("concepto", datosOrden.concepto);
+      formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
+      formData.append("registros", JSON.stringify(registrosSeleccionados)); // Serializar el arreglo
+  
+      // Guardar la orden de pago en el servidor
+      await guardarOrdenPago(formData);
+  
+      // Actualizar la página
+      window.location.reload();
     } catch (error) {
-      console.error("Error al generar el PDF o registrar el pago:", error);
-      alert("Ocurrió un error al generar el PDF o registrar el pago.");
+      console.error("Error al generar o guardar la orden de pago:", error);
+      alert("Ocurrió un error al generar o guardar la orden de pago.");
     }
   };
 
-  if (sinRegistros) {
-    return (
-      <div>
-        <h2>No existen registros pendientes para generar una orden de pago.</h2>
-        {ordenesDePago.length > 0 ? (
-          <div>
-            <h3>Órdenes de Pago Existentes:</h3>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th style={{ border: "1px solid black", padding: "5px" }}>Monto</th>
-                  <th style={{ border: "1px solid black", padding: "5px" }}>Fecha Generado</th>
-                  <th style={{ border: "1px solid black", padding: "5px" }}>Concepto</th>
-                  <th style={{ border: "1px solid black", padding: "5px" }}>Orden</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ordenesDePago.map((orden) => (
-                  <tr key={orden.id_pago}>
-                    <td style={{ border: "1px solid black", padding: "5px" }}>{orden.monto} Bs.</td>
-                    <td style={{ border: "1px solid black", padding: "5px" }}>{orden.fecha_generado}</td>
-                    <td style={{ border: "1px solid black", padding: "5px" }}>{orden.concepto}</td>
-                    <td style={{ border: "1px solid black", padding: "5px" }}>
-                      <a href={orden.orden} target="_blank" rel="noopener noreferrer">
-                        Descargar
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p>No se encontraron órdenes de pago existentes.</p>
-        )}
-      </div>
-    );
-  }
-
-  if (!encargado || !olimpiada || !conteoRegistros) {
-    return (
-      <div>
-        <h2>Cargando datos...</h2>
-      </div>
-    );
-  }
-
-  const totalRegistros = conteoRegistros.conteo_registros;
-  const costoPorUnidad = olimpiada.costo;
-  const importeTotal = (totalRegistros * costoPorUnidad).toFixed(2);
-  const detalleAreas = Object.entries(conteoRegistros.areas)
-    .map(([area, cantidad]) => `${area}: ${cantidad}`)
-    .join(", ");
-
-  const importeEnLiteral = traducirNumeroALiteral(importeTotal);
-
-  const fechaActual = new Date();
-  const dia = fechaActual.getDate();
-  const mes = fechaActual.toLocaleString("es-ES", { month: "long" });
-  const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
-  const año = fechaActual.getFullYear();
-
   return (
     <div className="p-4">
-      <div
-        ref={pdfRef}
-        style={{
-          padding: "20px",
-          backgroundColor: "#f5faff",
-          border: "1px solid #ccc",
-          borderRadius: "10px",
-          maxWidth: "700px",
-          margin: "auto",
-        }}
-      >
-        <h3 style={{ textAlign: "center", fontWeight: "bold" }}>
-          Universidad Mayor de San Simón
-          <br />
-          Facultad de Ciencias y Tecnología
-          <br />
-          Secretaría Administrativa
-          <br />
-          <span
-            style={{
-              fontSize: "20px",
-              display: "block",
-              marginTop: "10px",
-            }}
-          >
-            Orden de pago
-          </span>
-        </h3>
+      {/* Sección de registros pendientes */}
+      {sinRegistros ? (
+        <div>
+          <h2>No hay registros pendientes para generar una orden de pago.</h2>
+        </div>
+      ) : (
+        <div>
+          <h2>Registros Pendientes</h2>
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border border-black p-2">Seleccionar</th>
+                <th className="border border-black p-2">Nombres</th>
+                <th className="border border-black p-2">Apellidos</th>
+                <th className="border border-black p-2">Área</th>
+                <th className="border border-black p-2">Nivel</th>
+              </tr>
+            </thead>
+            <tbody>
+              {registros.map((registro) => (
+                <tr key={registro.id_registro}>
+                  <td className="border border-black p-2 text-center">
+                    <input
+                      type="checkbox"
+                      onChange={() => handleSeleccionarRegistro(registro.id_registro)}
+                      checked={registrosSeleccionados.includes(registro.id_registro)}
+                    />
+                  </td>
+                  <td className="border border-black p-2">{registro.nombres}</td>
+                  <td className="border border-black p-2">{registro.apellidos}</td>
+                  <td className="border border-black p-2">{registro.nombre_area}</td>
+                  <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="text-center mt-6">
+            <button
+              onClick={generarOrdenDePago}
+              className={`px-6 py-2 rounded-lg transition duration-200 ${
+                registrosSeleccionados.length > 0
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-400 text-gray-700 cursor-not-allowed"
+              }`}
+              disabled={registrosSeleccionados.length === 0}
+            >
+              Generar Orden de Pago
+            </button>
+          </div>
+        </div>
+      )}
 
-        <p>
-          <strong>Emitido por la Unidad:</strong> {olimpiada.nombre}
-        </p>
-        <p>
-          <strong>Señor:</strong> {encargado.nombre} {encargado.apellido}{" "}
-          &nbsp;&nbsp;&nbsp;&nbsp; <strong>NIT/CI:</strong> {encargado.ci}{" "}
-        </p>
-
-        <table
-          width="100%"
-          style={{ borderCollapse: "collapse", marginTop: "10px" }}
-        >
-          <thead>
-            <tr>
-              <th style={{ border: "1px solid black", padding: "5px" }}>
-                Cantidad
-              </th>
-              <th style={{ border: "1px solid black", padding: "5px" }}>
-                Concepto
-              </th>
-              <th style={{ border: "1px solid black", padding: "5px" }}>
-                Precio por unidad
-              </th>
-              <th style={{ border: "1px solid black", padding: "5px" }}>
-                Importe
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style={{ border: "1px solid black", padding: "5px" }}>
-                {totalRegistros}
-              </td>
-              <td style={{ border: "1px solid black", padding: "5px" }}>
-                DECANATO OLIMPIADA DE CIENCIAS {olimpiada.nombre}
-                <br />
-                Detalle: Inscritos en las áreas de {detalleAreas}
-              </td>
-              <td style={{ border: "1px solid black", padding: "5px" }}>
-                {costoPorUnidad} Bs.
-              </td>
-              <td style={{ border: "1px solid black", padding: "5px" }}>
-                {importeTotal} Bs.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p>
-          <strong>Nota:</strong> no vale como factura oficial
-        </p>
-        <p style={{ textAlign: "right" }}>[ ]</p>
-        <p>
-          <strong>Son:</strong> {importeEnLiteral} Bolivianos.
-        </p>
-
-        <p>
-          Cochabamba, {dia} de {mesCapitalizado} de {año}
-        </p>
-        <p>
-          <strong>Firma del responsable:</strong> ___________________________
-        </p>
-        <p>
-          <strong>Observaciones:</strong>
-        </p>
-        <div
-          style={{
-            border: "1px solid black",
-            height: "60px",
-            marginBottom: "20px",
-          }}
-        ></div>
-      </div>
-
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <button
-          onClick={generarPDF}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#007BFF",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Generar Orden de Pago
-        </button>
+      {/* Sección de órdenes de pago */}
+      <div className="mt-8">
+        <h2>Órdenes de Pago</h2>
+        {sinOrdenes ? (
+          <p>No hay órdenes de pago pendientes por pagar.</p>
+        ) : (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border border-black p-2">Monto</th>
+                <th className="border border-black p-2">Fecha Generado</th>
+                <th className="border border-black p-2">Concepto</th>
+                <th className="border border-black p-2">Orden</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ordenesDePago.map((orden) => (
+                <tr key={orden.id_pago}>
+                  <td className="border border-black p-2">{orden.monto} Bs.</td>
+                  <td className="border border-black p-2">{orden.fecha_generado}</td>
+                  <td className="border border-black p-2">{orden.concepto}</td>
+                  <td className="border border-black p-2 text-center">
+                    <a
+                      href={orden.orden}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+                    >
+                      Ver Orden
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

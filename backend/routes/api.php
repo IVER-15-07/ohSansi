@@ -89,7 +89,7 @@ Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 Route::get('/registros/{idEncargado}/{idOlimpiada}', [RegistroController::class, 'obtenerRegistros']);
 
 
-Route::post('/pagos/obtenerOrdenes', [PagoController::class, 'obtenerOrdenesDePago']);
+Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoController::class, 'obtenerOrdenesDePago']);
 
 Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAsociado']);
 
