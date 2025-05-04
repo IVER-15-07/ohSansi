@@ -121,8 +121,9 @@ const OrdenesDePago = () => {
       formData.append("fecha_generado", datosOrden.fecha_pago);
       formData.append("concepto", `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`);
       formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
-      formData.append("registros", JSON.stringify(registrosSeleccionados)); // Serializar el arreglo
-      console.log([...formData.entries()]);
+      registrosSeleccionados.forEach((id) => {
+        formData.append("registros[]", id); // Laravel espera este formato para arreglos
+      });
       // Guardar la orden de pago en el servidor
       await guardarOrdenPago(formData);
   
