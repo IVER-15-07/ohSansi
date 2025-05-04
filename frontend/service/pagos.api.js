@@ -26,7 +26,7 @@ export const guardarOrdenPago = async (formData) => {
 
 export const obtenerOrdenesDePago = async (idEncargado, idOlimpiada) => {
   try {
-    const response = await axiosInstance.get(`/pagos/obtenerOrdenesDePago/${idEncargado}/${idOlimpiada}`);
+    const response = await axiosInstance.post(`/pagos/obtenerOrdenesDePago/${idEncargado}/${idOlimpiada}`);
     return response.data;
   } catch (error) {
     console.error("Error al obtener órdenes de pago:", error);

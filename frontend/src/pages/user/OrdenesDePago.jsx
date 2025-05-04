@@ -73,19 +73,19 @@ const OrdenesDePago = () => {
       doc.text(`Nro Orden: ${datosOrden.id_pago}`, 160, 10);
   
       // Información del encargado
-      doc.text(`Emitido por la Unidad: ____________________________`, 10, 40);
-      doc.text(`Señor: ${datosOrden.nombre_completo_encargado}`, 10, 50);
+      doc.text(`Emitido por la Unidad: ${datosOrden.nombre_olimpiada}`, 10, 40);
+      doc.text(`Señor(a): ${datosOrden.nombre_completo_encargado}`, 10, 50);
       doc.text(`NIT/CI: ${datosOrden.ci_encargado}`, 10, 60);
   
       // Tabla de detalles
       doc.text("Por lo siguiente:", 10, 70);
       autoTable(doc, {
         startY: 75,
-        head: [["Cantidad", "Concepto", "Precio por unidad", "Importe"]],
+        head: [["Cantidad", "Concepto", "Precio por unidad", "Importe total"]],
         body: [
           [
             datosOrden.cantidad,
-            datosOrden.concepto,
+            `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`,
             `${datosOrden.precio_por_unidad} Bs.`,
             `${datosOrden.importe_total} Bs.`,
           ],
@@ -108,6 +108,9 @@ const OrdenesDePago = () => {
       );
       doc.text("Firma del responsable: ____________________________", 10, doc.lastAutoTable.finalY + 40);
   
+      // Descargar el PDF
+      doc.save(`orden_de_pago_${datosOrden.id_pago}.pdf`);
+
       // Convertir el PDF a Blob
       const pdfBlob = doc.output("blob");
   
@@ -116,10 +119,10 @@ const OrdenesDePago = () => {
       formData.append("id", datosOrden.id_pago);
       formData.append("monto", datosOrden.importe_total);
       formData.append("fecha_generado", datosOrden.fecha_pago);
-      formData.append("concepto", datosOrden.concepto);
+      formData.append("concepto", `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`);
       formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
       formData.append("registros", JSON.stringify(registrosSeleccionados)); // Serializar el arreglo
-  
+      console.log([...formData.entries()]);
       // Guardar la orden de pago en el servidor
       await guardarOrdenPago(formData);
   

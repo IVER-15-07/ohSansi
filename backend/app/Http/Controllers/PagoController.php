@@ -178,6 +178,7 @@ class PagoController extends Controller
     public function guardarOrdenPago(Request $request)
     {
     try {
+        $registros = json_decode($request->input('registros'), true);
         // Validar los datos enviados
         $validated = $request->validate([
             'id' => 'required|integer|unique:pago,id', // Validar que el ID sea único en la tabla pago
@@ -203,7 +204,7 @@ class PagoController extends Controller
 
         // Actualizar la columna id_pago en la tabla registro para los registros seleccionados
         DB::table('registro')
-            ->whereIn('id', $validated['registros'])
+            ->whereIn('id', $registros)
             ->update(['id_pago' => $validated['id']]);
 
         // Retornar una respuesta exitosa
