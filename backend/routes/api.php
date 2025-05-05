@@ -78,23 +78,23 @@ Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 
 Route::get('/encargados/{id}', [EncargadoController::class, 'obtenerEncargado']);
 
+
 Route::get('/formulario/{idOlimpiada}', [FormularioController::class, 'obtenerFormulario']);
 
 Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
 
-Route::get('/encargados/registros/{idEncargado}', [EncargadoController::class, 'obtenerConteoRegistros']);
 
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
+Route::get('/registros/{idEncargado}/{idOlimpiada}', [RegistroController::class, 'obtenerRegistros']);
 
-Route::post('/pagos/guardarPago', [PagoController::class, 'guardarPago']);
 
-Route::post('/pagos/obtenerId', [PagoController::class, 'obtenerIdPago']);
-
-Route::post('/pagos/agregar', [PagoController::class, 'agregarPago']);
-
-Route::post('/pagos/obtenerOrden', [PagoController::class, 'obtenerOrdenDePago']);
+Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoController::class, 'obtenerOrdenesDePago']);
 
 Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAsociado']);
 
 Route::post('/pagos/validarComprobantePago', [PagoController::class, 'validarComprobantePago']);
+
+Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
+
+Route::post('/pagos/guardarOrdenPago', [PagoController::class, 'guardarOrdenPago']);
