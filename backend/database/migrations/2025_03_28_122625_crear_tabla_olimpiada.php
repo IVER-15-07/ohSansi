@@ -15,7 +15,7 @@ class CrearTablaOlimpiada extends Migration
     {
         Schema::create('olimpiada', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre')->unique();
+            $table->string('nombre')->collation('texto_insensible')->unique();
             $table->string('convocatoria')->nullable(); 
             $table->string('descripcion')->nullable();
             $table->decimal('costo', 10, 2)->nullable();

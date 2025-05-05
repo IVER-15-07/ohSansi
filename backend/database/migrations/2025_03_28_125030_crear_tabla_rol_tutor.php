@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrearTablaCampoInscripcion extends Migration
+class CrearTablaRolTutor extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,9 @@ class CrearTablaCampoInscripcion extends Migration
      */
     public function up()
     {
-        Schema::create('campo_inscripcion', function (Blueprint $table) {
+        Schema::create('rol_tutor', function (Blueprint $table) {
             $table->id();
             $table->string('nombre')->collation('texto_insensible');
-
-            $table->foreignId('id_tipo_campo')->constrained('tipo_campo')->onDelete('cascade');
-            $table->foreignId('id_seccion_campo')->constrained('seccion_campo')->onDelete('cascade');
-            
         });
     }
 
@@ -30,6 +26,6 @@ class CrearTablaCampoInscripcion extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('campo_inscripcion');
+        Schema::dropIfExists('rol_tutor');
     }
 }

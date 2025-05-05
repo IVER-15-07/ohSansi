@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrearTablaEncargado extends Migration
+class CrearTablaTutor extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,11 @@ class CrearTablaEncargado extends Migration
      */
     public function up()
     {
-        Schema::create('encargado', function (Blueprint $table) {
+        Schema::create('tutor', function (Blueprint $table) {
             $table->id();
-            $table->string('ci')->unique();
-            $table->string('nombre')->collation('texto_insensible');
-            $table->string('apellido')->collation('texto_insensible');
-            $table->date('fecha_nacimiento');
-            $table->string('telefono')->unique();
+            $table->string('nombres')->collation('texto_insensible');
+            $table->string('apellidos')->collation('texto_insensible');
+            $table->string('ci')->collation('texto_insensible')->unique();
             $table->string('correo')->collation('texto_insensible')->unique();
         });
     }
@@ -31,6 +29,6 @@ class CrearTablaEncargado extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('encargado');
+        Schema::dropIfExists('tutor');
     }
 }
