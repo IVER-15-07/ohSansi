@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import Tesseract from "tesseract.js";
-import mammoth from "mammoth";
 import * as pdfjsLib from "pdfjs-dist";
 import SubirArchivo from "../../components/SubirArchivo";
 import { obtenerPagoAsociado, validarComprobantePago } from "../../../service/pagos.api";
@@ -8,50 +7,37 @@ import { obtenerPagoAsociado, validarComprobantePago } from "../../../service/pa
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const ValidarComprobante = () => {
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [olimpiada, setOlimpiada] = useState("");
-  const [textoExtraido, setTextoExtraido] = useState("");
-  const [error, setError] = useState(false);
-  const [cargando, setCargando] = useState(false);
+  const [idOrden, setIdOrden] = useState("");
+  const [nombreCompleto, setNombreCompleto] = useState("");
   const [monto, setMonto] = useState("");
   const [archivo, setArchivo] = useState(null);
   const [pagoAsociado, setPagoAsociado] = useState(null);
+  const [cargando, setCargando] = useState(false);
+  const [mensajeError, setMensajeError] = useState("");
   const inputRef = useRef(null);
 
   const extraerDatos = (texto) => {
     console.log("Texto extraído por OCR:", texto); // Depuración del texto extraído
-    setTextoExtraido(texto);
 
+    // Extraer el ID de la orden de pago (Aclaración OP XX)
+    const idOrdenMatch = texto.match(/Aclaración: OP\s*(\d+)/i);
+    setIdOrden(idOrdenMatch ? idOrdenMatch[1] : "");
+
+    // Extraer el nombre completo (Recibido de:)
     const nombreMatch = texto.match(/Recibido de:\s*(.*)/i);
-    const olimpiadaMatch = texto.match(/Por concepto de:\s*(.*)/i);
-    const montoMatch = texto.match(/Total:\s*(Bs)?\s*([\d.,]+)/i); // "Bs" ahora es opcional
+    setNombreCompleto(nombreMatch ? nombreMatch[1].trim() : "");
 
-    if (nombreMatch) {
-      const nombreCompleto = nombreMatch[1].trim();
-      const partes = nombreCompleto.split(" ");
+    // Extraer el monto (Total: Bs XX.XX)
+    const montoMatch = texto.match(/Total:\s*(Bs)?\s*([\d.,]+)/i);
+    setMonto(montoMatch ? montoMatch[2].replace(",", ".") : "");
 
-      if (partes.length === 2) {
-        setNombre(partes[0]);
-        setApellido(partes[1]);
-      } else if (partes.length === 3) {
-        setNombre(partes[0]);
-        setApellido(`${partes[1]} ${partes[2]}`);
-      } else if (partes.length === 4) {
-        setNombre(`${partes[0]} ${partes[1]}`);
-        setApellido(`${partes[2]} ${partes[3]}`);
-      } else {
-        setNombre(nombreCompleto);
-        setApellido("");
-      }
+    // Mostrar error si falta algún dato
+    if (!idOrdenMatch || !nombreMatch || !montoMatch) {
+      setMensajeError("No se pudieron extraer todos los datos necesarios del comprobante.");
     } else {
-      setNombre("");
-      setApellido("");
+      setMensajeError("");
     }
 
-    setOlimpiada(olimpiadaMatch ? olimpiadaMatch[1].trim() : "");
-    setMonto(montoMatch ? montoMatch[2].replace(",", ".") : ""); // Captura el número directamente
-    setError(!nombreMatch || !olimpiadaMatch || !montoMatch);
     setCargando(false);
   };
 
@@ -61,11 +47,11 @@ const ValidarComprobante = () => {
 
     setArchivo(archivoSeleccionado);
     setCargando(true);
-    setNombre("");
-    setApellido("");
-    setOlimpiada("");
-    setTextoExtraido("");
-    setError(false);
+    setIdOrden("");
+    setNombreCompleto("");
+    setMonto("");
+    setMensajeError("");
+    setPagoAsociado(null);
 
     const tipo = archivoSeleccionado.type;
 
@@ -106,20 +92,22 @@ const ValidarComprobante = () => {
       }
     } catch (error) {
       console.error("Error al procesar el archivo:", error);
-      setError(true);
+      setMensajeError("Error al procesar el archivo.");
       setCargando(false);
     }
   };
 
   const buscarPagoAsociado = async () => {
     try {
-      const data = { nombre, apellido, concepto: olimpiada, monto: parseFloat(monto) };
+      const data = { id: parseInt(idOrden), nombre_completo: nombreCompleto, monto: parseFloat(monto) };
       console.log("Datos enviados al backend:", data); // Depuración
       const response = await obtenerPagoAsociado(data);
       setPagoAsociado(response.data);
+      setMensajeError("");
     } catch (error) {
       console.error("Error al buscar el pago asociado:", error);
       setPagoAsociado(null);
+      setMensajeError("No se encontraron pagos asociados.");
     }
   };
 
@@ -128,7 +116,6 @@ const ValidarComprobante = () => {
       const formData = new FormData();
       formData.append("id_pago", pagoAsociado.id_pago);
       formData.append("comprobante", archivo);
-      formData.append("fecha_pago", new Date().toISOString().split("T")[0]);
 
       const response = await validarComprobantePago(formData);
       alert("Comprobante validado exitosamente.");
@@ -140,46 +127,55 @@ const ValidarComprobante = () => {
   };
 
   return (
-    <div>
+    <div className="p-6">
       <SubirArchivo
         nombreArchivo="Subir Comprobante"
-        tipoArchivo="jpg"
+        tipoArchivo="jpg, pdf"
         handleArchivo={handleArchivo}
         inputRef={inputRef}
       />
-      <div>
-        {cargando && <p>⏳ Procesando archivo, por favor espera...</p>}
+
+      <div className="mt-6">
+        {cargando && <p className="text-blue-500">⏳ Procesando archivo, por favor espera...</p>}
 
         {!cargando && (
           <>
+            {mensajeError && <p className="text-red-500">{mensajeError}</p>}
+
             <div className="mt-5">
-              <h3>Datos extraídos del comprobante:</h3>
-              <p><strong>Nombre:</strong> {nombre || "No disponible"}</p>
-              <p><strong>Apellido:</strong> {apellido || "No disponible"}</p>
-              <p><strong>Concepto:</strong> {olimpiada || "No disponible"}</p>
+              <h3 className="font-bold">Datos extraídos del comprobante:</h3>
+              <p><strong>ID Orden:</strong> {idOrden || "No disponible"}</p>
+              <p><strong>Nombre del Encargado:</strong> {nombreCompleto || "No disponible"}</p>
               <p><strong>Monto:</strong> {monto || "No disponible"} Bs</p>
             </div>
 
-            {textoExtraido && (
-              <button onClick={buscarPagoAsociado} className="btn btn-primary mt-3">
+            {idOrden && nombreCompleto && monto && (
+              <button
+                onClick={buscarPagoAsociado}
+                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+              >
                 Buscar Pago Asociado
               </button>
             )}
 
             {pagoAsociado ? (
               <div className="mt-5">
+                <h3 className="font-bold">Pago Asociado:</h3>
                 <p><strong>ID del Pago:</strong> {pagoAsociado.id_pago}</p>
-                <p><strong>Fecha Generado:</strong> {pagoAsociado.fecha_generado}</p>
                 <p><strong>Monto:</strong> {pagoAsociado.monto} Bs</p>
                 <p><strong>Concepto:</strong> {pagoAsociado.concepto}</p>
-                <button onClick={verificarComprobante} className="btn btn-success mt-3">
-                  Validar Comprobante
+                <p><strong>Fecha Generado:</strong> {pagoAsociado.fecha_generado}</p>
+                <button
+                  onClick={verificarComprobante}
+                  className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200"
+                >
+                  Validar
                 </button>
               </div>
             ) : (
-              textoExtraido && (
+              mensajeError && (
                 <p className="text-red-500 mt-3">
-                  ❌ No existen pagos asociados o el comprobante ya está validado.
+                  ❌ {mensajeError}
                 </p>
               )
             )}

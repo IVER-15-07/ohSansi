@@ -274,6 +274,14 @@ class PagoController extends Controller
                 ], 404);
             }
 
+            // Verificar si el comprobante ya está validado (fecha_pago no es nula)
+            if (!is_null($pago->fecha_pago)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El comprobante de pago ya está validado.',
+                ], 400);
+            }
+
             // Retornar los datos del pago encontrado
             return response()->json([
                 'success' => true,
