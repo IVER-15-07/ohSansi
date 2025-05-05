@@ -5,9 +5,8 @@ import logo from "../assets/logo.png"
 import { getOlimpiadasActivas } from "../../service/olimpiadas.api"
 import { useState, useEffect } from "react"
 import { Typewriter } from 'react-simple-typewriter';
-
-
 import Error from "./Error"
+
 
 const Home = () => {
   const navigate = useNavigate();

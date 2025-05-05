@@ -18,6 +18,7 @@ use App\Http\Controllers\EncargadoController;
 use App\Http\Controllers\FormularioController;
 
 use App\Http\Controllers\RegistroController;
+use App\Http\Controllers\SeccionController;
 
 use App\Http\Controllers\PagoController;
 /*

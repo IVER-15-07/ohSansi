@@ -16,4 +16,15 @@ class DatoInscripcion extends Model
         'id_campo_inscripcion',
         'valor',
     ];
+
+
+    public function campo_inscripcion()
+    {
+        return $this->belongsTo(CampoInscripcion::class, 'id_campo_inscripcion');
+    }
+
+    public function registro()
+    {
+        return $this->belongsTo(Registro::class, 'id_registro');
+    }
 }
