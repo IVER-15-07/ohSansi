@@ -21,6 +21,8 @@ use App\Http\Controllers\RegistroController;
 use App\Http\Controllers\SeccionController;
 
 use App\Http\Controllers\PagoController;
+use App\Http\Controllers\Registrolistcontroller;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -90,12 +92,20 @@ Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 Route::get('/registros/{idEncargado}/{idOlimpiada}', [RegistroController::class, 'obtenerRegistros']);
 
 
-Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoController::class, 'obtenerOrdenesDePago']);
 
 Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAsociado']);
 
 Route::post('/pagos/validarComprobantePago', [PagoController::class, 'validarComprobantePago']);
 
-Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
 
+
+//RUTAAS PARA GENERAR ORDEN DE PAGO
+Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
 Route::post('/pagos/guardarOrdenPago', [PagoController::class, 'guardarOrdenPago']);
+Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoController::class, 'obtenerOrdenesDePago']);
+
+
+// RUTAS PARA REGISTRO DE LISTA DE POSTULANTES
+Route::post('/registro_lista', [Registrolistcontroller::class, 'registrarListaPostulantes']);
+Route::get('/registro_lista', [Registrolistcontroller::class, 'obtenerListaPostulantes']);
+Route::get('/secciones', [SeccionController::class, 'obtenerSecciones']);
