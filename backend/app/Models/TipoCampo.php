@@ -12,10 +12,15 @@ class TipoCampo extends Model
     protected $table = 'tipo_campo';
 
     protected $fillable = [
-        'nombre'
+        'nombre',
+        'esLista'
     ];
 
-    public function campos_inscripcion(){
-        return $this->hasMany(CampoInscripcion::class, 'id_tipo_campo');
+    public function camposTutor(){
+        return $this->hasMany(CampoTutor::class, 'id_tipo_campo');
+    }
+
+    public function camposPostulante(){
+        return $this->hasMany(CampoPostulante::class, 'id_tipo_campo');
     }
 }

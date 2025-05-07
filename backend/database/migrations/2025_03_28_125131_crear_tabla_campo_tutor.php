@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrearTipoCampo extends Migration
+class CrearTablaCampoTutor extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,11 @@ class CrearTipoCampo extends Migration
      */
     public function up()
     {
-        Schema::create('tipo_campo', function (Blueprint $table) {
+        Schema::create('campo_tutor', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
+            $table->string('nombre')->collation('texto_insensible')->unique();
+
+            $table->foreignId('id_tipo_campo')->constrained('tipo_campo')->onDelete('cascade');
         });
     }
 
@@ -26,6 +28,6 @@ class CrearTipoCampo extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tipo_campo');
+        Schema::dropIfExists('campo_tutor');
     }
 }
