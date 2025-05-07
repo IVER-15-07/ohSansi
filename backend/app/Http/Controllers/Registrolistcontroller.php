@@ -102,22 +102,37 @@ class Registrolistcontroller extends Controller
             foreach ($data as $row) {
                 // Validar y obtener IDs relacionados
                 $idGrado = Grado::where('nombre', $row[array_search('grado', $headers)])->value('id');
-                $idArea = Area::where('nombre', $row[array_search('area', $headers)])->value('id');
-                $idNivelCategoria = NivelCategoria::where('nombre', $row[array_search('nivel_categoria', $headers)])->value('id');
+                if (!$idGrado) {
+                    throw new \Exception("El grado '{$row[array_search('grado', $headers)]}' no es válido.");
+                }
 
-                if (!$idGrado || !$idArea || !$idNivelCategoria) {
-                    throw new \Exception('Error al validar grado, área o nivel/categoría.');
+                $idArea = Area::where('nombre', $row[array_search('area', $headers)])->value('id');
+                if (!$idArea) {
+                    throw new \Exception("El área '{$row[array_search('area', $headers)]}' no es válida.");
+                }
+
+                $idNivelCategoria = NivelCategoria::where('nombre', $row[array_search('nivel_categoria', $headers)])->value('id');
+                if (!$idNivelCategoria) {
+                    throw new \Exception("El nivel/categoría '{$row[array_search('nivel_categoria', $headers)]}' no es válido.");
+                }
+
+                // Obtener el id_opcion_inscripcion basado en id_olimpiada, id_area y id_nivel_categoria
+                $idOpcionInscripcion = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)
+                    ->where('id_area', $idArea)
+                    ->where('id_nivel_categoria', $idNivelCategoria)
+                    ->value('id');
+
+                if (!$idOpcionInscripcion) {
+                    throw new \Exception('No se encontró una opción de inscripción válida para los datos proporcionados.');
                 }
 
                 // Crear el registro en la tabla "registro"
                 $registro = Registro::create([
-                    'nombres' => $row[array_search('nombres', $headers)],
-                    'apellidos' => $row[array_search('apellidos', $headers)],
+                    'nombres' => $row[array_search('nombre', $headers)],
+                    'apellidos' => $row[array_search('apellido', $headers)],
                     'ci' => $row[array_search('ci', $headers)],
-                    'id_grado' => $idGrado,
-                    'id_opcion_inscripcion' => OpcionInscripcion::where('id_olimpiada', $idOlimpiada)->value('id'),
-                    'id_area' => $idArea,
-                    'id_nivel_categoria' => $idNivelCategoria,
+                    'id_grado' => $idGrado, // Agregado el id_grado
+                    'id_opcion_inscripcion' => $idOpcionInscripcion,
                     'id_encargado' => $idEncargado,
                 ]);
 
@@ -137,7 +152,7 @@ class Registrolistcontroller extends Controller
 
                 // Procesar roles y tutores
                 foreach ($headers as $header) {
-                    if (str_contains($header, '(tutor')) {
+                    if (str_contains($header, '(')) {
                         $rolNombre = explode('(', $header)[0];
                         $idRolTutor = RolTutor::firstOrCreate(['nombre' => $rolNombre])->id;
 
@@ -177,7 +192,6 @@ class Registrolistcontroller extends Controller
             ], 500);
         }
     }
-
 
     public function obtenerListaPostulantes()
     {
