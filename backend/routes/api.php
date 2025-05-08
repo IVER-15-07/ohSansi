@@ -18,6 +18,11 @@ use App\Http\Controllers\EncargadoController;
 use App\Http\Controllers\FormularioController;
 
 use App\Http\Controllers\RegistroController;
+
+use App\Http\Controllers\TutorController;
+
+use App\Http\Controllers\PagoController;
+
 use App\Http\Controllers\SeccionController;
 /*
 |--------------------------------------------------------------------------
@@ -49,7 +54,7 @@ Route::post('/niveles_categorias/{id}/grados', [NivelCategoriaController::class,
 Route::get('/grados', [GradoController::class, 'obtenerGrados']);
 
 
-Route::get('/opciones_inscripcion', [OpcionInscripcionController::class, 'obtenerOpcionesInscripcion']);
+Route::get('/opciones_inscripcion/{idOlimpiada}', [OpcionInscripcionController::class, 'obtenerOpcionesInscripcion']);
 
 Route::post('/opciones_inscripcion', [OpcionInscripcionController::class, 'almacenarOpcionInscripcion']);
 
@@ -77,19 +82,30 @@ Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 
 Route::get('/encargados/{id}', [EncargadoController::class, 'obtenerEncargado']);
 
-Route::get('/formulario', [FormularioController::class, 'obtenerFormulario']);
+Route::get('/formulario/{idOlimpiada}', [FormularioController::class, 'obtenerFormulario']);
 
 Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
+
+Route::get('/encargados/registros/{idEncargado}', [EncargadoController::class, 'obtenerConteoRegistros']);
 
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 
+Route::get('/tutores/{ciTutor}', [TutorController::class, 'obtenerTutor']);
 
-Route::post('/registro/validarComprobante', [RegistroController::class, 'validarComprobante']);
+Route::post('/tutores', [TutorController::class, 'almacenarTutor']);
 
-Route::post('/registro_lote', [RegistroController::class, 'registrarListaPostulantes']);
-Route::get('/registro_lote', [RegistroController::class, 'obtenerListaPostulantes']);
+Route::get('/roles-tutor', [TutorController::class, 'obtenerRoles']);
 
-Route::get('/dato_inscripcion', [RegistroController::class, 'obtenerDatosInscripcion']);
 
-Route::get('/seccion', [SeccionController::class, 'obtenerSecciones']);
+Route::post('/pagos/guardarPago', [PagoController::class, 'guardarPago']);
+
+Route::post('/pagos/obtenerId', [PagoController::class, 'obtenerIdPago']);
+
+Route::post('/pagos/agregar', [PagoController::class, 'agregarPago']);
+
+Route::post('/pagos/obtenerOrden', [PagoController::class, 'obtenerOrdenDePago']);
+
+Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAsociado']);
+
+Route::post('/pagos/validarComprobantePago', [PagoController::class, 'validarComprobantePago']);

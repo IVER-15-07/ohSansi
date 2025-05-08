@@ -16,11 +16,11 @@ class CrearTablaEncargado extends Migration
         Schema::create('encargado', function (Blueprint $table) {
             $table->id();
             $table->string('ci')->unique();
-            $table->string('nombre');
-            $table->string('apellido');
+            $table->string('nombre')->collation('texto_insensible');
+            $table->string('apellido')->collation('texto_insensible');
             $table->date('fecha_nacimiento');
             $table->string('telefono')->unique();
-            $table->string('correo')->unique();
+            $table->string('correo')->collation('texto_insensible')->unique();
         });
     }
 

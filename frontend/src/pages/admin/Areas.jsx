@@ -38,10 +38,6 @@ const Areas = () => {
       return;
     }
 
-    if (!/^[a-zA-Z0-9\s]+$/.test(newArea)) {
-      setErrorMessage('El nombre del área solo puede contener letras, números y espacios.');
-      return;
-    }
 
     // Normalizar el nombre antes de comparar
     const normalizedNewArea = normalizeString(newArea);
@@ -125,10 +121,7 @@ const Areas = () => {
                   setErrorMessage('El nombre del área no puede exceder los 50 caracteres.');
                   return;
                 }
-                if (!/^[a-zA-Z0-9\s]+$/.test(newArea)) {
-                  setErrorMessage('El nombre del área solo puede contener letras, números y espacios.');
-                  return;
-                }
+                
                 handleAddArea();
                 setIsModalOpen(false);
               }}

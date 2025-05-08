@@ -15,12 +15,12 @@ class CrearTablaRegistro extends Migration
     {
         Schema::create('registro', function (Blueprint $table) {
             $table->id();
-            $table->string('nombres');
-            $table->string('apellidos');
-            $table->string('ci');
-            $table->foreignId('id_opcion_inscripcion')->constrained('opcion_inscripcion')->onDelete('cascade');
+            $table->foreignId('id_olimpiada')->constrained('olimpiada')->onDelete('cascade'); 
             $table->foreignId('id_encargado')->constrained('encargado')->onDelete('cascade');
-            $table->foreignId('id_pago')->nullable()->constrained('pago')->onDelete('cascade');
+            $table->foreignId('id_postulante')->constrained('postulante')->onDelete('cascade');
+            $table->foreignId('id_grado')->constrained('grado')->onDelete('cascade');
+
+            $table->unique(['id_olimpiada', 'id_encargado', 'id_postulante', 'id_grado'], 'unique_registro');
         });
     }
 

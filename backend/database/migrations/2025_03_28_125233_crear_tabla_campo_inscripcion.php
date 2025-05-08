@@ -15,7 +15,7 @@ class CrearTablaCampoInscripcion extends Migration
     {
         Schema::create('campo_inscripcion', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
+            $table->string('nombre')->collation('texto_insensible');
 
             $table->foreignId('id_tipo_campo')->constrained('tipo_campo')->onDelete('cascade');
             $table->foreignId('id_seccion_campo')->constrained('seccion_campo')->onDelete('cascade');

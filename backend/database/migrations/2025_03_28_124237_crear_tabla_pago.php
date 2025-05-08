@@ -17,7 +17,7 @@ class CrearTablaPago extends Migration
             $table->id();
             $table->decimal('monto', 10, 2);
             $table->date('fecha_generado');
-            $table->string('concepto');
+            $table->string('concepto')->collation('texto_insensible');
             $table->string('orden');
             $table->string('comprobante')->nullable();
             $table->date('fecha_pago')->nullable();

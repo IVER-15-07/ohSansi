@@ -9,12 +9,14 @@ use App\Models\CampoInscripcion;
 use App\Models\DatoInscripcion;
 class FormularioController extends Controller
 {
-    public function obtenerFormulario(Request $request)
+    public function obtenerFormulario(Request $request, $idOlimpiada)
     {
         try {
             // Intenta obtener las áreas desde la caché
-            $secciones = Cache::remember('seccionesConCampos2', 3600, function () {
-                return SeccionCampo::with(['campos_inscripcion.tipo_campo'])->get(); // Consulta a la base de datos si no está en caché
+            $secciones = Cache::remember("seccionesConCampos_{$idOlimpiada}", 3600, function () use($idOlimpiada) {
+                return SeccionCampo::where('id_olimpiada', $idOlimpiada) // Filtrar por id_olimpiada
+                ->with(['campos_inscripcion.tipo_campo']) // Cargar los campos_inscripcion y su relación tipo_campo
+                ->get();
             });
 
             return response()->json([
@@ -61,6 +63,7 @@ class FormularioController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
+                'request' => $request->all(),
                 'success' => false,
                 'status' => 'error',
                 'message' => 'Error al guardar los datos de inscripción: ' . $e->getMessage()
