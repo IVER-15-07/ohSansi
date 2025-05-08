@@ -17,6 +17,8 @@ use App\Http\Controllers\EncargadoController;
 
 use App\Http\Controllers\FormularioController;
 
+use App\Http\Controllers\InscripcionController;
+
 use App\Http\Controllers\RegistroController;
 
 use App\Http\Controllers\TutorController;
@@ -100,7 +102,7 @@ Route::post('/tutores', [TutorController::class, 'almacenarTutor']);
 
 Route::get('/roles-tutor', [TutorController::class, 'obtenerRoles']);
 
-Route::get('/registros/{idEncargado}/{idOlimpiada}', [RegistroController::class, 'obtenerRegistros']);
+Route::get('/registros/{idEncargado}/{idOlimpiada}', [InscripcionController::class, 'obtenerRegistros']);
 
 
 

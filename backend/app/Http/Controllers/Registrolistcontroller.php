@@ -24,7 +24,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class Registrolistcontroller extends Controller
 {
 
-    public function registrarListaPostulantes(Request $request)
+    /*public function registrarListaPostulantes(Request $request)
     {
         try {
             // Validar el archivo Excel
@@ -191,7 +191,7 @@ class Registrolistcontroller extends Controller
                 'message' => 'Error al registrar la lista de postulantes: ' . $e->getMessage(),
             ], 500);
         }
-    }
+    }*/
 
     public function obtenerListaPostulantes()
     {
