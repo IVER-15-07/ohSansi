@@ -15,9 +15,9 @@ class Tutor extends Model
     protected $fillable = [
         'nombres',
         'apellidos',
-        'ci',
-        'correo'
+        'ci'
     ];
+    
 
     /**
      * Relación muchos a muchos con Registro a través de la tabla registro_tutor
@@ -27,6 +27,10 @@ class Tutor extends Model
         return $this->belongsToMany(Registro::class, 'registro_tutor', 'id_tutor', 'id_registro')
                     ->withPivot('id_rol_tutor') // Incluir el rol del tutor en la relación
                     ->using(RegistroTutor::class); // Usar el modelo RegistroTutor para la relación
+    }
+    
+    public function datos(){
+        return $this->hasMany(DatoTutor::class, 'id_tutor');
     }
 
     /**

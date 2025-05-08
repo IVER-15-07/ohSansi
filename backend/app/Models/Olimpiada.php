@@ -30,5 +30,19 @@ class Olimpiada extends Model
         return $this->hasMany(OpcionInscripcion::class, 'id_olimpiada');
     }
 
+    public function registros()
+    {
+        return $this->hasMany(Registro::class, 'id_olimpiada');
+    }
+
+    public function olimpiadaCamposPostulante()
+    {
+        return $this->hasMany(OlimpiadaCampoPostulante::class, 'id_olimpiada');
+    }
+
+    public function olimpiadaCamposTutor()
+    {
+        return $this->hasMany(olimpiadaCampoTutor::class, 'id_olimpiada');
+    }
 
 }

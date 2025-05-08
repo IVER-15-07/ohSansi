@@ -2,15 +2,27 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getFormulario, saveDatosInscripcion, createRegistro } from "../../../service/formulario.api";
 import { getOpcionesInscripcion } from "../../../service/opciones_inscripcion.api";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Search } from "lucide-react";
+import { getGrados } from "../../../service/grados.api";
+import { getTutor, createTutor, getRolesTutor} from "../../../service/tutor.api";
 
 const RegistrarPostulante = () => {
-  const { idOlimpiada, idEncargado } = useParams();
-  const [secciones, setSecciones] = useState([]);
+  const {idOlimpiada, idEncargado } = useParams();
+
+  const [catalogoGrados, setCatalogoGrados] = useState([]);
+  const [gradoSeleccionado, setGradoSeleccionado] = useState(null);
+
+  const [tutores, setTutores] = useState([]);
+  const [rolesTutor, setRolesTutor] = useState([]);
+
   const [opcionesInscripcion, setOpcionesInscripcion] = useState([]);
+  const [selecciones, setSelecciones] = useState([]);
+
+  const [secciones, setSecciones] = useState([]);
   const [formValues, setFormValues] = useState({});
   const [datosPostulante, setDatosPostulante] = useState({ nombres: '', apellidos: '', ci: '' });
-  const [selecciones, setSelecciones] = useState([]);
+  const [idRegistros, setIdRegistros] = useState([]);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -20,6 +32,11 @@ const RegistrarPostulante = () => {
       try {
         const seccionesRes = await getFormulario(idOlimpiada);
         const opcionesRes = await getOpcionesInscripcion(idOlimpiada);
+        const gradosRes = await getGrados();
+        const rolesRes = await getRolesTutor();
+
+        setRolesTutor(rolesRes.data);
+        setCatalogoGrados(gradosRes.data);
         setSecciones(seccionesRes.data);
         setOpcionesInscripcion(opcionesRes.data);
         const initialValues = {};
@@ -37,6 +54,87 @@ const RegistrarPostulante = () => {
     };
     fetchData();
   }, [idOlimpiada]);
+
+  const agregarTutor = () => {
+    const existeTutorSinCI = tutores.some(tutor => !tutor.ci.trim());
+  
+    // Si hay algún tutor con CI vacío, mostrar alerta y no permitir agregar más
+    if (existeTutorSinCI) {
+      alert("No puedes agregar otro tutor hasta completar el CI de los tutores existentes");
+      return;
+    }
+    setTutores([...tutores, { idTutor:'', ci: '', nombres: '', apellidos: '', correo: '', idRol: '', buscado: false, encontrado: false }]);
+  }
+
+  const handleTutorChange = (index, field, value) => {
+    const nuevosTutores = [...tutores];
+    nuevosTutores[index][field] = value;
+    if(field === "ci") {
+      nuevosTutores[index].buscado = false; // Resetear el estado de buscado al cambiar el CI
+    };
+    setTutores(nuevosTutores);
+  };
+
+  const eliminarTutor = (index) => {
+    const nuevos = tutores.filter((_, i) => i !== index);
+    setTutores(nuevos);
+  };
+
+  const buscarTutor = async (index) => {
+    const tutor = tutores[index];
+    console.log(tutor)
+    if (!tutor.ci) {
+      alert("Por favor, ingrese el CI del tutor antes de buscar.");
+      return;
+    }
+    const tutorBuscado = await getTutor(tutor.ci);
+    console.log(tutorBuscado);
+    if (!tutorBuscado.data) {
+      alert("No se encontró un tutor con ese CI.");
+      const nuevosTutores = [...tutores];
+      nuevosTutores[index] = { ...nuevosTutores[index], buscado: true };
+      setTutores(nuevosTutores);
+      return;
+    }
+    const nuevosTutores = [...tutores];
+    nuevosTutores[index] = {
+      ...nuevosTutores[index],
+      idTutor: tutorBuscado.data.id,
+      nombres: tutorBuscado.data.nombres,
+      apellidos: tutorBuscado.data.apellidos,
+      correo: tutorBuscado.data.correo,
+      buscado: true,
+      encontrado: true,
+    };
+    setTutores(nuevosTutores);
+  };
+
+  const guardarTutores = async () => {
+    for (const [index, tutor] of tutores.entries()) {
+      if (!tutor.ci || !tutor.nombres || !tutor.apellidos || !tutor.correo || !tutor.idRol) {
+        alert("Por favor, complete todos los campos del tutor antes de guardar.");
+        throw new Error("Campos incompletos");
+      }
+      if (tutor.encontrado) {
+        continue;
+      }
+      console.log(index, tutor);
+      try {
+        const data = {
+          ci: tutor.ci,
+          nombres: tutor.nombres,
+          apellidos: tutor.apellidos,
+          correo: tutor.correo,
+        };
+        const tutorRes = await createTutor(data);
+        console.log(tutorRes.data);
+        handleTutorChange(index, 'idTutor', tutorRes.data.id);
+        handleTutorChange(index, 'encontrado', true);
+      } catch (error) {
+        alert("Error al guardar los tutores: " + error.message);
+      }
+    }
+  };
 
   const handleFormChange = (campoId, value) => {
     setFormValues({ ...formValues, [campoId]: value });
@@ -62,7 +160,7 @@ const RegistrarPostulante = () => {
     setSelecciones(nuevas);
   };
 
-  const handleSubmit = async () => {
+  const guardarRegistros = async () => {
     try {
       setIsLoading(true);
       for (const seleccion of selecciones) {
@@ -74,6 +172,7 @@ const RegistrarPostulante = () => {
         const registroRes = await createRegistro(data);
         const registro = registroRes.data;
         await saveDatosInscripcion({ formValues }, registro.id);
+        setIdRegistros((prev) => [...prev, registro.id]);
       }
       alert("Postulante inscrito con éxito");
     } catch (error) {
@@ -81,14 +180,19 @@ const RegistrarPostulante = () => {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  const guardarRegistrosTutores = async () => {
+
+  }
+
+  const handleSubmit = async () => {
+    await guardarTutores();
+    await guardarRegistros();
   };
+  console.log(tutores);
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md">
-
-
-  
-
-
       <h1 className="text-3xl font-bold text-blue-900 mb-6">Registro de Postulante</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -103,6 +207,18 @@ const RegistrarPostulante = () => {
         <div>
           <label className="text-sm font-medium text-gray-700">Carnet de Identidad</label>
           <input type="text" value={datosPostulante.ci} onChange={(e) => handlePostulanteChange("ci", e.target.value)} className="w-full px-3 py-2 border rounded-md" />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-gray-700">Grado</label>
+          <div>
+            <select value={gradoSeleccionado} onChange={(e) => setGradoSeleccionado(e.target.value)} className="flex-1 px-3 py-2 border rounded-md">
+                <option value="">Seleccione un Grado</option>
+                {Object.entries(catalogoGrados).map(([id, grado]) => (
+                  <option key={grado.id} value={grado.id}>{grado.nombre}</option>
+                ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -125,7 +241,60 @@ const RegistrarPostulante = () => {
         </div>
       ))}
 
+      <div className="space-y-4 mb-6">
+        <h3 className="text-lg font-semibold text-gray-800">Tutores</h3>
+        {tutores.map((tutor, index) => (
+          <div key={index} className="flex flex-col md:flex-row gap-4 items-center">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Carnet de Identidad</label>
+              <input type="text" disabled={tutor.encontrado} value={tutor.ci} onChange={(e) => handleTutorChange(index, "ci", e.target.value)} className="w-full px-3 py-2 border rounded-md" />
+            </div>
 
+            <button type="button" onClick={() => buscarTutor(index)} className="p-2 bg-blue-500 text-white rounded-md">
+              <Search size={16} />
+            </button>
+
+            <button type="button" onClick={() => eliminarTutor(index)} className="p-2 bg-red-500 text-white rounded-md">
+              <Trash2 size={16} />
+            </button>
+
+            {tutor.buscado && (
+              <div className="w-full mt-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Nombre</label>
+                  <input type="text" disabled={tutor.encontrado} value={tutor.nombres} onChange={(e) => handleTutorChange(index, "nombres", e.target.value)} className="w-full px-3 py-2 border rounded-md"/>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Apellidos</label>
+                  <input type="text" disabled={tutor.encontrado} value={tutor.apellidos} onChange={(e) => handleTutorChange(index, "apellidos", e.target.value)} className="w-full px-3 py-2 border rounded-md"  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Correo</label>
+                  <input type="text" disabled={tutor.encontrado} value={tutor.correo} onChange={(e) => handleTutorChange(index, "correo", e.target.value)} className="w-full px-3 py-2 border rounded-md"  />
+                </div>
+
+                <div >
+                  <label className="text-sm font-medium text-gray-700">Relación con el Postulante</label>
+                  <div>
+                    <select value={tutor.idRol} onChange={(e) => handleTutorChange(index, 'idRol', e.target.value)} className="flex-1 px-3 py-2 border rounded-md">
+                      <option value="">Seleccione un Rol</option>
+                      {Object.entries(rolesTutor).map(([id, rolTutor]) => (
+                        <option key={rolTutor.id} value={rolTutor.id}>{rolTutor.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+            )}
+          </div>
+        ))}
+        {tutores.length < 2 && (
+          <button type="button" onClick={agregarTutor} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            <Plus size={16} /> Agregar Tutor
+          </button>
+        )}
+      </div>
 
 
 
