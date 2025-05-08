@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Tesseract from "tesseract.js";
 import * as pdfjsLib from "pdfjs-dist";
 import SubirArchivo from "../../components/SubirArchivo";
@@ -15,6 +15,13 @@ const ValidarComprobante = () => {
   const [cargando, setCargando] = useState(false);
   const [mensajeError, setMensajeError] = useState("");
   const inputRef = useRef(null);
+
+  // Ejecutar automáticamente buscarPagoAsociado cuando los datos estén completos
+  useEffect(() => {
+    if (idOrden && nombreCompleto && monto) {
+      buscarPagoAsociado();
+    }
+  }, [idOrden, nombreCompleto, monto]);
 
   const extraerDatos = (texto) => {
     console.log("Texto extraído por OCR:", texto); // Depuración del texto extraído
@@ -107,7 +114,7 @@ const ValidarComprobante = () => {
     } catch (error) {
       console.error("Error al buscar el pago asociado:", error);
       setPagoAsociado(null);
-      setMensajeError("No se encontraron pagos asociados.");
+      setMensajeError("Comprobante de pago ya validado.");
     }
   };
 
@@ -148,15 +155,6 @@ const ValidarComprobante = () => {
               <p><strong>Nombre del Encargado:</strong> {nombreCompleto || "No disponible"}</p>
               <p><strong>Monto:</strong> {monto || "No disponible"} Bs</p>
             </div>
-
-            {idOrden && nombreCompleto && monto && (
-              <button
-                onClick={buscarPagoAsociado}
-                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
-              >
-                Buscar Pago Asociado
-              </button>
-            )}
 
             {pagoAsociado ? (
               <div className="mt-5">
