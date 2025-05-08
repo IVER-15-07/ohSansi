@@ -20,8 +20,13 @@ use App\Http\Controllers\FormularioController;
 use App\Http\Controllers\RegistroController;
 use App\Http\Controllers\SeccionController;
 
+use App\Http\Controllers\TutorController;
+
 use App\Http\Controllers\PagoController;
+<<<<<<< HEAD
 use App\Http\Controllers\Registrolistcontroller;
+=======
+>>>>>>> 566ccc2d8e5db48ce9f36c0247753175eded4fec
 
 /*
 |--------------------------------------------------------------------------
@@ -91,6 +96,17 @@ Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 Route::get('/registros/{idEncargado}/{idOlimpiada}', [RegistroController::class, 'obtenerRegistros']);
 
+<<<<<<< HEAD
+=======
+Route::get('/tutores/{ciTutor}', [TutorController::class, 'obtenerTutor']);
+
+Route::post('/tutores', [TutorController::class, 'almacenarTutor']);
+
+Route::get('/roles-tutor', [TutorController::class, 'obtenerRoles']);
+
+
+Route::post('/pagos/guardarPago', [PagoController::class, 'guardarPago']);
+>>>>>>> 566ccc2d8e5db48ce9f36c0247753175eded4fec
 
 
 Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAsociado']);

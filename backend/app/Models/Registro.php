@@ -13,17 +13,15 @@ class Registro extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'nombres',
-        'apellidos',
-        'ci',
-        'id_opcion_inscripcion',
+        'id_olimpiada',
         'id_encargado',
-        'id_pago'
+        'id_postulante',
+        'id_grado'
     ];
 
-    public function grado()
+    public function olimpiada()
     {
-        return $this->belongsTo(Grado::class, 'id_grado');
+        return $this->belongsTo(Olimpiada::class, 'id_olimpiada');
     }
 
     public function encargado()
@@ -31,20 +29,20 @@ class Registro extends Model
         return $this->belongsTo(Encargado::class, 'id_encargado');
     }
 
-    public function pago()
+    public function postulante()
     {
-        return $this->belongsTo(Pago::class, 'id_pago');
+        return $this->belongsTo(Postulante::class, 'id_postulante');
+    }
+
+    public function grado()
+    {
+        return $this->belongsTo(Grado::class, 'id_grado');
+    }
+
+    public function inscripciones(){
+        return $this->hasMany(Inscripcion::class, 'id_registro');
     }
     
-    public function opcion_inscripcion()
-    {
-        return $this->belongsTo(OpcionInscripcion::class, 'id_opcion_inscripcion');
-    }
-
-    public function datos(){
-        return $this->hasMany(DatoInscripcion::class, 'id_registro');
-    }
-
     /**
      * Relación muchos a muchos con Tutor a través de la tabla registro_tutor
      */
