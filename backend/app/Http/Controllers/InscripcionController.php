@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class InscripcionController extends Controller
 {
-    public function obtenerRegistros($idEncargado, $idOlimpiada)
+    public function obtenerInscripciones($idEncargado, $idOlimpiada)
     {
         try {
             // Obtener los registros asociados al encargado y a la olimpiada donde id_pago sea null

@@ -102,14 +102,14 @@ Route::post('/tutores', [TutorController::class, 'almacenarTutor']);
 
 Route::get('/roles-tutor', [TutorController::class, 'obtenerRoles']);
 
-Route::get('/registros/{idEncargado}/{idOlimpiada}', [InscripcionController::class, 'obtenerRegistros']);
 
 
+Route::get('/inscripciones/{idEncargado}/{idOlimpiada}', [InscripcionController::class, 'obtenerInscripciones']);
 
+
+// RUTAS PARA VALIDAR COMPROBANTES DE PAGOS
 Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAsociado']);
-
 Route::post('/pagos/validarComprobantePago', [PagoController::class, 'validarComprobantePago']);
-
 
 
 //RUTAAS PARA GENERAR ORDEN DE PAGO

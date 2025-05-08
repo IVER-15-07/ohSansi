@@ -304,76 +304,76 @@ class PagoController extends Controller
 
     private function separarNombreCompleto($nombreCompleto)
     {
-    $partes = explode(' ', trim($nombreCompleto));
-    $cantidadPartes = count($partes);
+        $partes = explode(' ', trim($nombreCompleto));
+        $cantidadPartes = count($partes);
 
-    if ($cantidadPartes === 2) {
-        return [
-            'nombre' => $partes[0],
-            'apellido' => $partes[1],
-        ];
-    } elseif ($cantidadPartes === 3) {
-        return [
-            'nombre' => $partes[0],
-            'apellido' => $partes[1] . ' ' . $partes[2],
-        ];
-    } elseif ($cantidadPartes === 4) {
-        return [
-            'nombre' => $partes[0] . ' ' . $partes[1],
-            'apellido' => $partes[2] . ' ' . $partes[3],
-        ];
-    } else {
-        throw new \Exception('El nombre completo debe tener entre 2 y 4 palabras.');
-    }
+        if ($cantidadPartes === 2) {
+            return [
+                'nombre' => $partes[0],
+                'apellido' => $partes[1],
+            ];
+        } elseif ($cantidadPartes === 3) {
+            return [
+                'nombre' => $partes[0],
+                'apellido' => $partes[1] . ' ' . $partes[2],
+            ];
+        } elseif ($cantidadPartes === 4) {
+            return [
+                'nombre' => $partes[0] . ' ' . $partes[1],
+                'apellido' => $partes[2] . ' ' . $partes[3],
+            ];
+        } else {
+            throw new \Exception('El nombre completo debe tener entre 2 y 4 palabras.');
+        }
     }
 
     public function validarComprobantePago(Request $request)
     {
-    try {
-        // Validar los datos enviados
-        $validated = $request->validate([
-            'id_pago' => 'required|integer|exists:pago,id',
-            'comprobante' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048', // Validar formatos y tamaño
-        ]);
-
-        // Buscar el registro en la tabla pago
-        $pago = DB::table('pago')->where('id', $validated['id_pago'])->first();
-
-        if (!$pago) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Pago no encontrado.',
-            ], 404);
-        }
-
-        // Guardar el archivo del comprobante en el almacenamiento
-        $rutaComprobante = $request->file('comprobante')->store('comprobantes', 'public');
-
-        // Actualizar la tabla pago con la ruta del comprobante y la fecha de pago actual
-        DB::table('pago')
-            ->where('id', $validated['id_pago'])
-            ->update([
-                'comprobante' => $rutaComprobante,
-                'fecha_pago' => now(), // Fecha actual
+        try {
+            // Validar los datos enviados
+            $validated = $request->validate([
+                'id_pago' => 'required|integer|exists:pago,id',
+                'comprobante' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048', // Validar formatos y tamaño
             ]);
 
-        // Retornar una respuesta exitosa
-        return response()->json([
-            'success' => true,
-            'message' => 'Comprobante de pago validado y guardado exitosamente.',
-            'data' => [
-                'id_pago' => $validated['id_pago'],
-                'comprobante' => asset('storage/' . $rutaComprobante), // Generar URL completa
-                'fecha_pago' => now()->format('Y-m-d'), // Fecha actual en formato aaaa-mm-dd
-            ],
-        ], 200);
-    } catch (\Exception $e) {
-        // Manejar errores y retornar una respuesta
-        return response()->json([
-            'success' => false,
-            'status' => 'error',
-            'message' => 'Error al validar el comprobante de pago: ' . $e->getMessage(),
-        ], 500);
-    }
+            // Buscar el registro en la tabla pago
+            $pago = DB::table('pago')->where('id', $validated['id_pago'])->first();
+
+            if (!$pago) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pago no encontrado.',
+                ], 404);
+            }
+
+            // Guardar el archivo del comprobante en el almacenamiento
+            $rutaComprobante = $request->file('comprobante')->store('comprobantes', 'public');
+
+            // Actualizar la tabla pago con la ruta del comprobante y la fecha de pago actual
+            DB::table('pago')
+                ->where('id', $validated['id_pago'])
+                ->update([
+                    'comprobante' => $rutaComprobante,
+                    'fecha_pago' => now(), // Fecha actual
+                ]);
+
+            // Retornar una respuesta exitosa
+            return response()->json([
+                'success' => true,
+                'message' => 'Comprobante de pago validado y guardado exitosamente.',
+                'data' => [
+                    'id_pago' => $validated['id_pago'],
+                    'comprobante' => asset('storage/' . $rutaComprobante), // Generar URL completa
+                    'fecha_pago' => now()->format('Y-m-d'), // Fecha actual en formato aaaa-mm-dd
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar errores y retornar una respuesta
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al validar el comprobante de pago: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
