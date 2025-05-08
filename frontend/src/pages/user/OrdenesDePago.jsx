@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { obtenerRegistros } from "../../../service/registros.api";
+import { obtenerInscripciones } from "../../../service/inscripcion.api";
 import { generarDatosDeOrden, guardarOrdenPago, obtenerOrdenesDePago } from "../../../service/pagos.api";
 
 const OrdenesDePago = () => {
@@ -18,12 +18,12 @@ const OrdenesDePago = () => {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        // Obtener registros
-        const registrosResponse = await obtenerRegistros(idEncargado, idOlimpiada);
-        if (registrosResponse.data.length === 0) {
+        // Obtener inscripciones
+        const inscripcionesResponse = await obtenerInscripciones(idEncargado, idOlimpiada);
+        if (inscripcionesResponse.data.length === 0) {
           setSinRegistros(true);
         } else {
-          setRegistros(registrosResponse.data);
+          setRegistros(inscripcionesResponse.data);
         }
 
         // Obtener órdenes de pago
@@ -44,14 +44,14 @@ const OrdenesDePago = () => {
   }, [idEncargado, idOlimpiada]);
 
   // Manejar selección de registros
-  const handleSeleccionarRegistro = (idRegistro) => {
+  const handleSeleccionarRegistro = (idInscripcion) => {
     setRegistrosSeleccionados((prevSeleccionados) =>
-      prevSeleccionados.includes(idRegistro)
-        ? prevSeleccionados.filter((id) => id !== idRegistro)
-        : [...prevSeleccionados, idRegistro]
+      prevSeleccionados.includes(idInscripcion)
+        ? prevSeleccionados.filter((id) => id !== idInscripcion)
+        : [...prevSeleccionados, idInscripcion]
     );
   };
-
+  
   // Generar orden de pago
   const generarOrdenDePago = async () => {
     try {
@@ -166,22 +166,24 @@ const OrdenesDePago = () => {
                     <th className="border border-black p-2">Nombres</th>
                     <th className="border border-black p-2">Apellidos</th>
                     <th className="border border-black p-2">Área</th>
+                    <th className="border border-black p-2">Grado</th>
                     <th className="border border-black p-2">Nivel/Categoria</th>
                   </tr>
                 </thead>
                 <tbody>
                   {registros.map((registro) => (
-                    <tr key={registro.id_registro}>
+                    <tr key={registro.id_inscripcion}>
                       <td className="border border-black p-2 text-center">
                         <input
                           type="checkbox"
-                          onChange={() => handleSeleccionarRegistro(registro.id_registro)}
-                          checked={registrosSeleccionados.includes(registro.id_registro)}
+                          onChange={() => handleSeleccionarRegistro(registro.id_inscripcion)}
+                          checked={registrosSeleccionados.includes(registro.id_inscripcion)}
                         />
                       </td>
                       <td className="border border-black p-2">{registro.nombres}</td>
                       <td className="border border-black p-2">{registro.apellidos}</td>
                       <td className="border border-black p-2">{registro.nombre_area}</td>
+                      <td className="border border-black p-2">{registro.grado}</td>
                       <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
                     </tr>
                   ))}
