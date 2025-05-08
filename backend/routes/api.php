@@ -23,7 +23,8 @@ use App\Http\Controllers\TutorController;
 use App\Http\Controllers\SeccionController;
 
 use App\Http\Controllers\PagoController;
->>>>>>>>> Temporary merge branch 2
+use App\Http\Controllers\Registrolistcontroller;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
