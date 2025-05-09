@@ -200,7 +200,7 @@ class PagoController extends Controller
                 'monto' => 'required|numeric|min:0', // Validar que el monto sea un número positivo
                 'fecha_generado' => 'required|date', // Validar que sea una fecha válida
                 'concepto' => 'required|string|max:1000', // Validar que el concepto sea un string
-                'orden' => 'required|file|mimes:pdf|max:2048', // Validar que sea un archivo PDF de máximo 2MB
+                'orden' => 'required|file|mimes:pdf|max:4096', // Validar que sea un archivo PDF de máximo 4MB
                 'registros' => 'required|array|min:1', // Validar que sea un arreglo
                 'registros.*' => 'integer|exists:inscripcion,id', // Validar que los elementos del arreglo existan
             ]);

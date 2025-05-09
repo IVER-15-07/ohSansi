@@ -50,6 +50,8 @@ const OrdenesDePago = () => {
         ? prevSeleccionados.filter((id) => id !== idInscripcion)
         : [...prevSeleccionados, idInscripcion]
     );
+    // Agregar console.log para verificar los registros seleccionados
+    console.log("Registros seleccionados:", registrosSeleccionados);
   };
   
   // Generar orden de pago
@@ -61,6 +63,9 @@ const OrdenesDePago = () => {
         id_olimpiada: idOlimpiada,
         registros: registrosSeleccionados,
       });
+
+      // Agregar console.log para verificar la respuesta
+      console.log("Respuesta de generarDatosDeOrden:", datosOrdenResponse.data);
 
       const datosOrden = datosOrdenResponse.data;
 
@@ -128,9 +133,19 @@ const OrdenesDePago = () => {
       formData.append("fecha_generado", datosOrden.fecha_pago);
       formData.append("concepto", `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`);
       formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
+
       registrosSeleccionados.forEach((id) => {
         formData.append("registros[]", id); // Laravel espera este formato para arreglos
       });
+
+      console.log("Datos enviados al backend (guardarOrdenPago):", {
+        id: datosOrden.id_pago,
+        monto: datosOrden.importe_total,
+        fecha_generado: datosOrden.fecha_pago,
+        concepto: `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`,
+        registros: registrosSeleccionados,
+      });
+      console.log("FormData enviado al backend:", formData);
       // Guardar la orden de pago en el servidor
       await guardarOrdenPago(formData);
 
