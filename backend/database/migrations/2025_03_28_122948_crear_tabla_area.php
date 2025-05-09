@@ -15,7 +15,7 @@ class CrearTablaArea extends Migration
     {
         Schema::create('area', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre')->unique();
+            $table->string('nombre')->collation('texto_insensible')->unique();
         });
     }
 

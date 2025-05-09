@@ -21,8 +21,8 @@ class Pago extends Model
         'fecha_pago'
     ];
 
-    public function registros()
+    public function inscripciones()
     {
-        return $this->hasMany(Registro::class, 'id_pago');
+        return $this->hasMany(Inscripcion::class, 'id_pago');
     }
 }

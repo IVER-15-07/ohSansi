@@ -17,9 +17,18 @@ use App\Http\Controllers\EncargadoController;
 
 use App\Http\Controllers\FormularioController;
 
+use App\Http\Controllers\InscripcionController;
+
 use App\Http\Controllers\RegistroController;
 
+use App\Http\Controllers\TutorController;
+
+use App\Http\Controllers\SeccionController;
+
 use App\Http\Controllers\PagoController;
+
+use App\Http\Controllers\Registrolistcontroller;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -78,23 +87,38 @@ Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 
 Route::get('/encargados/{id}', [EncargadoController::class, 'obtenerEncargado']);
 
+
 Route::get('/formulario/{idOlimpiada}', [FormularioController::class, 'obtenerFormulario']);
 
 Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
 
-Route::get('/encargados/registros/{idEncargado}/{idOlimpiada}', [EncargadoController::class, 'obtenerConteoRegistros']);
 
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);
 
 
-Route::post('/pagos/guardarPago', [PagoController::class, 'guardarPago']);
+Route::get('/tutores/{ciTutor}', [TutorController::class, 'obtenerTutor']);
 
-Route::post('/pagos/obtenerId', [PagoController::class, 'obtenerIdPago']);
+Route::post('/tutores', [TutorController::class, 'almacenarTutor']);
 
-Route::post('/pagos/agregar', [PagoController::class, 'agregarPago']);
+Route::get('/roles-tutor', [TutorController::class, 'obtenerRoles']);
 
-Route::post('/pagos/obtenerOrden', [PagoController::class, 'obtenerOrdenDePago']);
 
+
+Route::get('/inscripciones/{idEncargado}/{idOlimpiada}', [InscripcionController::class, 'obtenerInscripciones']);
+
+
+// RUTAS PARA VALIDAR COMPROBANTES DE PAGOS
 Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAsociado']);
-
 Route::post('/pagos/validarComprobantePago', [PagoController::class, 'validarComprobantePago']);
+
+
+//RUTAAS PARA GENERAR ORDEN DE PAGO
+Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
+Route::post('/pagos/guardarOrdenPago', [PagoController::class, 'guardarOrdenPago']);
+Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoController::class, 'obtenerOrdenesDePago']);
+
+
+// RUTAS PARA REGISTRO DE LISTA DE POSTULANTES
+Route::post('/registro_lista', [Registrolistcontroller::class, 'registrarListaPostulantes']);
+Route::get('/registro_lista', [Registrolistcontroller::class, 'obtenerListaPostulantes']);
+Route::get('/secciones', [SeccionController::class, 'obtenerSecciones']);
