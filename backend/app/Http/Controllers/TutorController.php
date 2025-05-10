@@ -53,7 +53,6 @@ class TutorController extends Controller
             $validated = $request->validate([
                 'nombres' => 'required|string|max:50',
                 'apellidos' => 'required|string|max:50',
-                'correo' => 'required|email|max:255',
                 'ci' => 'required||string||max:50||unique:tutor,ci',
             ]);
 
@@ -61,7 +60,6 @@ class TutorController extends Controller
             $tutor = Tutor::create([
                 'nombres' => ucwords(mb_strtolower($validated['nombres'], 'UTF-8')),
                 'apellidos' => ucwords(mb_strtolower($validated['apellidos'], 'UTF-8')),
-                'correo' => mb_strtolower($validated['correo'], 'UTF-8'),
                 'ci' => $validated['ci'],
             ]);
 

@@ -15,7 +15,7 @@ class CrearTablaInscripcion extends Migration
     {
         Schema::create('inscripcion', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_registro')->constrained('inscripcion')->onDelete('cascade'); 
+            $table->foreignId('id_registro')->constrained('registro')->onDelete('cascade'); 
             $table->foreignId('id_opcion_inscripcion')->constrained('opcion_inscripcion')->onDelete('cascade');
             $table->foreignId('id_pago')->nullable()->constrained('pago')->onDelete('cascade');
 

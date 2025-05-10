@@ -34,9 +34,9 @@ export const getEncargado = async (idEncargado) => {
   }
 }
 
-export const obtenerConteoRegistrosPorEncargado = async (idEncargado) => {
+export const obtenerConteoRegistrosPorEncargado = async (idEncargado, idOlimpiada) => {
   try {
-    const response = await axiosInstance.get(`/encargados/registros/${idEncargado}`);
+    const response = await axiosInstance.get(`/encargados/registrosTotales/${idEncargado}/${idOlimpiada}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching conteo de registros:", error);
