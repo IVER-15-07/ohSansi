@@ -143,106 +143,121 @@ const OrdenesDePago = () => {
   };
 
   return (
-    <div className="p-4">
-      {/* Mostrar "Cargando..." mientras se obtienen los datos */}
-      {cargando ? (
-        <div className="text-center">
-          <h2>Cargando...</h2>
-        </div>
-      ) : (
-        <>
-          {/* Sección de registros pendientes */}
-          {sinRegistros ? (
-            <div>
-              <h2>No hay registros pendientes para generar una orden de pago.</h2>
-            </div>
-          ) : (
-            <div>
-              <h2>Registros Pendientes</h2>
-              <table className="w-full border-collapse">
-                <thead>
+    <div className="p-4 max-w-6xl mx-auto">
+  {cargando ? (
+    <div className="text-center text-blue-900 font-medium text-lg">
+      <h2>Cargando...</h2>
+    </div>
+  ) : (
+    <>
+      {/* Registros Pendientes */}
+      <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
+        <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+          Registros Pendientes
+        </h2>
+
+        {sinRegistros ? (
+          <p className="text-center text-gray-700">
+            No hay registros pendientes para generar una orden de pago.
+          </p>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-collapse text-sm">
+                <thead className="bg-blue-800 text-white">
                   <tr>
-                    <th className="border border-black p-2">Seleccionar</th>
-                    <th className="border border-black p-2">Nombres</th>
-                    <th className="border border-black p-2">Apellidos</th>
-                    <th className="border border-black p-2">Área</th>
-                    <th className="border border-black p-2">Nivel/Categoria</th>
+                    <th className="border p-2 text-left">Seleccionar</th>
+                    <th className="border p-2 text-left">Nombres</th>
+                    <th className="border p-2 text-left">Apellidos</th>
+                    <th className="border p-2 text-left">Área</th>
+                    <th className="border p-2 text-left">Nivel/Categoría</th>
                   </tr>
                 </thead>
                 <tbody>
                   {registros.map((registro) => (
-                    <tr key={registro.id_registro}>
-                      <td className="border border-black p-2 text-center">
+                    <tr key={registro.id_registro} className="hover:bg-gray-50">
+                      <td className="border p-2 text-center">
                         <input
                           type="checkbox"
                           onChange={() => handleSeleccionarRegistro(registro.id_registro)}
                           checked={registrosSeleccionados.includes(registro.id_registro)}
                         />
                       </td>
-                      <td className="border border-black p-2">{registro.nombres}</td>
-                      <td className="border border-black p-2">{registro.apellidos}</td>
-                      <td className="border border-black p-2">{registro.nombre_area}</td>
-                      <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
+                      <td className="border p-2">{registro.nombres}</td>
+                      <td className="border p-2">{registro.apellidos}</td>
+                      <td className="border p-2">{registro.nombre_area}</td>
+                      <td className="border p-2">{registro.nombre_nivel_categoria}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="text-center mt-6">
-                <button
-                  onClick={generarOrdenDePago}
-                  className={`px-6 py-2 rounded-lg transition duration-200 ${
-                    registrosSeleccionados.length > 0
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-gray-400 text-gray-700 cursor-not-allowed"
-                  }`}
-                  disabled={registrosSeleccionados.length === 0}
-                >
-                  Generar Orden de Pago
-                </button>
-              </div>
             </div>
-          )}
 
-          {/* Sección de órdenes de pago */}
-          <div className="mt-8">
-            <h2>Órdenes de Pago</h2>
-            {sinOrdenes ? (
-              <p>No hay órdenes de pago pendientes por pagar.</p>
-            ) : (
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr>
-                    <th className="border border-black p-2">Monto</th>
-                    <th className="border border-black p-2">Fecha Generado</th>
-                    <th className="border border-black p-2">Concepto</th>
-                    <th className="border border-black p-2">Orden</th>
+            <div className="text-center mt-6">
+              <button
+                onClick={generarOrdenDePago}
+                className={`px-6 py-3 rounded-lg font-medium transition ${
+                  registrosSeleccionados.length > 0
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                }`}
+                disabled={registrosSeleccionados.length === 0}
+              >
+                Generar Orden de Pago
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Órdenes de Pago */}
+      <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
+        <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+          Órdenes de Pago
+        </h2>
+
+        {sinOrdenes ? (
+          <p className="text-center text-gray-700">
+            No hay órdenes de pago pendientes por pagar.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse text-sm">
+              <thead className="bg-blue-800 text-white">
+                <tr>
+                  <th className="border p-2 text-left">Monto</th>
+                  <th className="border p-2 text-left">Fecha Generado</th>
+                  <th className="border p-2 text-left">Concepto</th>
+                  <th className="border p-2 text-center">Orden</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ordenesDePago.map((orden) => (
+                  <tr key={orden.id_pago} className="hover:bg-gray-50">
+                    <td className="border p-2">{orden.monto} Bs.</td>
+                    <td className="border p-2">{orden.fecha_generado}</td>
+                    <td className="border p-2">{orden.concepto}</td>
+                    <td className="border p-2 text-center min-w-[130px]">
+                      <a
+                        href={orden.orden}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                      >
+                        Ver Orden
+                      </a>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {ordenesDePago.map((orden) => (
-                    <tr key={orden.id_pago}>
-                      <td className="border border-black p-2">{orden.monto} Bs.</td>
-                      <td className="border border-black p-2">{orden.fecha_generado}</td>
-                      <td className="border border-black p-2">{orden.concepto}</td>
-                      <td className="border border-black p-2 text-center min-w-[130px]">
-                        <a
-                          href={orden.orden}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
-                        >
-                          Ver Orden
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                ))}
+              </tbody>
+            </table>
           </div>
-        </>
-      )}
-    </div>
+        )}
+      </div>
+    </>
+  )}
+</div>
+
   );
 };
 

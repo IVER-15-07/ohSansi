@@ -115,7 +115,6 @@ Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoCont
 
 
 // RUTAS PARA REGISTRO DE LISTA DE POSTULANTES
-Route::post('/registro_lista', [Registrolistcontroller::class, 'registrarListaPostulantes']);
+Route::post('/postulantes', [Registrolistcontroller::class, 'registrarListaPostulantes']);
 Route::get('/registro_lista', [Registrolistcontroller::class, 'obtenerListaPostulantes']);
-Route::get('/secciones', [SeccionController::class, 'obtenerSecciones']);
 Route::post('/registro_lista/importar', [Registrolistcontroller::class, 'importar']);
