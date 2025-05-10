@@ -27,13 +27,13 @@ use App\Models\Postulante;
 use Illuminate\Support\Facades\DB;
 
 
-class PostulantesImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading
+class PostulantesImport implements ToModel, WithHeadingRow, WithBatchInserts
 {
 
     protected $idEncargado;
     protected $idOlimpiada;
 
-    // Cache para evitar consultas repetitivas
+
     protected $areas;
     protected $categorias;
     protected $grados;
@@ -44,7 +44,7 @@ class PostulantesImport implements ToModel, WithHeadingRow, WithBatchInserts, Wi
         $this->idEncargado = $idEncargado;
         $this->idOlimpiada = $idOlimpiada;
 
-        // Cargar datos en memoria para evitar consultas repetitivas
+       
         $this->areas = Area::pluck('id', 'nombre');
         $this->categorias = NivelCategoria::pluck('id', 'nombre');
         $this->grados = Grado::pluck('id', 'nombre');
@@ -54,7 +54,7 @@ class PostulantesImport implements ToModel, WithHeadingRow, WithBatchInserts, Wi
     public function model(array $row)
     {
         return DB::transaction(function () use ($row) {
-            // Obtener IDs desde la cache
+           
             $areaId = $this->areas[$row['area']] ?? null;
             if (!$areaId) {
                 throw new \Exception("El área '{$row['area']}' no existe en la base de datos.");
@@ -105,7 +105,7 @@ class PostulantesImport implements ToModel, WithHeadingRow, WithBatchInserts, Wi
                 ->first();
 
             if (!$registro) {
-                // Crear el registro en la tabla `Registro` si no existe
+               
                 $registro = Registro::create([
                     'id_postulante' => $postulante->id,
                     'id_encargado' => $this->idEncargado,
@@ -114,7 +114,6 @@ class PostulantesImport implements ToModel, WithHeadingRow, WithBatchInserts, Wi
                 ]);
             }
 
-            // Crear o buscar el tutor
             $tutor = Tutor::firstOrCreate([
                 'ci' => $row['ci_tutor'],
             ], [
@@ -129,7 +128,7 @@ class PostulantesImport implements ToModel, WithHeadingRow, WithBatchInserts, Wi
                 ->first();
 
             if (!$registroTutor) {
-                // Asociar el tutor con el registro y el rol si no existe
+              
                 RegistroTutor::create([
                     'id_registro' => $registro->id,
                     'id_tutor' => $tutor->id,
@@ -137,25 +136,23 @@ class PostulantesImport implements ToModel, WithHeadingRow, WithBatchInserts, Wi
                 ]);
             }
 
-            // Verificar si ya existe una inscripción para esta opción
+        
             $inscripcion = Inscripcion::where('id_registro', $registro->id)
                 ->where('id_opcion_inscripcion', $opcionInscripcion->id)
                 ->first();
 
             if (!$inscripcion) {
-                // Crear la inscripción si no existe
+                
                 return Inscripcion::create([
                     'id_registro' => $registro->id,
                     'id_opcion_inscripcion' => $opcionInscripcion->id,
-
                 ]);
             }
-
             return $inscripcion; // Retornar la inscripción existente si ya estaba registrada
         });
     }
 
-   
+
 
     public function batchSize(): int
     {
