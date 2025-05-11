@@ -108,13 +108,7 @@ Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAs
 Route::post('/pagos/validarComprobantePago', [PagoController::class, 'validarComprobantePago']);
 
 
-//RUTAAS PARA GENERAR ORDEN DE PAGO
-Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
-Route::post('/pagos/guardarOrdenPago', [PagoController::class, 'guardarOrdenPago']);
-Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoController::class, 'obtenerOrdenesDePago']);
-
-
 // RUTAS PARA REGISTRO DE LISTA DE POSTULANTES
-Route::post('/registro_lista', [Registrolistcontroller::class, 'registrarListaPostulantes']);
+Route::post('/postulantes', [Registrolistcontroller::class, 'registrarListaPostulantes']);
 Route::get('/registro_lista', [Registrolistcontroller::class, 'obtenerListaPostulantes']);
-Route::get('/secciones', [SeccionController::class, 'obtenerSecciones']);
+Route::post('/registro_lista/importar', [Registrolistcontroller::class, 'importar']);

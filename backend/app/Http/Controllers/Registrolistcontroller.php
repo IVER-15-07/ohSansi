@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Registro;
@@ -16,182 +18,163 @@ use App\Models\TipoCampo;
 use App\Models\RolTutor;
 use App\Models\Tutor;
 use App\Models\RegistroTutor;
-use Illuminate\Support\Facades\Validator;
+
 use Illuminate\Support\Facades\DB;
+
+use App\Imports\PostulantesImport;
+
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\ToModel;
+
+use Maatwebsite\Excel\HeadingRowImport;
+use App\Models\Postulante;
+use App\Models\Inscripcion;
+
+
+
+
+
+
 
 
 class Registrolistcontroller extends Controller
 {
 
-    /*public function registrarListaPostulantes(Request $request)
+
+
+
+    public function registrarListaPostulantes(Request $request)
     {
+        $request->validate([
+            'archivo' => 'required|file|mimes:xlsx,xls',
+            'id_encargado' => 'required|exists:encargado,id',
+            'id_olimpiada' => 'required|exists:olimpiada,id',
+        ]);
+
+        $idEncargado = $request->id_encargado;
+        $idOlimpiada = $request->id_olimpiada;
+
         try {
-            // Validar el archivo Excel
-            $validator = Validator::make($request->all(), [
-                'archivo' => 'required|file|mimes:xlsx,xls',
-                'id_encargado' => 'required|exists:encargado,id',
-                'id_olimpiada' => 'required|exists:olimpiada,id',
-            ]);
+            $rows = Excel::toCollection(null, $request->file('archivo'))[0]->toArray();
+            $headings = array_map('trim', (new HeadingRowImport)->toArray($request->file('archivo'))[0][0]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error de validación.',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
+            $requiredHeadings = ['nombres', 'apellidos', 'ci', 'area', 'categoria', 'grado', 'ci_tutor', 'nombres_tutor', 'apellidos_tutor', 'rol_tutor'];
 
-            $idEncargado = $request->id_encargado;
-            $idOlimpiada = $request->id_olimpiada;
-
-            // Verificar si existe la sección "Datos del Postulante"
-            $seccionCampo = SeccionCampo::where('nombre', 'Datos del Postulante')
-                ->where('id_olimpiada', $idOlimpiada)
-                ->first();
-
-            if (!$seccionCampo) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se encontró la sección "Datos del Postulante" para la olimpiada especificada.',
-                ], 422);
-            }
-
-            $idSeccionCampo = $seccionCampo->id;
-
-            // Obtener los campos de inscripción relacionados
-            $camposInscripcion = CampoInscripcion::where('id_seccion_campo', $idSeccionCampo)->get();
-
-            if ($camposInscripcion->isEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se encontraron campos de inscripción para la sección "Datos del Postulante".',
-                ], 422);
-            }
-
-            // Mapear los nombres y tipos de los campos
-            $camposMapeados = [];
-            foreach ($camposInscripcion as $campo) {
-                $tipoCampo = TipoCampo::find($campo->id_tipo_campo);
-                if (!$tipoCampo) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'No se encontró el tipo de campo para el campo de inscripción: ' . $campo->nombre,
-                    ], 422);
-                }
-                $camposMapeados[$campo->nombre] = $tipoCampo->nombre;
-            }
-
-            // Leer el archivo Excel
-            $file = $request->file('archivo');
-            $data = Excel::toArray([], $file)[0]; // Leer la primera hoja del Excel
-
-            // Validar encabezados del Excel
-            $headers = array_shift($data); // Obtener los encabezados
-            foreach ($camposMapeados as $nombreCampo => $tipoCampo) {
-                if (!in_array($nombreCampo, $headers)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "El campo requerido '$nombreCampo' no está presente en el archivo Excel.",
-                    ], 422);
+            foreach ($requiredHeadings as $heading) {
+                if (!in_array($heading, $headings)) {
+                    throw new \Exception("El encabezado '{$heading}' es obligatorio en el archivo.");
                 }
             }
 
-            DB::beginTransaction();
+            $areas = Area::pluck('id', 'nombre');
+            $categorias = NivelCategoria::pluck('id', 'nombre');
+            $grados = Grado::pluck('id', 'nombre');
+            $roles = RolTutor::pluck('id', 'nombre');
 
-            foreach ($data as $row) {
-                // Validar y obtener IDs relacionados
-                $idGrado = Grado::where('nombre', $row[array_search('grado', $headers)])->value('id');
-                if (!$idGrado) {
-                    throw new \Exception("El grado '{$row[array_search('grado', $headers)]}' no es válido.");
-                }
+            $errores = []; // Arreglo para almacenar errores por fila
 
-                $idArea = Area::where('nombre', $row[array_search('area', $headers)])->value('id');
-                if (!$idArea) {
-                    throw new \Exception("El área '{$row[array_search('area', $headers)]}' no es válida.");
-                }
+            DB::transaction(function () use ($rows, $idEncargado, $idOlimpiada, $areas, $categorias, $grados, $roles, &$errores) {
+                foreach ($rows as $index => $row) {
+                    $fila = $index + 2; // Para mostrar el número real (considerando encabezados)
 
-                $idNivelCategoria = NivelCategoria::where('nombre', $row[array_search('nivel_categoria', $headers)])->value('id');
-                if (!$idNivelCategoria) {
-                    throw new \Exception("El nivel/categoría '{$row[array_search('nivel_categoria', $headers)]}' no es válido.");
-                }
-
-                // Obtener el id_opcion_inscripcion basado en id_olimpiada, id_area y id_nivel_categoria
-                $idOpcionInscripcion = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)
-                    ->where('id_area', $idArea)
-                    ->where('id_nivel_categoria', $idNivelCategoria)
-                    ->value('id');
-
-                if (!$idOpcionInscripcion) {
-                    throw new \Exception('No se encontró una opción de inscripción válida para los datos proporcionados.');
-                }
-
-                // Crear el registro en la tabla "registro"
-                $registro = Registro::create([
-                    'nombres' => $row[array_search('nombre', $headers)],
-                    'apellidos' => $row[array_search('apellido', $headers)],
-                    'ci' => $row[array_search('ci', $headers)],
-                    'id_grado' => $idGrado, // Agregado el id_grado
-                    'id_opcion_inscripcion' => $idOpcionInscripcion,
-                    'id_encargado' => $idEncargado,
-                ]);
-
-                // Crear los datos de inscripción en la tabla "dato_inscripcion"
-                foreach ($camposMapeados as $nombreCampo => $tipoCampo) {
-                    $valor = $row[array_search($nombreCampo, $headers)];
-                    if (gettype($valor) !== $tipoCampo) {
-                        throw new \Exception("El valor del campo '$nombreCampo' no coincide con el tipo esperado '$tipoCampo'.");
-                    }
-
-                    DatoInscripcion::create([
-                        'id_campo_inscripcion' => CampoInscripcion::where('nombre', $nombreCampo)->value('id'),
-                        'id_registro' => $registro->id,
-                        'valor' => $valor,
-                    ]);
-                }
-
-                // Procesar roles y tutores
-                foreach ($headers as $header) {
-                    if (str_contains($header, '(')) {
-                        $rolNombre = explode('(', $header)[0];
-                        $idRolTutor = RolTutor::firstOrCreate(['nombre' => $rolNombre])->id;
-
-                        $tutorData = explode(',', $row[array_search($header, $headers)]);
-                        foreach ($tutorData as $tutor) {
-                            [$nombre, $apellido, $ci, $correo] = explode('|', $tutor);
-                            $tutorModel = Tutor::firstOrCreate([
-                                'ci' => $ci,
-                            ], [
-                                'nombres' => $nombre,
-                                'apellidos' => $apellido,
-                                'correo' => $correo,
-                            ]);
-
-                            RegistroTutor::create([
-                                'id_registro' => $registro->id,
-                                'id_tutor' => $tutorModel->id,
-                                'id_rol_tutor' => $idRolTutor,
-                            ]);
+                    try {
+                        foreach (['nombres', 'apellidos', 'ci', 'area', 'categoria', 'grado', 'ci_tutor', 'nombres_tutor', 'apellidos_tutor', 'rol_tutor'] as $campo) {
+                            if (!isset($row[$campo]) || trim($row[$campo]) === '') {
+                                throw new \Exception("La fila #$fila no contiene el campo obligatorio '{$campo}'.");
+                            }
                         }
+
+                        $areaId = $areas[$row['area']] ?? null;
+                        if (!$areaId) {
+                            throw new \Exception("El área '{$row['area']}' no existe en la base de datos. Fila #$fila.");
+                        }
+
+                        $categoriaId = $categorias[$row['categoria']] ?? null;
+                        if (!$categoriaId) {
+                            throw new \Exception("La categoría '{$row['categoria']}' no existe en la base de datos. Fila #$fila.");
+                        }
+
+                        $gradoId = $grados[$row['grado']] ?? null;
+                        if (!$gradoId) {
+                            throw new \Exception("El grado '{$row['grado']}' no existe en la base de datos. Fila #$fila.");
+                        }
+
+                        $rolId = $roles[$row['rol_tutor']] ?? null;
+                        if (!$rolId) {
+                            throw new \Exception("El rol del tutor '{$row['rol_tutor']}' no existe en la base de datos. Fila #$fila.");
+                        }
+
+                        $opcionInscripcion = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)
+                            ->where('id_area', $areaId)
+                            ->where('id_nivel_categoria', $categoriaId)
+                            ->first();
+
+                        if (!$opcionInscripcion) {
+                            throw new \Exception("No se encontró una opción de inscripción para el área '{$row['area']}' y la categoría '{$row['categoria']}'. Fila #$fila.");
+                        }
+
+                        $postulante = Postulante::firstOrCreate(
+                            ['ci' => $row['ci']],
+                            [
+                                'nombres' => $row['nombres'],
+                                'apellidos' => $row['apellidos'],
+                                'id_area' => $areaId,
+                                'id_nivel_categoria' => $categoriaId,
+                            ]
+                        );
+
+                        $registro = Registro::firstOrCreate(
+                            ['id_postulante' => $postulante->id, 'id_olimpiada' => $idOlimpiada],
+                            ['id_encargado' => $idEncargado, 'id_grado' => $gradoId]
+                        );
+
+                        $tutor = Tutor::firstOrCreate(
+                            ['ci' => $row['ci_tutor']],
+                            ['nombres' => $row['nombres_tutor'], 'apellidos' => $row['apellidos_tutor']]
+                        );
+
+                        RegistroTutor::firstOrCreate([
+                            'id_registro' => $registro->id,
+                            'id_tutor' => $tutor->id,
+                            'id_rol_tutor' => $rolId,
+                        ]);
+
+                        Inscripcion::firstOrCreate([
+                            'id_registro' => $registro->id,
+                            'id_opcion_inscripcion' => $opcionInscripcion->id,
+                        ]);
+                    } catch (\Exception $e) {
+                        $errores[] = $e->getMessage(); // Agrega el error al arreglo
                     }
                 }
-            }
+            });
 
-            DB::commit();
+            if (!empty($errores)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Algunos registros no pudieron ser procesados.',
+                    'errors' => $errores, // Devuelve los errores al frontend
+                ], 400);
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Lista de postulantes registrada exitosamente.',
             ], 201);
         } catch (\Exception $e) {
-            DB::rollBack();
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error al registrar la lista de postulantes: ' . $e->getMessage(),
             ], 500);
         }
-    }*/
+    }
+
+
+
+
 
     public function obtenerListaPostulantes()
     {
@@ -213,5 +196,4 @@ class Registrolistcontroller extends Controller
             ], 500);
         }
     }
-
 }
