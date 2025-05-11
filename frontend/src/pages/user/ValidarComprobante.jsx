@@ -3,6 +3,7 @@ import Tesseract from "tesseract.js";
 import * as pdfjsLib from "pdfjs-dist";
 import SubirArchivo from "../../components/SubirArchivo";
 import { obtenerPagoAsociado, validarComprobantePago } from "../../../service/pagos.api";
+import { FileText, FileCheck2, AlertCircle, CheckCircle, Upload, Search } from "lucide-react";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
@@ -134,53 +135,82 @@ const ValidarComprobante = () => {
   };
 
   return (
-    <div className="p-6">
-      <SubirArchivo
-        nombreArchivo="Subir Comprobante"
-        tipoArchivo="jpg, pdf"
-        handleArchivo={handleArchivo}
-        inputRef={inputRef}
-      />
+   <div className="p-6">
+  <SubirArchivo
+    nombreArchivo="Subir Comprobante"
+    tipoArchivo="jpg, pdf"
+    handleArchivo={handleArchivo}
+    inputRef={inputRef}
+  />
 
-      <div className="mt-6">
-        {cargando && <p className="text-blue-500">⏳ Procesando archivo, por favor espera...</p>}
+  <div className="mt-6">
+    {cargando && (
+      <p className="text-blue-500 flex items-center gap-2">
+        <Upload className="animate-spin w-4 h-4" />
+        Procesando archivo, por favor espera...
+      </p>
+    )}
 
-        {!cargando && (
-          <>
-            {mensajeError && <p className="text-red-500">{mensajeError}</p>}
-
-            <div className="mt-5">
-              <h3 className="font-bold">Datos extraídos del comprobante:</h3>
-              <p><strong>ID Orden:</strong> {idOrden || "No disponible"}</p>
-              <p><strong>Nombre del Encargado:</strong> {nombreCompleto || "No disponible"}</p>
-              <p><strong>Monto:</strong> {monto || "No disponible"} Bs</p>
-            </div>
-
-            {pagoAsociado ? (
-              <div className="mt-5">
-                <h3 className="font-bold">Pago Asociado:</h3>
-                <p><strong>ID del Pago:</strong> {pagoAsociado.id_pago}</p>
-                <p><strong>Monto:</strong> {pagoAsociado.monto} Bs</p>
-                <p><strong>Concepto:</strong> {pagoAsociado.concepto}</p>
-                <p><strong>Fecha Generado:</strong> {pagoAsociado.fecha_generado}</p>
-                <button
-                  onClick={verificarComprobante}
-                  className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200"
-                >
-                  Validar
-                </button>
-              </div>
-            ) : (
-              mensajeError && (
-                <p className="text-red-500 mt-3">
-                  ❌ {mensajeError}
-                </p>
-              )
-            )}
-          </>
+    {!cargando && (
+      <>
+        {mensajeError && (
+          <p className="text-red-500 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            {mensajeError}
+          </p>
         )}
-      </div>
-    </div>
+
+        <div className="mt-5 space-y-1 text-gray-700">
+          <h3 className="font-bold text-lg flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-600" />
+            Datos extraídos del comprobante:
+          </h3>
+          <p><strong>ID Orden:</strong> {idOrden || "No disponible"}</p>
+          <p><strong>Nombre del Encargado:</strong> {nombreCompleto || "No disponible"}</p>
+          <p><strong>Monto:</strong> {monto || "No disponible"} Bs</p>
+        </div>
+
+        {idOrden && nombreCompleto && monto && (
+          <button
+            onClick={buscarPagoAsociado}
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center gap-2"
+          >
+            <Search className="w-4 h-4" />
+            Buscar Pago Asociado
+          </button>
+        )}
+
+        {pagoAsociado ? (
+          <div className="mt-5 space-y-1 text-gray-700">
+            <h3 className="font-bold text-lg flex items-center gap-2">
+              <FileCheck2 className="w-5 h-5 text-green-600" />
+              Pago Asociado:
+            </h3>
+            <p><strong>ID del Pago:</strong> {pagoAsociado.id_pago}</p>
+            <p><strong>Monto:</strong> {pagoAsociado.monto} Bs</p>
+            <p><strong>Concepto:</strong> {pagoAsociado.concepto}</p>
+            <p><strong>Fecha Generado:</strong> {pagoAsociado.fecha_generado}</p>
+            <button
+              onClick={verificarComprobante}
+              className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 flex items-center gap-2"
+            >
+              <CheckCircle className="w-4 h-4" />
+              Validar
+            </button>
+          </div>
+        ) : (
+          mensajeError && (
+            <p className="text-red-500 mt-3 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              {mensajeError}
+            </p>
+          )
+        )}
+      </>
+    )}
+  </div>
+</div>
+
   );
 };
 

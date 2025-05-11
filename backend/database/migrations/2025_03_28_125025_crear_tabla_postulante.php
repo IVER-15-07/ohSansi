@@ -18,6 +18,7 @@ class CrearTablaPostulante extends Migration
             $table->string('ci')->collation('texto_insensible')->unique();
             $table->string('nombres')->collation('texto_insensible');
             $table->string('apellidos')->collation('texto_insensible');
+            $table->date('fecha_nacimiento');
         });
     }
 

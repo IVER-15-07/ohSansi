@@ -10,7 +10,7 @@ class TipoCampo extends Model
     use HasFactory;
 
     protected $table = 'tipo_campo';
-
+    public $timestamps = false;
     protected $fillable = [
         'nombre',
         'esLista'

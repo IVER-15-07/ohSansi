@@ -7,7 +7,7 @@ import Cargando from '../Cargando';
 
 const NivelCategoria = () => {
   const queryClient = useQueryClient();
-  
+
   const { data: nivelCategoria, isLoading: isLoadingNivelesCategorias, error: errorNivelesCategorias } = useQuery({
     queryKey: ['niveles_categorias'],
     queryFn: getNivelesCategorias,
@@ -264,8 +264,8 @@ const NivelCategoria = () => {
             }}
             disabled={isAdding}
             className={`bg-[#E63946] text-white px-8 py-2 rounded-xl text-sm font-semibold hover:bg-red-600 transition ${isAdding
-                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                : "bg-blue-900 text-white hover:bg-blue-800 transition"
+              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+              : "bg-blue-900 text-white hover:bg-blue-800 transition"
               }`}
           >
             {isAdding ? "Cargando..." : isNivel ? "Agregar nivel" : "Agregar categoría"}

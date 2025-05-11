@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\Grado;
 class GradoController extends Controller
 {
-    public function obtenerGrados(Request $request){
+    public function obtenerGrados(){
         try{
             // Intenta obtener los grados desde la caché
             $grados = Cache::remember('grados', 3600, function () {

@@ -301,6 +301,7 @@ const CrearOlimpiada = () => {
 
           <div className="col-span-1 md:col-span-3">
             <SubirArchivo
+          
               nombreArchivo="Subir la convocatoria de la olimpiada"
               tipoArchivo="pdf"
               handleArchivo={handleArchivo}
