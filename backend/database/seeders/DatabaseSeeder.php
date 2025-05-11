@@ -19,6 +19,12 @@ class DatabaseSeeder extends Seeder
         
         $this->call(AreaSeeder::class);
 
+        $this->call(OlimpiadaSeeder::class);
+
+        $this->call(OpcionInscripcionSeeder::class);
+
         $this->call(RolTutorSeeder::class);
+
+        $this->call(TipoCampoSeeder::class);
     }
 }
