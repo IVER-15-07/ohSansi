@@ -25,9 +25,9 @@ class RegistroController extends Controller
             // Validar los datos enviados
             $validated = $request->validate([
                 'id_olimpiada' => 'required|exists:olimpiada,id',
-                
                 'id_postulante' => 'required|exists:postulante,id',
                 'id_grado' => 'required|exists:grado,id',
+                'id_encargado' => 'required|exists:encargado,id',
             ]);
 
             // Crear el registro
