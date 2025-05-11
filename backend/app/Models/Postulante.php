@@ -16,6 +16,7 @@ class Postulante extends Model
         'ci',
         'nombres',
         'apellidos',
+        'fecha_nacimiento',
     ];
     
 

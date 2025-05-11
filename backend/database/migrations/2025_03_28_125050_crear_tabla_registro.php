@@ -20,7 +20,7 @@ class CrearTablaRegistro extends Migration
             $table->foreignId('id_postulante')->constrained('postulante')->onDelete('cascade');
             $table->foreignId('id_grado')->constrained('grado')->onDelete('cascade');
 
-            $table->unique(['id_olimpiada', 'id_encargado', 'id_postulante', 'id_grado'], 'unique_registro');
+            $table->unique(['id_olimpiada', 'id_postulante'], 'unique_registro');
         });
     }
 
