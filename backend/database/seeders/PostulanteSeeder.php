@@ -77,7 +77,7 @@ class PostulanteSeeder extends Seeder
                 'fecha_nacimiento' => '2013-09-09',
             ],
             [
-                'ci' => '55667788',
+                'ci' => '55667780',
                 'nombres' => 'Valentina',
                 'apellidos' => 'Cruz',
                 'fecha_nacimiento' => '2014-10-10',
@@ -88,7 +88,7 @@ class PostulanteSeeder extends Seeder
         foreach ($postulantes as $postulante) {
             Postulante::create($postulante);
         }
-        
+
         Schema::enableForeignKeyConstraints();
     }
 }

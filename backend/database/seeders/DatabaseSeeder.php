@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        $this->call(TipoCampoSeeder::class);
+
         $this->call(GradoSeeder::class);
         
         $this->call(NivelCategoriaSeeder::class);
@@ -23,8 +25,12 @@ class DatabaseSeeder extends Seeder
 
         $this->call(OpcionInscripcionSeeder::class);
 
-        $this->call(RolTutorSeeder::class);
+        $this->call(PostulanteSeeder::class);
+        
+        $this->call(CampoTutorSeeder::class);
 
-        $this->call(TipoCampoSeeder::class);
+        $this->call(PostulanteSeeder::class);
+
+        $this->call(RolTutorSeeder::class);
     }
 }
