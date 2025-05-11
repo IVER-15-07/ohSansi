@@ -194,20 +194,30 @@ class PagoController extends Controller
     public function guardarOrdenPago(Request $request)
     {
         try {
-
+            // Validar los datos enviados
             $validated = $request->validate([
                 'id' => 'required|integer|unique:pago,id', // Validar que el ID sea único en la tabla pago
                 'monto' => 'required|numeric|min:0', // Validar que el monto sea un número positivo
                 'fecha_generado' => 'required|date', // Validar que sea una fecha válida
                 'concepto' => 'required|string|max:1000', // Validar que el concepto sea un string
-                'orden' => 'required|file|mimes:pdf|max:2048', // Validar que sea un archivo PDF de máximo 2MB
+                'orden' => 'required|file|mimes:pdf|max:4096', // Validar que sea un archivo PDF de máximo 4MB
                 'registros' => 'required|array|min:1', // Validar que sea un arreglo
                 'registros.*' => 'integer|exists:inscripcion,id', // Validar que los elementos del arreglo existan
             ]);
-
+    
+            // Iniciar una transacción para garantizar la consistencia de los datos
+            DB::beginTransaction();
+    
             // Guardar el archivo PDF en el almacenamiento
+            if (!$request->hasFile('orden') || !$request->file('orden')->isValid()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El archivo PDF no es válido.',
+                ], 400);
+            }
+    
             $rutaOrden = $request->file('orden')->store('ordenes', 'public');
-
+    
             // Insertar los datos en la tabla pago
             DB::table('pago')->insert([
                 'id' => $validated['id'],
@@ -216,12 +226,15 @@ class PagoController extends Controller
                 'concepto' => $validated['concepto'],
                 'orden' => $rutaOrden,
             ]);
-
+    
             // Actualizar la columna id_pago en la tabla inscripcion para los registros seleccionados
             DB::table('inscripcion')
                 ->whereIn('id', $validated['registros'])
                 ->update(['id_pago' => $validated['id']]);
-
+    
+            // Confirmar la transacción
+            DB::commit();
+    
             // Retornar una respuesta exitosa
             return response()->json([
                 'success' => true,
@@ -235,12 +248,17 @@ class PagoController extends Controller
                 ],
             ], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
+            // Manejar errores de validación
             return response()->json([
                 'success' => false,
                 'message' => 'Error de validación.',
                 'errors' => $e->errors(),
             ], 422);
         } catch (\Exception $e) {
+            // Revertir la transacción en caso de error
+            DB::rollBack();
+    
+            // Manejar errores generales
             return response()->json([
                 'success' => false,
                 'message' => 'Error al guardar la orden de pago: ' . $e->getMessage(),
