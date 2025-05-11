@@ -12,6 +12,7 @@ const Areas = () => {
   const { data: areas, isLoading, error: errorAreas } = useQuery({
     queryKey: ['areas'],
     queryFn: getAreas,
+    staleTime: 6000,
   });
 
   const [newArea, setNewArea] = useState('');
