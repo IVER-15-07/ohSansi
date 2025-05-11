@@ -106,4 +106,4 @@ Route::get('/inscripciones/{idEncargado}/{idOlimpiada}', [InscripcionController:
 // RUTAS PARA VALIDAR COMPROBANTES DE PAGOS
 Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAsociado']);
 Route::post('/pagos/validarComprobantePago', [PagoController::class, 'validarComprobantePago']);
->>>>>>>>> Temporary merge branch 2
+
