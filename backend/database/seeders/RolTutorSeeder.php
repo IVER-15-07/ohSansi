@@ -27,8 +27,8 @@ class RolTutorSeeder extends Seeder
             ['nombre' => 'Mamá'],
         ];
 
-        foreach ($areas as $area) {
-            RolTutor::create($rolesTutor);
+        foreach ($rolesTutor as $rolTutor) {
+            RolTutor::create($rolTutor);
         }
 
         // Reactivar verificación de claves foráneas

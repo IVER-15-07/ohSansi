@@ -18,7 +18,7 @@ class Registro extends Model
         'id_postulante',
         'id_grado'
     ];
-    
+
     public function olimpiada()
     {
         return $this->belongsTo(Olimpiada::class, 'id_olimpiada');
