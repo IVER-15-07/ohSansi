@@ -50,4 +50,14 @@ export const createOpcionInscripcion = async (data) => {
     throw error;
   }
 }
+
+export const getOpcionesConPostulantes = async (idOlimpiada) => {
+  try {
+    const response = await axiosInstance.get(`/opciones_inscripcion/${idOlimpiada}/con-postulantes`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener opciones con postulantes:", error);
+    throw error;
+  }
+}
   
