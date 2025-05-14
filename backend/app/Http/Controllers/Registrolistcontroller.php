@@ -22,38 +22,43 @@ class Registrolistcontroller extends Controller
                 'idEncargado' => 'required|integer|exists:encargado,id',
                 'idOlimpiada' => 'required|integer|exists:olimpiada,id',
             ]);
-    
+
             $idEncargado = $validated['idEncargado'];
             $idOlimpiada = $validated['idOlimpiada'];
             $archivo = $request->file('archivo');
-    
+
             // Leer el archivo Excel
             $datosExcel = Excel::toArray([], $archivo)[0]; // Leer la primera hoja del Excel
-    
+
             // Convertir los datos a UTF-8
             $datosExcel = array_map(function ($fila) {
                 return array_map(function ($valor) {
                     return is_string($valor) ? mb_convert_encoding($valor, 'UTF-8', 'auto') : $valor;
                 }, $fila);
             }, $datosExcel);
-    
+
             // Validar encabezados del Excel
             $encabezados = array_map('strtolower', $datosExcel[0]); // Convertir encabezados a minúsculas
             $this->validarEncabezados($encabezados);
-    
+
             // Procesar cada fila del Excel
             foreach ($datosExcel as $index => $fila) {
                 if ($index === 0) continue; // Saltar encabezados
-    
+
+                // Verificar si la fila está vacía
+                if (empty(array_filter($fila))) {
+                    break; // Detener el procesamiento si la fila está vacía
+                }
+
                 DB::beginTransaction(); // Iniciar transacción
-    
+
                 try {
                     // Validar y procesar la fila
                     $idRegistro = $this->procesarFila($fila, $encabezados, $idEncargado, $idOlimpiada);
-    
+
                     // Validar e insertar datos del tutor
                     $this->procesarTutores($fila, $encabezados, $idRegistro, $idOlimpiada);
-    
+
                     DB::commit(); // Confirmar transacción
                 } catch (\Exception $e) {
                     DB::rollBack(); // Revertir transacción en caso de error
@@ -63,7 +68,7 @@ class Registrolistcontroller extends Controller
                     ], 500);
                 }
             }
-    
+
             return response()->json([
                 'success' => true,
                 'message' => 'Lista de postulantes procesada exitosamente.',
@@ -84,7 +89,6 @@ class Registrolistcontroller extends Controller
         if (!$idRegistro) {
             throw new \Exception("El registro no está definido.");
         }
-
         $idTutor = null; // Inicializar $idTutor
 
         foreach ($encabezados as $key => $campo) {
@@ -113,15 +117,16 @@ class Registrolistcontroller extends Controller
                         ->where('ci', $ciTutor)
                         ->first();
 
-                    if (!$tutorExistente) {
+                    if ($tutorExistente) {
+                        // Si el tutor ya existe, pasar al siguiente tutor
+                        $idTutor = $tutorExistente->id;
+                    } else {
                         // Insertar nuevo tutor
                         $idTutor = DB::table('tutor')->insertGetId([
                             'ci' => $ciTutor,
                             'nombres' => $nombresTutor,
                             'apellidos' => $apellidosTutor,
                         ]);
-                    } else {
-                        $idTutor = $tutorExistente->id;
                     }
 
                     // Verificar si ya existe la relación en registro_tutor
@@ -169,12 +174,20 @@ class Registrolistcontroller extends Controller
                         throw new \Exception("No se pudo asociar datos adicionales porque el tutor no está definido.");
                     }
 
-                    // Insertar datos adicionales del tutor
-                    DB::table('dato_tutor')->insert([
-                        'id_tutor' => $idTutor,
-                        'valor' => $fila[$key],
-                        'id_olimpiada_campo_tutor' => $olimpiadaCampoTutor->id,
-                    ]);
+                    // Verificar si ya existe el dato adicional del tutor
+                    $datoTutorExistente = DB::table('dato_tutor')
+                        ->where('id_tutor', $idTutor)
+                        ->where('valor', $fila[$key])
+                        ->where('id_olimpiada_campo_tutor', $olimpiadaCampoTutor->id)
+                        ->exists();
+
+                    if (!$datoTutorExistente) {
+                        DB::table('dato_tutor')->insert([
+                            'id_tutor' => $idTutor,
+                            'valor' => $fila[$key],
+                            'id_olimpiada_campo_tutor' => $olimpiadaCampoTutor->id,
+                        ]);
+                    }
                 }
             }
         }
@@ -227,52 +240,50 @@ class Registrolistcontroller extends Controller
             ->first();
 
         if ($postulanteExistente) {
-            $this->validarPostulanteExistente($postulanteExistente, $idOlimpiada);
-        } else {
-            // Insertar nuevo postulante
-            $idPostulante = DB::table('postulante')->insertGetId([
-                'ci' => $ci,
-                'nombres' => $nombres,
-                'apellidos' => $apellidos,
-                'fecha_nacimiento' => $fechaNacimiento,
-            ]);
+            // Validar si el registro pertenece a la misma olimpiada
+            $registroExistente = DB::table('registro')
+                ->where('id_postulante', $postulanteExistente->id)
+                ->where('id_olimpiada', $idOlimpiada)
+                ->first();
 
-            // Insertar datos adicionales del postulante
-            $this->insertarDatosPostulante($fila, $encabezados, $idPostulante, $idOlimpiada);
+            if ($registroExistente) {
+                // Validar el límite de inscripciones
+                $inscripcionesExistentes = DB::table('inscripcion')
+                    ->where('id_registro', $registroExistente->id)
+                    ->count();
 
-            // Insertar registro e inscripción
-            $idRegistro = $this->insertarRegistroEInscripcion($fila, $encabezados, $idPostulante, $idEncargado, $idOlimpiada);
-        }
-        if (!$idRegistro) {
-            throw new \Exception("No se pudo insertar el registro.");
-        }
-    
-        return $idRegistro;
-    }
+                $maxAreas = DB::table('olimpiada')
+                    ->where('id', $idOlimpiada)
+                    ->value('max_areas');
 
-    /**
-     * Validar si el postulante ya existe.
-     */
-    private function validarPostulanteExistente($postulante, $idOlimpiada)
-    {
-        $registroExistente = DB::table('registro')
-            ->where('id_postulante', $postulante->id)
-            ->where('id_olimpiada', $idOlimpiada)
-            ->first();
+                if ($inscripcionesExistentes >= $maxAreas) {
+                    throw new \Exception("El postulante ya está inscrito en el máximo de áreas permitidas.");
+                }
 
-        if ($registroExistente) {
-            $inscripcionesExistentes = DB::table('inscripcion')
-                ->where('id_registro', $registroExistente->id)
-                ->count();
-
-            $maxAreas = DB::table('olimpiada')
-                ->where('id', $idOlimpiada)
-                ->value('max_areas');
-
-            if ($inscripcionesExistentes >= $maxAreas) {
-                throw new \Exception("El postulante ya está inscrito en el máximo de áreas permitidas.");
+                // Procesar inscripción existente
+                $this->procesarInscripcion($fila, $encabezados, $registroExistente->id, $idOlimpiada);
+                return $registroExistente->id;
             }
         }
+
+        // Si el postulante no existe o no tiene registro en la misma olimpiada, crear uno nuevo
+        $idPostulante = $postulanteExistente->id ?? DB::table('postulante')->insertGetId([
+            'ci' => $ci,
+            'nombres' => $nombres,
+            'apellidos' => $apellidos,
+            'fecha_nacimiento' => $fechaNacimiento,
+        ]);
+
+        // Insertar datos adicionales del postulante
+        $this->insertarDatosPostulante($fila, $encabezados, $idPostulante, $idOlimpiada);
+
+        // Crear un nuevo registro
+        $idRegistro = $this->crearRegistro($idPostulante, $idEncargado, $idOlimpiada, $fila, $encabezados);
+
+        // Procesar inscripción
+        $this->procesarInscripcion($fila, $encabezados, $idRegistro, $idOlimpiada);
+
+        return $idRegistro;
     }
 
     /**
@@ -325,7 +336,7 @@ class Registrolistcontroller extends Controller
     /**
      * Insertar registro e inscripción.
      */
-    private function insertarRegistroEInscripcion($fila, $encabezados, $idPostulante, $idEncargado, $idOlimpiada)
+    private function crearRegistro($idPostulante, $idEncargado, $idOlimpiada, $fila, $encabezados)
     {
         // Obtener el ID del grado
         $idGrado = DB::table('grado')
@@ -336,18 +347,17 @@ class Registrolistcontroller extends Controller
             throw new \Exception("El grado '" . $fila[array_search('grado', $encabezados)] . "' no es válido.");
         }
 
-        // Insertar el registro
-        $idRegistro = DB::table('registro')->insertGetId([
+        // Crear el registro
+        return DB::table('registro')->insertGetId([
             'id_olimpiada' => $idOlimpiada,
             'id_encargado' => $idEncargado,
             'id_postulante' => $idPostulante,
             'id_grado' => $idGrado,
         ]);
+    }
 
-        if (!$idRegistro) {
-            throw new \Exception("No se pudo insertar el registro.");
-        }
-
+    private function procesarInscripcion($fila, $encabezados, $idRegistro, $idOlimpiada)
+    {
         // Obtener el ID del área
         $idArea = DB::table('area')
             ->where('nombre', $fila[array_search('area', $encabezados)])
@@ -366,7 +376,33 @@ class Registrolistcontroller extends Controller
             throw new \Exception("El nivel categoría '" . $fila[array_search('nivel_categoria', $encabezados)] . "' no es válido.");
         }
 
-        // Obtener el ID de la opción de inscripción
+        // Validar que el grado y el nivel categoría estén relacionados
+        $nivelCategoriaGradoExistente = DB::table('nivel_categoria_grado')
+            ->where('id_grado', DB::table('registro')->where('id', $idRegistro)->value('id_grado'))
+            ->where('id_nivel_categoria', $idNivelCategoria)
+            ->exists();
+
+        if (!$nivelCategoriaGradoExistente) {
+            throw new \Exception("El grado y el nivel categoría no están relacionados en la tabla nivel_categoria_grado.");
+        }
+
+        // Validar si ya existe una inscripción con el mismo registro y olimpiada
+        $inscripcionExistente = DB::table('inscripcion')
+            ->join('opcion_inscripcion', 'inscripcion.id_opcion_inscripcion', '=', 'opcion_inscripcion.id')
+            ->where('inscripcion.id_registro', $idRegistro)
+            ->where('opcion_inscripcion.id_olimpiada', $idOlimpiada)
+            ->where('opcion_inscripcion.id_area', $idArea)
+            ->where('opcion_inscripcion.id_nivel_categoria', $idNivelCategoria)
+            ->first();
+
+        if ($inscripcionExistente) {
+            $nombreNivelCategoria = DB::table('nivel_categoria')->where('id', $idNivelCategoria)->value('nombre');
+            $nombreArea = DB::table('area')->where('id', $idArea)->value('nombre');
+
+            throw new \Exception("Ya se tiene un registro del postulante en el nivel/categoría '$nombreNivelCategoria' del área de '$nombreArea'.");
+        }
+
+        // Validar la opción de inscripción
         $idOpcionInscripcion = DB::table('opcion_inscripcion')
             ->where('id_olimpiada', $idOlimpiada)
             ->where('id_area', $idArea)
@@ -382,7 +418,6 @@ class Registrolistcontroller extends Controller
             'id_registro' => $idRegistro,
             'id_opcion_inscripcion' => $idOpcionInscripcion,
         ]);
-        return $idRegistro;
     }
 
     public function obtenerListaPostulantes()
