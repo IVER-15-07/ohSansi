@@ -198,7 +198,7 @@ class Registrolistcontroller extends Controller
     
     private function validarEncabezados($encabezados)
     {
-        $camposRequeridos = ['ci', 'nombres', 'apellidos', 'fecha_nacimiento'];
+        $camposRequeridos = ['ci', 'nombres', 'apellidos', 'fecha_nacimiento', 'grado', 'area', 'nivel_categoria'];
         foreach ($camposRequeridos as $campo) {
             if (!in_array($campo, $encabezados)) {
                 throw new \Exception("El campo '$campo' es obligatorio en el encabezado del Excel.");
@@ -296,33 +296,33 @@ class Registrolistcontroller extends Controller
             if (empty($campo)) {
                 continue;
             }
-    
-            // Ignorar los campos básicos del postulante y los campos relacionados con tutores
-            if (!in_array($campo, ['ci', 'nombres', 'apellidos', 'fecha_nacimiento']) && !preg_match('/\((.*?)\)$/', $campo)) {
+
+            // Ignorar los campos básicos del postulante, los campos relacionados con tutores y los campos obligatorios
+            if (!in_array($campo, ['ci', 'nombres', 'apellidos', 'fecha_nacimiento', 'grado', 'area', 'nivel_categoria']) && !preg_match('/\((.*?)\)$/', $campo)) {
                 // Buscar el campo en la tabla campo_postulante
                 $idCampoPostulante = DB::table('campo_postulante')
                     ->where('nombre', $campo)
                     ->value('id');
-    
+
                 if (!$idCampoPostulante) {
                     throw new \Exception("El campo '$campo' no es válido.");
                 }
-    
+
                 // Validar que el campo esté asociado a la olimpiada
                 $idOlimpiadaCampoPostulante = DB::table('olimpiada_campo_postulante')
                     ->where('id_olimpiada', $idOlimpiada)
                     ->where('id_campo_postulante', $idCampoPostulante)
                     ->first();
-    
+
                 if (!$idOlimpiadaCampoPostulante) {
                     throw new \Exception("El campo '$campo' no está asociado a la olimpiada.");
                 }
-    
+
                 // Verificar si el campo es obligatorio y está vacío
                 if ($idOlimpiadaCampoPostulante->esObligatorio && empty($fila[$key])) {
                     throw new \Exception("El campo '$campo' es obligatorio y no puede estar vacío.");
                 }
-    
+
                 // Insertar el dato adicional del postulante
                 DB::table('dato_postulante')->insert([
                     'id_postulante' => $idPostulante,
