@@ -17,7 +17,7 @@ export const enviarRegistrosLote = async (data) => {
         formData.append("id_encargado", data.id_encargado);
         formData.append("id_olimpiada", data.id_olimpiada);
 
-        const response = await axiosInstance.post("/postulantes", formData, {
+        const response = await axiosInstance.post("/postulantes_lote", formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
