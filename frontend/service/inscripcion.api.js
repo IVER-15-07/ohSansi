@@ -8,4 +8,4 @@ export const obtenerInscripciones = async (idEncargado, idOlimpiada) => {
       console.error("Error al obtener registros:", error);
       throw error;
     }
-  };
+};

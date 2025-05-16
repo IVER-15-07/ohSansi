@@ -21,7 +21,7 @@ class OlimpiadaSeeder extends Seeder
         $Olimpiadas = [
             ['nombre' => 'OH SANSI 2025',
             'convocatoria' => null,
-            'descripcion' => 'La Olimpiada de Ciencias y Tecnologías más imporotante de Cochabamba en su versión 2025',
+            'descripcion' => 'La Olimpiada de Ciencias y Tecnologías más importante de Cochabamba en su versión 2025',
             'costo' => 20,
             'max_areas' => 3,
             'fecha_inicio' => '2025-05-01',

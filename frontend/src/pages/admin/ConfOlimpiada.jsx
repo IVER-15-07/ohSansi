@@ -5,7 +5,7 @@ import { getAreas } from '../../../service/areas.api';
 import { ArrowLeft } from 'lucide-react';
 
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
-import { getAreasByOlimpiada, getMapOfOlimpiada, deleteOpcionesInscripcionByOlimpiada, createOpcionInscripcion } from '../../../service/opciones_inscripcion.api';
+import { getAreasByOlimpiada, getMapOfOlimpiada, deleteOpcionesInscripcionByOlimpiada, createOpcionInscripcion, getOpcionesConPostulantes } from '../../../service/opciones_inscripcion.api';
 import Cargando from '../Cargando';
 import Error from '../Error';
 import ElegirAreas from './ElegirAreas';
@@ -25,6 +25,9 @@ const ConfOlimpiada = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [opcionesConPostulantes, setOpcionesConPostulantes] = useState([]);
+  const [areasConPostulantes, setAreasConPostulantes] = useState([]);
+  const [nivelesConPostulantesPorArea, setNivelesConPostulantesPorArea] = useState({});
 
   const { data: areasCatalogo, isLoading: isLoadingAreas, error: errorAreas } = useQuery({
     queryKey: ['areas'],
@@ -42,12 +45,32 @@ const ConfOlimpiada = () => {
       try {
         const areasRes = await getAreasByOlimpiada(id);
         const mapaRes = await getMapOfOlimpiada(id);
+        const opcionesConPostulantesRes = await getOpcionesConPostulantes(id);
+        
         setAreasSeleccionadas(areasRes.data || []);
         setNivelesPorArea(mapaRes.data || {});
+        
+        // Procesar opciones con postulantes
+        const opciones = opcionesConPostulantesRes.data || [];
+        setOpcionesConPostulantes(opciones);
+        
+        // Extraer áreas con postulantes
+        const areasIds = [...new Set(opciones.map(opcion => opcion.id_area))];
+        setAreasConPostulantes(areasIds);
+        
+        // Agrupar niveles con postulantes por área
+        const nivelesAgrupados = {};
+        opciones.forEach(opcion => {
+          if (!nivelesAgrupados[opcion.id_area]) {
+            nivelesAgrupados[opcion.id_area] = [];
+          }
+          nivelesAgrupados[opcion.id_area].push(opcion.id_nivel_categoria);
+        });
+        setNivelesConPostulantesPorArea(nivelesAgrupados);
       } catch (e) {
         console.error(e);
         setError("Error al cargar los datos. Intenta nuevamente.");
-      }finally {	
+      } finally {	
         setIsLoading(false);	
       }
     };
@@ -62,6 +85,43 @@ const ConfOlimpiada = () => {
     setIsAdding(true);
     setShowConfirmModal(false);
     try {
+      // Verificar si se está intentando eliminar alguna opción con postulantes
+      let hayErrores = false;
+      
+      // Verificar si se eliminan áreas con postulantes
+      const areasEliminadas = areasConPostulantes.filter(
+        areaId => !areasSeleccionadas.some(area => area.id === areaId)
+      );
+      
+      if (areasEliminadas.length > 0) {
+        setError("No puedes eliminar áreas que ya tienen postulantes o inscripciones registradas.");
+        hayErrores = true;
+      }
+      
+      // Verificar si se eliminan niveles con postulantes
+      if (!hayErrores) {
+        for (const areaId of areasConPostulantes) {
+          const nivelesObligatorios = nivelesConPostulantesPorArea[areaId] || [];
+          const nivelesSeleccionados = nivelesPorArea[areaId] || [];
+          const nivelesSeleccionadosIds = nivelesSeleccionados.map(nivel => nivel.id);
+          
+          for (const nivelId of nivelesObligatorios) {
+            if (!nivelesSeleccionadosIds.includes(nivelId)) {
+              setError("No puedes eliminar niveles/categorías que ya tienen postulantes o inscripciones registradas.");
+              hayErrores = true;
+              break;
+            }
+          }
+          if (hayErrores) break;
+        }
+      }
+      
+      if (hayErrores) {
+        setIsAdding(false);
+        return;
+      }
+      
+      // Continuar con el proceso de guardado
       await deleteOpcionesInscripcionByOlimpiada(id);
       const configuraciones = [];
 
@@ -116,6 +176,7 @@ const ConfOlimpiada = () => {
             seleccionadas={areasSeleccionadas}
             setSeleccionadas={setAreasSeleccionadas}
             setNivelesPorArea={setNivelesPorArea}
+            areasConPostulantes={areasConPostulantes}
           />
         )}
   
@@ -125,6 +186,7 @@ const ConfOlimpiada = () => {
             nivelesCatalogo={nivelesCatalogo.data}
             nivelesPorArea={nivelesPorArea}
             setNivelesPorArea={setNivelesPorArea}
+            nivelesConPostulantesPorArea={nivelesConPostulantesPorArea}
           />
         )}
       </div>
