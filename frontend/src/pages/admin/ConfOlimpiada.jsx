@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getAreas } from '../../../service/areas.api';
 import { ArrowLeft } from 'lucide-react';
+import { getOlimpiada } from '../../../service/olimpiadas.api';
 
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
 import { getAreasByOlimpiada, getMapOfOlimpiada, deleteOpcionesInscripcionByOlimpiada, createOpcionInscripcion, getOpcionesConPostulantes } from '../../../service/opciones_inscripcion.api';
@@ -28,6 +29,7 @@ const ConfOlimpiada = () => {
   const [opcionesConPostulantes, setOpcionesConPostulantes] = useState([]);
   const [areasConPostulantes, setAreasConPostulantes] = useState([]);
   const [nivelesConPostulantesPorArea, setNivelesConPostulantesPorArea] = useState({});
+  const [modalError, setModalError] = useState("");
 
   const { data: areasCatalogo, isLoading: isLoadingAreas, error: errorAreas } = useQuery({
     queryKey: ['areas'],
@@ -38,6 +40,24 @@ const ConfOlimpiada = () => {
     queryKey: ['niveles_categorias'],
     queryFn: getNivelesCategorias,
   });
+
+  useEffect(() => {
+    // Validar fecha de inscripcion antes de mostrar la vista
+    const validarFechas = async () => {
+      try {
+        const olimpiada = await getOlimpiada(id);
+        if (!olimpiada || !olimpiada.inicio_inscripcion) return;
+        const hoy = new Date();
+        const inicioInscripcion = new Date(olimpiada.inicio_inscripcion);
+        if (hoy >= inicioInscripcion) {
+          setModalError("Las inscripciones están en curso, no se puede modificar la configuración de la Olimpiada");
+        }
+      } catch (e) {
+        setModalError("Error al validar la fecha de inscripción de la olimpiada.");
+      }
+    };
+    validarFechas();
+  }, [id]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -145,6 +165,13 @@ const ConfOlimpiada = () => {
       setIsAdding(false);
     }
   };
+
+  // Mostrar modal de error si corresponde
+  if (modalError) {
+    return (
+      <Modal message={modalError} onClose={() => navigate('/AdminLayout/Olympiad')} />
+    );
+  }
 
   if (isLoadingAreas || isLoadingNiveles || isLoading) return <Cargando />;
   if (errorAreas) return <Error error={errorAreas} />;
