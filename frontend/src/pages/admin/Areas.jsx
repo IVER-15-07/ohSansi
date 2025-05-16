@@ -74,7 +74,7 @@ const Areas = () => {
 
 
     // Normalizar el nombre antes de comparar
-    const normalizedNewArea = normalizeString(newArea);
+    const normalizedNewArea = normalizeString(newArea.trim());
 
     const nombreExiste = areas.data.some(
       (area) => normalizeString(area.nombre) === normalizedNewArea
@@ -92,7 +92,8 @@ const Areas = () => {
   const handleAddArea = async () => {
     setIsAdding(true);
     try {
-      const nuevaArea = await createArea({ nombre: newArea });
+      const nombreArea = newArea.trim; // elimina espacios en blanco 
+      const nuevaArea = await createArea({ nombre: nombreArea });
       setNewArea('');
       setErrorMessage('');
       queryClient.setQueryData(['areas'], (oldData) => ({
