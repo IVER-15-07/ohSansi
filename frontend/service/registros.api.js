@@ -10,13 +10,21 @@ export const getRegistroByCI = async ($idOlimpiada, $ci) => {
     }
 }
 
-export const enviarRegistrosLote = async (data) => {
+export const enviarRegistrosLote = async (archivo, idOlimpiada, idEncargado) => {
     try {
-        const response = await axiosInstance.post("/registro_lote", data);
-        console.log("Respuesta del backend:", response.data); // Agrega este log
+        const formData = new FormData();
+        formData.append("archivo", archivo);
+        formData.append("idOlimpiada", idOlimpiada);
+        formData.append("idEncargado", idEncargado);
+
+        const response = await axiosInstance.post("/registro_lista", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
         return response.data;
     } catch (error) {
         console.error("Error al enviar registros en lote:", error);
         throw error;
     }
-}
+};
