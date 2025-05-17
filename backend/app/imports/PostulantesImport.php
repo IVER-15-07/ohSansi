@@ -4,24 +4,9 @@ namespace App\Imports;
 
 use App\Models\Registro;
 
-
-
-
-use Illuminate\Validation\Rule;
-
-
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-
-
-use Maatwebsite\Excel\Concerns\WithValidation;
-
-
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
-
-
-use Maatwebsite\Excel\Concerns\WithChunkReading;
-
 
 use App\Models\Grado;
 use App\Models\Area;
@@ -33,35 +18,13 @@ use App\Models\CampoTutor;
 use App\Models\DatoPostulante;
 use App\Models\DatoTutor;
 use App\Models\OlimpiadaCampoPostulante;
-
 use App\Models\Tutor;
 use App\Models\RolTutor;
 use App\Models\RegistroTutor;
-
-
-
-
-
-
-
-
-
-
 use App\Models\Postulante;
-
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Cache\CacheManager;
-use Illuminate\Support\Facades\Cache;
-
-
-
-
-
-
-
 
 
 class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInserts
@@ -128,7 +91,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
 
 
-
     private function procesarFila($fila)
     {
         // Validar que los datos requeridos estén presentes
@@ -167,15 +129,9 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
     }
 
 
-
-
     private function insertarDatosPostulante($fila, $idPostulante)
     {
         foreach ($fila as $campo => $valor) {
-
-
-
-
 
             // Ignora campos vacíos o de tutor
             if (is_null($valor) || $valor === '' || preg_match('/_(papa|mama|profesor)$/i', $campo)) {
@@ -189,11 +145,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
                 continue;
             }
-
-
-
-
-
 
             $olimpiadaCampoPostulante = OlimpiadaCampoPostulante::where('id_olimpiada', $this->idOlimpiada)
                 ->where('id_campo_postulante', $campoPostulante->id)
@@ -358,14 +309,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
 
 
-
-
-
-
-
-
-
-
     private function insertarRegistroEInscripcion($fila, $idPostulante)
     {
         if (empty($fila['grado'])) {
@@ -421,7 +364,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
         return $registro->id;
     }
-
 
 
     private function limpiarTexto($texto)
