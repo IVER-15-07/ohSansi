@@ -172,21 +172,21 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
     private function insertarDatosPostulante($fila, $idPostulante)
     {
         foreach ($fila as $campo => $valor) {
-            Log::info("Procesando campo: $campo con valor: $valor");
+
 
 
 
 
             // Ignora campos vacíos o de tutor
             if (is_null($valor) || $valor === '' || preg_match('/_(papa|mama|profesor)$/i', $campo)) {
-                Log::warning("Campo '$campo' vacío o es de tutor, se ignora.");
+
                 continue;
             }
 
             // Solo procesa si el campo existe en campo_postulante
             $campoPostulante = CampoPostulante::where('nombre', $campo)->first();
             if (!$campoPostulante) {
-                Log::warning("Campo '$campo' no existe en campo_postulante, se ignora.");
+
                 continue;
             }
 
@@ -200,12 +200,12 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                 ->first();
 
             if (!$olimpiadaCampoPostulante) {
-                Log::warning("Campo '$campo' no está asociado a la olimpiada, se ignora.");
+
                 continue;
             }
 
             if ($olimpiadaCampoPostulante->esObligatorio && empty($valor)) {
-                Log::error("Campo '$campo' es obligatorio y está vacío.");
+
                 throw new \Exception("El campo '$campo' es obligatorio y no puede estar vacío.");
             }
 
@@ -220,7 +220,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             );
 
             if (!$dato || !$dato->id) {
-                Log::error("No se pudo crear el dato adicional '$campo' para el postulante $idPostulante.");
+
                 throw new \Exception("No se pudo crear el dato adicional '$campo' para el postulante $idPostulante.");
             }
 
@@ -291,21 +291,30 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
     private function insertarDatosTutor($fila, $idTutor, $rol)
     {
         foreach ($fila as $campo => $valor) {
+            Log::info("Revisando campo '$campo' con valor: " . var_export($valor, true) . " para rol '$rol'");
+
             // Buscar campos que terminen con el sufijo del rol (ej: telefono_papa, correo_mama, direccion_profesor)
-            if (preg_match('/^(.*)_' . $rol . '$/i', $campo, $matches)) {
+            if (
+                preg_match('/^(.*)_' . $rol . '$/i', $campo, $matches) || // correo_profesor
+                preg_match('/^(.*)' . $rol . '$/i', $campo, $matches)     // correoprofesor
+
+
+            ) {
                 $campoNombre = $matches[1]; // El prefijo indica el tipo de campo
+                Log::info("Campo identificado como dato de tutor: prefijo='$campoNombre', rol='$rol'");
 
                 if (is_null($valor) || $valor === '') {
-                    Log::info("Campo adicional de tutor '$campoNombre' vacío, se ignora.");
+                    Log::warning("Campo adicional de tutor '$campoNombre' vacío, se ignora.");
                     continue;
                 }
 
                 // Buscar el campo en la tabla campo_tutor
                 $campoTutor = CampoTutor::where('nombre', $campoNombre)->first();
                 if (!$campoTutor) {
-                    Log::debug("El campo '$campoNombre' no existe en campo_tutor, se ignora.");
+                    Log::error("El campo '$campoNombre' no existe en campo_tutor, se ignora.");
                     continue;
                 }
+                Log::info("CampoTutor encontrado: " . json_encode($campoTutor->toArray()));
 
                 // Verificar que el campo esté asociado a la olimpiada
                 $olimpiadaCampoTutor = \App\Models\OlimpiadaCampoTutor::where('id_olimpiada', $this->idOlimpiada)
@@ -313,12 +322,14 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                     ->first();
 
                 if (!$olimpiadaCampoTutor) {
-                    Log::debug("El campo '$campoNombre' no está asociado a la olimpiada, se ignora.");
+                    Log::error("El campo '$campoNombre' no está asociado a la olimpiada, se ignora.");
                     continue;
                 }
+                Log::info("OlimpiadaCampoTutor encontrado: " . json_encode($olimpiadaCampoTutor->toArray()));
 
                 // Validar si es obligatorio y está vacío
                 if ($olimpiadaCampoTutor->esObligatorio && empty($valor)) {
+                    Log::error("El campo '$campoNombre' es obligatorio para el tutor con rol '$rol' y está vacío.");
                     throw new \Exception("El campo '$campoNombre' es obligatorio para el tutor con rol '$rol'.");
                 }
 
@@ -334,10 +345,13 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                 );
 
                 if (!$dato || !$dato->id) {
+                    Log::error("No se pudo crear el dato adicional '$campoNombre' para el tutor $idTutor.");
                     throw new \Exception("No se pudo crear el dato adicional '$campoNombre' para el tutor $idTutor.");
                 }
 
                 Log::info("DatoTutor guardado para campo '$campoNombre', tutor $idTutor.");
+            } else {
+                Log::debug("Campo '$campo' no coincide con el patrón para el rol '$rol'.");
             }
         }
     }
