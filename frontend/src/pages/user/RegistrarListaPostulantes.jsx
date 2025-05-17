@@ -1,21 +1,26 @@
-
+import React, { useState } from 'react'
 import * as XLSX from "xlsx";
-import { useState } from "react";
 import { FileUp, FileCheck2, FileX2 } from "lucide-react";
 import { enviarRegistrosLote } from '../../../service/registros.api';
+import { useParams } from "react-router-dom";
 
 const RegistrarListaPostulantes = () => {
- const [data, setData] = useState([]);
+  const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [fileName, setFileName] = useState("");
+  const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [enviar, setEnviar] = useState(false);
+
+  // Obtener ids del URL
+  const { idOlimpiada, idEncargado } = useParams();
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setFileName(file.name);
+    setFile(file);
     setError("");
 
     const reader = new FileReader();
@@ -50,28 +55,21 @@ const RegistrarListaPostulantes = () => {
       }
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.readAsBinaryString(file);
   };
 
   const enviarRegistro = async () => {
+    if (!file) {
+      alert("Debes seleccionar un archivo Excel.");
+      return;
+    }
+    if (!idOlimpiada || !idEncargado) {
+      alert("No se encontraron los IDs en la URL.");
+      return;
+    }
+    setEnviar(true);
     try {
-      setError(""); // Limpia errores previos
-      setEnviar(true); // Desactiva el botón mientras se envía
-
-      const registros = data.map((row) => ({
-        nombres: row[0],
-        apellidos: row[1],
-        ci: row[2],
-        id_opcion_inscripcion: row[5],
-        id_encargado: row[6],
-        datos: [
-          { id_campo_inscripcion: 1, valor: row[3] },
-          { id_campo_inscripcion: 2, valor: row[4] },
-        ],
-      }));
-
-      const response = await enviarRegistrosLote({ registros });
-
+      const response = await enviarRegistrosLote(file, idOlimpiada, idEncargado);
       if (response.success) {
         alert("Postulantes registrados exitosamente.");
       } else {
@@ -83,6 +81,7 @@ const RegistrarListaPostulantes = () => {
     } finally {
       setEnviar(false); // Reactiva el botón después de enviar
     }
+    setEnviar(false);
   };
 
   return (
@@ -126,35 +125,46 @@ const RegistrarListaPostulantes = () => {
           )}
         </div>
 
-        {/* Tabla de datos */}
-        <div className="bg-white p-4 rounded-xl shadow border border-gray-200 min-h-[300px]">
-          {headers.length > 0 && (
-            <div className="overflow-auto rounded border border-gray-300">
-              <table className="min-w-full table-auto border-collapse text-sm">
-                <thead className="bg-blue-800 text-white">
-                  <tr>
-                    {headers.map((header, index) => (
-                      <th key={index} className="px-4 py-2 border text-left">
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
+        {headers.length > 0 && (
+          <div className="overflow-auto rounded shadow border border-gray-300">
+            <table className="min-w-full table-auto border-collapse text-sm">
+              <thead className="bg-blue-800 text-white">
+                <tr>
+                  {headers.map((header, index) => (
+                    <th key={index} className="px-4 py-2 border text-left">
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
                 <tbody>
                   {data.map((row, rowIndex) => (
-                    <tr key={rowIndex} className="hover:bg-gray-50 even:bg-gray-50">
-                      {row.map((cell, colIndex) => (
-                        <td key={colIndex} className="px-4 py-2 border">
-                          {cell}
-                        </td>
-                      ))}
+                    <tr key={rowIndex} className="hover:bg-gray-50">
+                      {row.map((cell, colIndex) => {
+                        // Detectar si la columna es fecha_nacimiento
+                        const header = headers[colIndex]?.toLowerCase();
+                        let displayValue = cell;
+
+                        // Si es fecha_nacimiento y es un número, convertirlo a aaaa-mm-dd
+                        if (header === "fecha_nacimiento" && cell !== "" && !isNaN(cell)) {
+                          // Excel almacena fechas como números, así que convertimos:
+                          const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                          const date = new Date(excelEpoch.getTime() + (cell - 0) * 86400000);
+                          displayValue = date.toISOString().slice(0, 10);
+                        }
+
+                        return (
+                          <td key={colIndex} className="px-4 py-2 border">
+                            {displayValue}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Botón enviar */}
         <div className="text-center">
@@ -175,4 +185,4 @@ const RegistrarListaPostulantes = () => {
   );
 };
 
-export default RegistrarListaPostulantes
+export default RegistrarListaPostulantes;

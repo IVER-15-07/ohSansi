@@ -10,31 +10,21 @@ export const getRegistroByCI = async ($idOlimpiada, $ci) => {
     }
 }
 
-export const enviarRegistrosLote = async (data) => {
+export const enviarRegistrosLote = async (archivo, idOlimpiada, idEncargado) => {
     try {
         const formData = new FormData();
-        formData.append("archivo", data.archivo);
-        formData.append("id_encargado", data.id_encargado);
-        formData.append("id_olimpiada", data.id_olimpiada);
+        formData.append("archivo", archivo);
+        formData.append("idOlimpiada", idOlimpiada);
+        formData.append("idEncargado", idEncargado);
 
-        const response = await axiosInstance.post("/postulantes", formData, {
+        const response = await axiosInstance.post("/registro_lista", formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
         });
-
-        return response.data; // Devuelve la respuesta del backend
+        return response.data;
     } catch (error) {
-        if (error.response && error.response.data) {
-            // Si el backend devuelve un arreglo de errores, lánzalo
-            if (error.response.data.errors) {
-                throw new Error(error.response.data.errors.join("\n"));
-            }
-            // Si solo hay un mensaje de error, lánzalo
-            throw new Error(error.response.data.message);
-        } else {
-            // Devuelve un mensaje genérico si no hay respuesta del backend
-            throw new Error("Error al enviar los registros. Intenta nuevamente.");
-        }
+        console.error("Error al enviar registros en lote:", error);
+        throw error;
     }
 };
