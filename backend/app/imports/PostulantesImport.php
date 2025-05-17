@@ -172,64 +172,50 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
     private function procesarTutores($fila, $idRegistro)
     {
+        Log::info("Entrando a procesarTutores para registro: $idRegistro");
         $tutoresPorRol = [];
-        // Normaliza los nombres de los roles precargados UNA SOLA VEZ
         $rolesNormalizados = $this->roles->mapWithKeys(function ($id, $nombre) {
             return [$this->limpiarTexto($nombre) => $id];
         });
+        Log::info("Roles normalizados: " . json_encode($rolesNormalizados));
 
-        foreach ($fila as $campo => $valor) {
-            // Solo acepta campos tipo ci(rol), nombres(rol), apellidos(rol)
-            if (preg_match('/^(ci|nombres|apellidos)\((.*?)\)$/i', $campo, $matches)) {
-                $campoNombre = $matches[1];
-                $rol = $matches[2];
+        // Detectar tutores por sufijo (ej: nombresmama, apellidosmama, cipapa)
+        $patron = '/^(ci|nombres|apellidos)(papa|mama|profesor)$/i';
 
-                // Normalizar el rol para buscarlo correctamente
-                $rolNormalizado = $this->limpiarTexto($rol);
-                $idRolTutor = $rolesNormalizados[$rolNormalizado] ?? null;
-                if (!$idRolTutor) {
-                    throw new \Exception("El rol '$rol' (normalizado: '$rolNormalizado') no existe en la base de datos. Verifica la tabla rol_tutor.");
-                }
+        // Buscar todos los roles posibles en la fila
+        foreach ($rolesNormalizados as $rol => $idRolTutor) {
+            $ciTutor = $fila["ci$rol"] ?? null;
+            $nombresTutor = $fila["nombres$rol"] ?? null;
+            $apellidosTutor = $fila["apellidos$rol"] ?? null;
 
-                if ($campoNombre === 'ci' && !isset($tutoresPorRol[$rol])) {
-                    $ciTutor = $fila["ci($rol)"] ?? null;
-                    $nombresTutor = $fila["nombres($rol)"] ?? null;
-                    $apellidosTutor = $fila["apellidos($rol)"] ?? null;
+            Log::info("Intentando extraer tutor: rol=$rol, ci=$ciTutor, nombres=$nombresTutor, apellidos=$apellidosTutor");
 
-                    if (empty($ciTutor) || empty($nombresTutor) || empty($apellidosTutor)) {
-                        throw new \Exception("Datos incompletos para el tutor '$rol': ci='$ciTutor', nombres='$nombresTutor', apellidos='$apellidosTutor'.");
-                    }
+            if ($ciTutor && $nombresTutor && $apellidosTutor) {
+                $tutor = Tutor::firstOrCreate(
+                    ['ci' => $ciTutor],
+                    ['nombres' => $nombresTutor, 'apellidos' => $apellidosTutor]
+                );
+                Log::info("Tutor creado o encontrado: " . json_encode($tutor->toArray()));
 
-                    $tutor = Tutor::firstOrCreate(
-                        ['ci' => $ciTutor],
-                        ['nombres' => $nombresTutor, 'apellidos' => $apellidosTutor]
-                    );
+                $registroTutor = RegistroTutor::firstOrCreate([
+                    'id_registro' => $idRegistro,
+                    'id_tutor' => $tutor->id,
+                    'id_rol_tutor' => $idRolTutor,
+                ]);
+                Log::info("RegistroTutor creado o encontrado: " . json_encode($registroTutor->toArray()));
 
-                    if (!$tutor || !$tutor->id) {
-                        throw new \Exception("No se pudo crear el tutor para el rol '$rol' (ci: $ciTutor).");
-                    }
-
-                    $registroTutor = RegistroTutor::firstOrCreate([
-                        'id_registro' => $idRegistro,
-                        'id_tutor' => $tutor->id,
-                        'id_rol_tutor' => $idRolTutor,
-                    ]);
-
-                    if (!$registroTutor || !$registroTutor->id) {
-                        throw new \Exception("No se pudo crear la relación registro-tutor para el tutor '$rol' (ci: $ciTutor).");
-                    }
-
-                    $tutoresPorRol[$rol] = $tutor->id;
-                }
+                $tutoresPorRol[$rol] = $tutor->id;
+            } else {
+                Log::debug("Datos incompletos para el tutor '$rol': ci='$ciTutor', nombres='$nombresTutor', apellidos='$apellidosTutor'.");
             }
         }
 
-        // Si no se creó ningún tutor, lanzar excepción
         if (empty($tutoresPorRol)) {
             Log::error("No se creó ningún tutor. Roles normalizados: " . json_encode($rolesNormalizados));
             Log::error("Fila recibida: " . json_encode($fila));
             throw new \Exception("No se creó ningún tutor para el registro $idRegistro. Revisa los encabezados, los datos y los roles en la base de datos.");
         }
+        Log::info("Tutores asociados para registro $idRegistro: " . json_encode($tutoresPorRol));
     }
 
 
