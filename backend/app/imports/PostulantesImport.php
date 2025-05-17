@@ -131,6 +131,24 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
     private function insertarDatosPostulante($fila, $idPostulante)
     {
+
+
+        // Validar que todos los campos obligatorios estén presentes y con valor
+        $camposObligatorios = OlimpiadaCampoPostulante::where('id_olimpiada', $this->idOlimpiada)
+            ->where('esObligatorio', true)
+            ->with('campoPostulante')
+            ->get()
+            ->pluck('campoPostulante.nombre')
+            ->toArray();
+
+        foreach ($camposObligatorios as $campoObligatorio) {
+            if (!array_key_exists($campoObligatorio, $fila) || empty($fila[$campoObligatorio])) {
+                throw new \Exception("El campo obligatorio '$campoObligatorio' no está presente o está vacío en el Excel.");
+            }
+        }
+
+
+
         foreach ($fila as $campo => $valor) {
 
             // Ignora campos vacíos o de tutor
@@ -241,6 +259,27 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
     private function insertarDatosTutor($fila, $idTutor, $rol)
     {
+        // Validar que todos los campos obligatorios para este rol estén presentes y con valor
+        $camposObligatorios = \App\Models\OlimpiadaCampoTutor::where('id_olimpiada', $this->idOlimpiada)
+            ->where('esObligatorio', true)
+            ->with('campoTutor')
+            ->get()
+            ->pluck('campoTutor.nombre')
+            ->toArray();
+
+        foreach ($camposObligatorios as $campoObligatorio) {
+            // Buscar tanto con guion bajo como sin guion bajo
+            $campoExcel1 = "{$campoObligatorio}_{$rol}";
+            $campoExcel2 = "{$campoObligatorio}{$rol}";
+            if (
+                (!array_key_exists($campoExcel1, $fila) || empty($fila[$campoExcel1])) &&
+                (!array_key_exists($campoExcel2, $fila) || empty($fila[$campoExcel2]))
+            ) {
+                throw new \Exception("El campo obligatorio '$campoObligatorio' para el tutor '$rol' no está presente o está vacío en el Excel.");
+            }
+        }
+
+
         foreach ($fila as $campo => $valor) {
             Log::info("Revisando campo '$campo' con valor: " . var_export($valor, true) . " para rol '$rol'");
 
