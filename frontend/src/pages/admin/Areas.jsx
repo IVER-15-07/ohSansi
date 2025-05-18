@@ -92,7 +92,7 @@ const Areas = () => {
   const handleAddArea = async () => {
     setIsAdding(true);
     try {
-      const nombreArea = newArea.trim; // elimina espacios en blanco 
+      const nombreArea = newArea.trim(); // elimina espacios en blanco 
       const nuevaArea = await createArea({ nombre: nombreArea });
       setNewArea('');
       setErrorMessage('');
@@ -103,8 +103,15 @@ const Areas = () => {
       queryClient.invalidateQueries(['areas']);
       setSuccessMessage('Área creada exitosamente.');
     } catch (error) {
+      // Mostrar mensaje de duplicado si viene del backend
+      if (error.response && error.response.data && error.response.data.errors && error.response.data.errors.nombre) {
+        setErrorMessage(error.response.data.errors.nombre[0]);
+      } else if (error.response && error.response.data && error.response.data.message) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage('Hubo un error al agregar el área. Inténtalo nuevamente.');
+      }
       console.error('Error al agregar el área:', error);
-      setErrorMessage('Hubo un error al agregar el área. Inténtalo nuevamente.');
     } finally {
       setIsAdding(false);
       setIsModalOpen(false);
