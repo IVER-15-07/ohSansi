@@ -42,8 +42,11 @@ const Areas = () => {
   const handleInputChange = (e) => {
     const value = e.target.value;
     
-    // Si el usuario intenta ingresar más de 50 caracteres, cortar el texto
-    if (value.length > 50) {
+    // Limitar a 50 caracteres reales (corregido code units)
+    const area_input = Array.from(value);
+    if (area_input.length > 50) {
+      const valorSeguro = area_input.slice(0,50).join('');
+      setNewArea(valorSeguro.toUpperCase());
       return;
     }
     
@@ -67,7 +70,7 @@ const Areas = () => {
       return;
     }
 
-    if (newArea.length > 50) {
+    if (Array.from(newArea).length > 50) {
       setErrorMessage('El nombre del área no puede exceder los 50 caracteres.');
       return;
     }
@@ -92,7 +95,7 @@ const Areas = () => {
   const handleAddArea = async () => {
     setIsAdding(true);
     try {
-      const nombreArea = newArea.trim; // elimina espacios en blanco 
+      const nombreArea = newArea.trim(); // elimina espacios en blanco 
       const nuevaArea = await createArea({ nombre: nombreArea });
       setNewArea('');
       setErrorMessage('');
@@ -103,8 +106,15 @@ const Areas = () => {
       queryClient.invalidateQueries(['areas']);
       setSuccessMessage('Área creada exitosamente.');
     } catch (error) {
+      // Mostrar mensaje de duplicado si viene del backend
+      if (error.response && error.response.data && error.response.data.errors && error.response.data.errors.nombre) {
+        setErrorMessage(error.response.data.errors.nombre[0]);
+      } else if (error.response && error.response.data && error.response.data.message) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage('Hubo un error al agregar el área. Inténtalo nuevamente.');
+      }
       console.error('Error al agregar el área:', error);
-      setErrorMessage('Hubo un error al agregar el área. Inténtalo nuevamente.');
     } finally {
       setIsAdding(false);
       setIsModalOpen(false);
@@ -149,7 +159,7 @@ const Areas = () => {
               }}
             />
             {errorMessage && <p className="text-red-600 text-sm mt-1">{errorMessage}</p>}
-            <p className="text-gray-500 text-sm mt-1">{newArea.length}/50 caracteres</p>
+            <p className="text-gray-500 text-sm mt-1">{Array.from(newArea).length}/50 caracteres</p>
           </div>
 
           <div className="flex justify-center">

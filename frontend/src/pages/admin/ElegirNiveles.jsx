@@ -16,12 +16,7 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
     };
 
     const handleQuitar = (nivel) => {
-        // Verificar si el nivel tiene postulantes
-        const nivelesConPostulantes = nivelesConPostulantesPorArea[areaActiva] || [];
-        if (nivelesConPostulantes.includes(nivel.id)) {
-            return; // No permitir eliminar niveles con postulantes
-        }
-        
+        // Eliminar el nivel sin importar si tiene postulantes
         setNivelesPorArea({
             ...nivelesPorArea,
             [areaActiva]: nivelesPorArea[areaActiva]?.filter(n => n.id !== nivel.id),
@@ -83,37 +78,24 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
                             <div className="overflow-y-auto max-h-[320px] px-1 sm:px-2 md:px-1">
                                 <ul className="flex flex-col gap-2">
                                     {(nivelesPorArea[areaActiva] || []).map((nivel) => {
-                                        const tienePostulantes = (nivelesConPostulantesPorArea[areaActiva] || []).includes(nivel.id);
                                         return (
                                             <li
                                                 key={nivel.id}
                                                 className={`flex justify-between items-center gap-4 p-4 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01]
-                                                    ${nivel.id % 2 === 0 ? 'bg-gradient-to-r from-blue-50 to-blue-100' : 'bg-gradient-to-r from-red-50 to-red-100'}
-                                                    ${tienePostulantes ? 'border-2 border-yellow-400' : ''}`}
+                                                    ${nivel.id % 2 === 0 ? 'bg-gradient-to-r from-blue-50 to-blue-100' : 'bg-gradient-to-r from-red-50 to-red-100'}`}
                                             >
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-blue-900 font-medium">{nivel.nombre}</span>
-                                                        {tienePostulantes && (
-                                                            <div className="inline-flex items-center text-yellow-600 text-xs bg-yellow-100 px-2 py-1 rounded-full">
-                                                                <Info size={14} className="mr-1" />
-                                                                Con postulantes
-                                                            </div>
-                                                        )}
                                                     </div>
                                                     <div className="text-sm text-gray-600 mt-1">Grados: {obtenerGradosAsociados(nivel.grados).join(', ')}</div>
                                                 </div>
                                                 <button
                                                     onClick={() => handleQuitar(nivel)}
-                                                    disabled={tienePostulantes}
-                                                    className={`flex items-center gap-1 text-sm font-medium ${
-                                                        tienePostulantes 
-                                                            ? 'text-gray-400 cursor-not-allowed' 
-                                                            : 'text-red-600 hover:text-red-800'
-                                                    }`}
+                                                    className="flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-800"
                                                 >
                                                     <X size={18} />
-                                                    {tienePostulantes ? 'No se puede quitar' : 'Quitar'}
+                                                    Quitar
                                                 </button>
                                             </li>
                                         );

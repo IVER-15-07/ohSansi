@@ -108,41 +108,8 @@ const ConfOlimpiada = () => {
     setIsAdding(true);
     setShowConfirmModal(false);
     try {
-      // Verificar si se está intentando eliminar alguna opción con postulantes
-      let hayErrores = false;
-      
-      // Verificar si se eliminan áreas con postulantes
-      const areasEliminadas = areasConPostulantes.filter(
-        areaId => !areasSeleccionadas.some(area => area.id === areaId)
-      );
-      
-      if (areasEliminadas.length > 0) {
-        setError("No puedes eliminar áreas que ya tienen postulantes o inscripciones registradas.");
-        hayErrores = true;
-      }
-      
-      // Verificar si se eliminan niveles con postulantes
-      if (!hayErrores) {
-        for (const areaId of areasConPostulantes) {
-          const nivelesObligatorios = nivelesConPostulantesPorArea[areaId] || [];
-          const nivelesSeleccionados = nivelesPorArea[areaId] || [];
-          const nivelesSeleccionadosIds = nivelesSeleccionados.map(nivel => nivel.id);
-          
-          for (const nivelId of nivelesObligatorios) {
-            if (!nivelesSeleccionadosIds.includes(nivelId)) {
-              setError("No puedes eliminar niveles/categorías que ya tienen postulantes o inscripciones registradas.");
-              hayErrores = true;
-              break;
-            }
-          }
-          if (hayErrores) break;
-        }
-      }
-      
-      if (hayErrores) {
-        setIsAdding(false);
-        return;
-      }
+      // Se permite eliminar áreas y niveles con postulantes
+      // Se ha eliminado la validación que impedía eliminar áreas y niveles con postulantes
       
       // Continuar con el proceso de guardado
       await deleteOpcionesInscripcionByOlimpiada(id);
