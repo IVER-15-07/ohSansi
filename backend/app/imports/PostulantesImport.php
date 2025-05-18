@@ -262,9 +262,9 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         // Validar que todos los campos obligatorios para este rol estén presentes y con valor
         $camposObligatorios = \App\Models\OlimpiadaCampoTutor::where('id_olimpiada', $this->idOlimpiada)
             ->where('esObligatorio', true)
-            ->with('campoTutor')
+            ->with('campo_tutor')
             ->get()
-            ->pluck('campoTutor.nombre')
+            ->pluck('campo_tutor.nombre')
             ->toArray();
 
         foreach ($camposObligatorios as $campoObligatorio) {

@@ -1,22 +1,43 @@
 
 import * as XLSX from "xlsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FileUp, FileCheck2, FileX2 } from "lucide-react";
 import { enviarRegistrosLote } from '../../../service/registros.api';
+import { useParams } from "react-router-dom";
+
+
 
 const RegistrarListaPostulantes = () => {
- const [data, setData] = useState([]);
+  const { idOlimpiada, idEncargado } = useParams();
+
+  const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
   const [enviar, setEnviar] = useState(false);
+  const [archivo, setArchivo] = useState(null);
+  const [erroresPorCelda, setErroresPorCelda] = useState({});
+
+  // Restaurar datos desde localStorage al montar el componente
+  useEffect(() => {
+    const savedHeaders = localStorage.getItem("postulantes_excel_headers");
+    const savedData = localStorage.getItem("postulantes_excel_data");
+    const savedFileName = localStorage.getItem("postulantes_excel_fileName");
+    if (savedHeaders && savedData) {
+      setHeaders(JSON.parse(savedHeaders));
+      setData(JSON.parse(savedData));
+      setFileName(savedFileName || "");
+    }
+  }, []);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    setArchivo(file); // Guarda el objeto File real
     setFileName(file.name);
     setError("");
+    setErroresPorCelda({});
 
     const reader = new FileReader();
 
@@ -43,56 +64,72 @@ const RegistrarListaPostulantes = () => {
 
         setHeaders(cleanHeaders);
         setData(cleanRows);
+
+        // Guardar en localStorage
+        localStorage.setItem("postulantes_excel_headers", JSON.stringify(cleanHeaders));
+        localStorage.setItem("postulantes_excel_data", JSON.stringify(cleanRows));
+        localStorage.setItem("postulantes_excel_fileName", file.name);
       } catch (err) {
         setError("Hubo un error al procesar el archivo. Asegúrate de que esté en formato correcto.");
         setData([]);
         setHeaders([]);
+        localStorage.removeItem("postulantes_excel_headers");
+        localStorage.removeItem("postulantes_excel_data");
+        localStorage.removeItem("postulantes_excel_fileName");
       }
     };
 
-    reader.readAsArrayBuffer(file);
+    reader.readAsBinaryString(file);
   };
 
   const enviarRegistro = async () => {
-    try {
-      setError(""); // Limpia errores previos
-      setEnviar(true); // Desactiva el botón mientras se envía
+         try {
+      setError("");
+      setEnviar(true);
+      setErroresPorCelda({});
 
-      const registros = data.map((row) => ({
-        nombres: row[0],
-        apellidos: row[1],
-        ci: row[2],
-        id_opcion_inscripcion: row[5],
-        id_encargado: row[6],
-        datos: [
-          { id_campo_inscripcion: 1, valor: row[3] },
-          { id_campo_inscripcion: 2, valor: row[4] },
-        ],
-      }));
+      // Llama a la función con los parámetros separados
+      const response = await enviarRegistrosLote(
+        archivo,
+        idOlimpiada,
+        idEncargado
+      );
 
-      const response = await enviarRegistrosLote({ registros });
-
-      if (response.success) {
-        alert("Postulantes registrados exitosamente.");
+      if (response && response.message && !response.errors && !response.error) {
+        alert(response.message);
+        localStorage.removeItem("postulantes_excel_headers");
+        localStorage.removeItem("postulantes_excel_data");
+        localStorage.removeItem("postulantes_excel_fileName");
+        setHeaders([]);
+        setData([]);
+        setFileName("");
+        setArchivo(null);
+        setErroresPorCelda({});
       } else {
-        setError(response.message || "Ocurrió un error desconocido.");
+        let msg = response?.message || "Ocurrió un error desconocido.";
+        if (response?.errors && typeof response.errors === "object") {
+          setErroresPorCelda(response.errors);
+          msg += "\nErrores en el archivo. Revisa la tabla.";
+        }
+        if (response?.error) {
+          msg += "\n" + response.error;
+        }
+        setError(msg);
       }
     } catch (error) {
-      console.error("Error al registrar postulantes:", error);
       setError(error.message);
     } finally {
-      setEnviar(false); // Reactiva el botón después de enviar
+      setEnviar(false);
     }
   };
-
   return (
-    <div className="p-4 max-w-6xl mx-auto">
+    <div className="p-4 max-w-5xl mx-auto">
       <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-6">
         {/* Título y descripción */}
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-blue-900 mb-2">Subir Excel de Postulantes</h2>
+          <h2 className="text-2xl font-bold text-blue-900 mb-2">Importar Lista de Postulantes</h2>
           <p className="text-sm text-gray-600">
-            Sube un archivo en formato <strong>.xlsx</strong> o <strong>.xls</strong> con los datos de los postulantes.
+            Sube un archivo <strong>.xlsx</strong> o <strong>.xls</strong> con los postulantes. El archivo debe tener los encabezados correctos.
           </p>
         </div>
 
@@ -104,7 +141,6 @@ const RegistrarListaPostulantes = () => {
           >
             <FileUp className="w-5 h-5" /> Seleccionar Archivo Excel
           </label>
-
           <input
             id="file-upload"
             type="file"
@@ -129,7 +165,7 @@ const RegistrarListaPostulantes = () => {
         {/* Tabla de datos */}
         <div className="bg-white p-4 rounded-xl shadow border border-gray-200 min-h-[300px]">
           {headers.length > 0 && (
-            <div className="overflow-auto rounded border border-gray-300">
+            <div className="overflow-x-auto rounded border border-gray-300">
               <table className="min-w-full table-auto border-collapse text-sm">
                 <thead className="bg-blue-800 text-white">
                   <tr>
@@ -160,18 +196,15 @@ const RegistrarListaPostulantes = () => {
         <div className="text-center">
           <button
             onClick={enviarRegistro}
-            disabled={enviar}
-            className={`mt-4 px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition ${
-              enviar ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            disabled={enviar || !data.length || !archivo}
+            className={`mt-4 px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition ${enviar || !data.length || !archivo ? "opacity-50 cursor-not-allowed" : ""
+              }`}
           >
             {enviar ? "Enviando..." : "Enviar Registros"}
           </button>
         </div>
       </div>
     </div>
-
-
   );
 };
 

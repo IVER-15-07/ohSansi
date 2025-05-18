@@ -33,6 +33,7 @@ class Registrolistcontroller extends Controller
                 'message' => 'Error de validación durante la importación.',
                 'errors' => $failures,
             ], 422);
+            
         } catch (\Exception $e) {
             // Manejar cualquier otro error
             return response()->json([
