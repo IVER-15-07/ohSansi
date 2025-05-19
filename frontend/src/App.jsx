@@ -15,23 +15,21 @@ import ConfOlimpiada from "./pages/admin/ConfOlimpiada"
 import CrearOlimpiada from "./pages/admin/CrearOlimpiada"
 import Versiones from "./pages/Versiones"
 import LayoutRegistro from "./pages/user/LayoutRegistro"
+import MenuOlimpiada from "./pages/user/MenuOlimpiada"
 
 function App() {
   return (
     <div className="flex flex-col min-h-screen">
       <Routes>
+
         {/* Layout para público */}
         <Route path="/" element={<UserLayout />}>
           <Route index element={<Home />} /> 
           <Route path="versiones" element={<Versiones />} />
-
-      
+          <Route path="/olimpiadas/:idOlimpiada" element={<MenuOlimpiada />} />
           <Route path="IdentificarEncargado" element={<IdentificarEncargado />} />
-         
           <Route path="RegistroEncargado" element={<RegistroTutor />} />
-
           <Route path="registros/:idEncargado/:idOlimpiada" element={<LayoutRegistro />} />
-          
         </Route>
 
 
