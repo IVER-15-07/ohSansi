@@ -13,6 +13,14 @@ use App\Http\Controllers\OpcionInscripcionController;
 
 use App\Http\Controllers\OlimpiadaController;
 
+use App\Http\Controllers\OlimpiadaCampoPostulanteController;
+
+use App\Http\Controllers\DatoPostulanteController;
+
+use App\Http\Controllers\OlimpiadaCampoTutorController;
+
+use App\Http\Controllers\DatoTutorController;
+
 use App\Http\Controllers\EncargadoController;
 
 use App\Http\Controllers\FormularioController;
@@ -30,6 +38,8 @@ use App\Http\Controllers\PagoController;
 use App\Http\Controllers\Registrolistcontroller;
 
 use App\Http\Controllers\PostulanteController;
+
+use App\Http\Controllers\RegistroTutorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,6 +68,11 @@ Route::post('/niveles_categorias/{id}/grados', [NivelCategoriaController::class,
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE GRADOS
 Route::get('/grados', [GradoController::class, 'obtenerGrados']);
 
+// RUTAS PARA OBTENER LOS REIGSTROS DE TUTORES
+Route::get('/registros_tutores/{idRegistro}', [RegistroTutorController::class, 'obtenerRegistrosTutoresPorRegistro']);
+Route::post('/registros_tutores', [RegistroTutorController::class, 'crearRegistroTutor']);
+Route::delete('/registros_tutores/{idRegistroTutor}', [RegistroTutorController::class, 'eliminarRegistroTutor']);
+
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE OPCIONES DE INSCRIPCIÓN A UNA OLIMPIADA 
 Route::get('/opciones_inscripcion/{idOlimpiada}', [OpcionInscripcionController::class, 'obtenerOpcionesInscripcion']);
 Route::post('/opciones_inscripcion', [OpcionInscripcionController::class, 'almacenarOpcionInscripcion']);
@@ -70,6 +85,21 @@ Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiadasActivas']);
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
 Route::get('/olimpiadas/{id}', [OlimpiadaController::class, 'obtenerOlimpiada']);
+
+//RUTAS PARA LOS CAMPOS DE POSTULANTE DADA UNA OLIMPIADA
+Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/{idPostulante}', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
+Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
+
+//RUTAS PARA LOS DATOS DEL POSTULANTE
+Route::post('/datos_postulante', [DatoPostulanteController::class, 'almacenarDatosPostulante']);
+
+
+//RUTAS PARA LOS CAMPOS DE TUTOR DADA UNA OLIMPIADA
+Route::get('/olimpiadas/{idOlimpiada}/campos_tutor/{idTutor}', [OlimpiadaCampoTutorController::class, 'obtenerCamposTutor']);
+Route::get('/olimpiadas/{idOlimpiada}/campos_tutor/', [OlimpiadaCampoTutorController::class, 'obtenerCamposTutor']);
+
+//RUTAS PARA LOS DATOS DEL TUTOR
+Route::post('/datos_tutor', [DatoTutorController::class, 'almacenarDatosTutor']);
 
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE ENCARGADOS DE INSCRIPCIÓN 
 Route::get('/encargados', [EncargadoController::class, 'obtenerEncargados']);
@@ -98,10 +128,13 @@ Route::get('/roles-tutor', [TutorController::class, 'obtenerRoles']);
 
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE POSTULANTES
 Route::get('/postulantes/ci/{ci}', [PostulanteController::class, 'obtenerPostulantePorCI']);
-Route::post('/postulantes', [PostulanteController::class, 'crearPostulante']);
+Route::post('/postulante_nuevo', [PostulanteController::class, 'crearPostulante']);
 
+// RUTAS PARA ADMINISTRAR LAS INSCRIPCIONES
 Route::get('/inscripciones/{idEncargado}/{idOlimpiada}', [InscripcionController::class, 'obtenerInscripciones']);
-
+Route::get('/inscripciones-registro/{idRegistro}', [InscripcionController::class, 'obtenerInscripcionesPorRegistro']);
+Route::post('/inscripciones', [InscripcionController::class, 'crearInscripcion']);
+Route::delete('/inscripciones/{idInscripcion}', [InscripcionController::class, 'eliminarInscripcion']);
 
 // RUTAS PARA VALIDAR COMPROBANTES DE PAGOS
 Route::post('/pagos/obtenerPagoAsociado', [PagoController::class, 'obtenerPagoAsociado']);

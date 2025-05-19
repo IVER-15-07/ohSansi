@@ -13,9 +13,9 @@ class Tutor extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'ci',
         'nombres',
         'apellidos',
-        'ci'
     ];
     
 

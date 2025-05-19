@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Inscripcion;
 
 class InscripcionController extends Controller
 {
@@ -72,4 +73,83 @@ class InscripcionController extends Controller
         }
     }
 
+    public function obtenerInscripcionesPorRegistro($idRegistro)
+    {
+        try {
+            // Buscar las inscripciones asociadas al registro usando Eloquent
+            $inscripciones = Inscripcion::where('id_registro', $idRegistro)->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $inscripciones,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al obtener las inscripciones dado un registro: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function crearInscripcion(Request $request)
+    {
+        try {
+            // Validar los datos enviados
+            $validated = $request->validate([
+                'id_registro' => 'required|integer|exists:registro,id',
+                'id_opcion_inscripcion' => 'required|integer|exists:opcion_inscripcion,id',
+            ]);
+
+            // Crear la inscripción
+            $inscripcion = Inscripcion::create([
+                'id_registro' => $validated['id_registro'],
+                'id_opcion_inscripcion' => $validated['id_opcion_inscripcion'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inscripción creada exitosamente.',
+                'data' => $inscripcion,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al crear la inscripción: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function eliminarInscripcion($idInscripcion)
+    {
+        try {
+            // Buscar la inscripción por su ID
+            $inscripcion = Inscripcion::findOrFail($idInscripcion);
+            // Verificar si la inscripción ya tiene pago asociado
+            if (!is_null($inscripcion->id_pago)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar la inscripción porque ya tiene un pago asociado.',
+                ], 400);
+            }
+            $inscripcion->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inscripción eliminada exitosamente.',
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Inscripción no encontrada.',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al eliminar la inscripción: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

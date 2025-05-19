@@ -23,15 +23,17 @@ class OlimpiadaCampoPostulante extends Model
         return $this->belongsTo(Olimpiada::class, 'id_olimpiada');
     }
 
-    public function campoPostulante()
+    public function campo_postulante()
     {
         return $this->belongsTo(CampoPostulante::class, 'id_campo_postulante');
     }
 
-    public function datosPostulante()
+    public function datos_postulante($idPostulante)
     {
-        return $this->hasMany(DatoPostulante::class, 'id_olimpiada_campo_postulante');
+        return $this->hasMany(DatoPostulante::class, 'id_olimpiada_campo_postulante')
+            ->where('id_postulante', $idPostulante);
     }
+
 
     public function opcionesCampoPostulante()
     {

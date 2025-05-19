@@ -9,3 +9,13 @@ export const getPostulanteByCI = async ($ci) => {
     throw error;
   }
 }
+
+export const createPostulante = async (data) => {
+  try {
+    const response = await axiosInstance.post("/postulante_nuevo", data);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating postulante:", error);
+    throw error;
+  }
+}

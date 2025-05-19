@@ -25,11 +25,23 @@ class DatabaseSeeder extends Seeder
 
         $this->call(OpcionInscripcionSeeder::class);
 
+        $this->call(EncargadoSeeder::class);
+
         $this->call(PostulanteSeeder::class);
+
+        $this->call(RegistroSeeder::class);
+
+        $this->call(InscripcionSeeder::class);
+
+        $this->call(TutorSeeder::class);
         
         $this->call(CampoTutorSeeder::class);
 
-        $this->call(PostulanteSeeder::class);
+        $this->call(CampoPostulanteSeeder::class);
+
+        $this->call(OlimpiadaCampoPostulanteSeeder::class);
+
+        $this->call(OlimpiadaCampoTutorSeeder::class);
 
         $this->call(RolTutorSeeder::class);
     }

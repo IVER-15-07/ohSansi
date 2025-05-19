@@ -10,6 +10,16 @@ export const getRegistroByCI = async ($idOlimpiada, $ci) => {
     }
 }
 
+export const createRegistro = async (data) => {
+    try {
+        const response = await axiosInstance.post("/registro", data);
+        return response.data;
+    } catch (error) {
+        console.error("Error creating registro:", error);
+        throw error;
+    }
+}
+
 export const enviarRegistrosLote = async (data) => {
     try {
         const formData = new FormData();

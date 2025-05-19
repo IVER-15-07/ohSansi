@@ -34,6 +34,12 @@ class OpcionInscripcionController extends Controller
                             'id_opcion_inscripcion' => $item->id, // ID de OpcionInscripcion
                             'id_nivel_categoria' => $item->nivel_categoria->id,
                             'nombre' => $item->nivel_categoria->nombre,
+                            'grados' => $item->nivel_categoria->grados->map(function ($grado) {
+                                return [
+                                    'id' => $grado->id,
+                                    'nombre' => $grado->nombre,
+                                ];
+                            })->unique('id')->values(), // Obtener los grados únicos
                         ];
                     })->unique('id_nivel_categoria')->values(),
                 ];

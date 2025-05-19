@@ -28,9 +28,10 @@ class OlimpiadaCampoTutor extends Model
         return $this->belongsTo(Olimpiada::class, 'id_olimpiada');
     }
 
-    public function datosTutor()
+    public function datos_tutor($idTutor)
     {
-        return $this->hasMany(DatoTutor::class, 'id_olimpiada_campo_tutor');
+        return $this->hasMany(DatoTutor::class, 'id_olimpiada_campo_tutor')
+            ->where('id_tutor', $idTutor);
     }
 
     public function opcionesCampoTutor()
