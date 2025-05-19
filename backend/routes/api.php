@@ -145,3 +145,11 @@ Route::post('/pagos/validarComprobantePago', [PagoController::class, 'validarCom
 Route::post('/postulantes_lote', [Registrolistcontroller::class, 'registrarListaPostulantes']);
 Route::get('/registro_lista', [Registrolistcontroller::class, 'obtenerListaPostulantes']);
 Route::post('/registro_lista/importar', [Registrolistcontroller::class, 'importar']);
+
+// RUTAS PARA INSCRIPCIONES
+Route::get('/inscripciones/{idEncargado}/{idOlimpiada}', [InscripcionController::class, 'obtenerInscripciones']);
+
+//RUTAS PARA GENERAR ORDEN DE PAGO
+Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
+Route::post('/pagos/guardarOrdenPago', [PagoController::class, 'guardarOrdenPago']);
+Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoController::class, 'obtenerOrdenesDePago']);
