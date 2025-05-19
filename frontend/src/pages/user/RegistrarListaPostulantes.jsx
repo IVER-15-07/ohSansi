@@ -87,7 +87,7 @@ const RegistrarListaPostulantes = () => {
       setError("");
       setEnviar(true);
       setErroresPorCelda({});
-
+console.log("idOlimpiada:", idOlimpiada, "idEncargado:", idEncargado);
       // Llama a la función con los parámetros separados
       const response = await enviarRegistrosLote(
         archivo,

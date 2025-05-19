@@ -12,13 +12,22 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class Registrolistcontroller extends Controller
 {
-    public function registrarListaPostulantes(Request $request)
+     public function registrarListaPostulantes(Request $request)
     {
-        $request->validate([
-            'excel' => 'required|file|mimes:xlsx,csv',
-            'id_olimpiada' => 'required|exists:olimpiada,id',
-            'id_encargado' => 'required|exists:encargado,id',
-        ]);
+        try {
+            // Validación inicial clara
+            $request->validate([
+                'excel' => 'required|file|mimes:xlsx,csv',
+                'id_olimpiada' => 'required|exists:olimpiada,id',
+                'id_encargado' => 'required|exists:encargado,id',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Mensajes claros de validación de Laravel
+            return response()->json([
+                'message' => 'Error de validación en los datos enviados.',
+                'errors' => $e->errors(),
+            ], 422);
+        }
 
         try {
             // Intentar importar el archivo Excel
@@ -26,22 +35,23 @@ class Registrolistcontroller extends Controller
 
             return response()->json(['message' => 'Importación completada con éxito'], 200);
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            // Manejar errores de validación específicos de Maatwebsite Excel
+            // Errores de validación específicos de Maatwebsite Excel
             $failures = $e->failures();
 
             return response()->json([
                 'message' => 'Error de validación durante la importación.',
                 'errors' => $failures,
             ], 422);
-            
+
         } catch (\Exception $e) {
-            // Manejar cualquier otro error
+            // Cualquier otro error
             return response()->json([
                 'message' => 'Ocurrió un error durante la importación.',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
+    
 
 
 
