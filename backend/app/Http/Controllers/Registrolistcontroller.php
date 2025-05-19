@@ -14,6 +14,7 @@ class Registrolistcontroller extends Controller
 {
      public function registrarListaPostulantes(Request $request)
     {
+        set_time_limit(300);
         try {
             // Validación inicial clara
             $request->validate([

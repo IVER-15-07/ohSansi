@@ -13,6 +13,7 @@ const RegistrarListaPostulantes = () => {
   const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [fileName, setFileName] = useState("");
+  const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [enviar, setEnviar] = useState(false);
   const [archivo, setArchivo] = useState(null);
@@ -36,6 +37,7 @@ const RegistrarListaPostulantes = () => {
 
     setArchivo(file); // Guarda el objeto File real
     setFileName(file.name);
+    setFile(file);
     setError("");
     setErroresPorCelda({});
 
@@ -80,7 +82,9 @@ const RegistrarListaPostulantes = () => {
     };
 
     reader.readAsBinaryString(file);
+    reader.readAsBinaryString(file);
   };
+
 
   const enviarRegistro = async () => {
          try {
@@ -121,6 +125,7 @@ console.log("idOlimpiada:", idOlimpiada, "idEncargado:", idEncargado);
     } finally {
       setEnviar(false);
     }
+    setEnviar(false);
   };
   return (
     <div className="p-4 max-w-5xl mx-auto">
@@ -208,4 +213,4 @@ console.log("idOlimpiada:", idOlimpiada, "idEncargado:", idEncargado);
   );
 };
 
-export default RegistrarListaPostulantes
+export default RegistrarListaPostulantes;
