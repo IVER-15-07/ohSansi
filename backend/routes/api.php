@@ -142,6 +142,6 @@ Route::post('/pagos/validarComprobantePago', [PagoController::class, 'validarCom
 
 
 // RUTAS PARA REGISTRO DE LISTA DE POSTULANTES
-Route::post('/postulantes', [Registrolistcontroller::class, 'registrarListaPostulantes']);
+Route::post('/postulantes_lote', [Registrolistcontroller::class, 'registrarListaPostulantes']);
 Route::get('/registro_lista', [Registrolistcontroller::class, 'obtenerListaPostulantes']);
 Route::post('/registro_lista/importar', [Registrolistcontroller::class, 'importar']);
