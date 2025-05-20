@@ -46,7 +46,7 @@ class AreaController extends Controller
                     'regex:/^[a-zA-ZÁÉÍÓÚáéíóúÜüÑñ0-9\s]+$/',
                     function ($attribute, $value, $fail) use ($nombre) {
                         // Validar duplicados usando solo el nombre normalizado
-                    if (\App\Models\Area::whereRaw('LOWER(TRIM(nombre)) = ?', [strtolower($nombre)])->exists()) {
+                    if (Area::where('nombre', ($nombre))->exists()) {
                         $fail('El nombre del área ya existe en el catálogo.');
                         }
                     },
