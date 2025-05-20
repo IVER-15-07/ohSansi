@@ -198,6 +198,7 @@ const RegistrarListaPostulantes = () => {
               <table className="min-w-full table-auto border-collapse text-sm">
                 <thead className="bg-blue-800 text-white">
                   <tr>
+                    <th className="px-4 py-2 border text-left">1</th>
                     {headers.map((header, index) => (
                       <th key={index} className="px-4 py-2 border text-left">
                         {header}
@@ -208,6 +209,7 @@ const RegistrarListaPostulantes = () => {
                 <tbody>
                   {data.map((row, rowIndex) => (
                     <tr key={rowIndex} className="hover:bg-gray-50 even:bg-gray-50">
+                      <td className="px-4 py-2 border font-bold text-blue-700 text-center">{rowIndex + 2}</td>
                       {row.map((cell, colIndex) => (
                         <td key={colIndex} className="px-4 py-2 border">
                           {cell}
