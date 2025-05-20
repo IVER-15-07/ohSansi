@@ -34,7 +34,11 @@ export const enviarRegistrosLote = async (archivo, idOlimpiada, idEncargado) => 
         });
         return response.data;
     } catch (error) {
-        console.error("Error al enviar registros en lote:", error);
+        // Si el backend responde con un error y tiene data, retorna esa data
+        if (error.response && error.response.data) {
+            return error.response.data;
+        }
+        // Si no, lanza el error normal
         throw error;
     }
 };

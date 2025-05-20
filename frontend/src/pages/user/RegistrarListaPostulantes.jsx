@@ -81,17 +81,17 @@ const RegistrarListaPostulantes = () => {
       }
     };
 
-    reader.readAsBinaryString(file);
+
     reader.readAsBinaryString(file);
   };
 
 
   const enviarRegistro = async () => {
-         try {
+    try {
       setError("");
       setEnviar(true);
       setErroresPorCelda({});
-console.log("idOlimpiada:", idOlimpiada, "idEncargado:", idEncargado);
+      console.log("idOlimpiada:", idOlimpiada, "idEncargado:", idEncargado);
       // Llama a la función con los parámetros separados
       const response = await enviarRegistrosLote(
         archivo,
@@ -160,11 +160,35 @@ console.log("idOlimpiada:", idOlimpiada, "idEncargado:", idEncargado);
             </p>
           )}
 
+
+
           {error && (
             <p className="mt-1 text-red-600 flex items-center gap-2 text-sm">
               <FileX2 className="w-5 h-5" /> {error}
             </p>
           )}
+
+          {/* Mostrar errores personalizados por fila si existen */}
+          {Object.keys(erroresPorCelda).length > 0 ? (
+            <div className="mt-3 bg-red-50 border border-red-300 rounded p-3 text-red-700 text-sm">
+              <strong>Errores en el archivo:</strong>
+              <ul className="list-disc ml-5">
+                {Object.entries(erroresPorCelda).map(([celda, mensaje], idx) => (
+                  <li key={idx}>
+                    <span className="font-semibold">{celda}:</span> {mensaje}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            error && (
+              <p className="mt-1 text-red-600 flex items-center gap-2 text-sm">
+                <FileX2 className="w-5 h-5" /> {error}
+              </p>
+            )
+          )}
+
+
         </div>
 
         {/* Tabla de datos */}

@@ -12,46 +12,59 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class Registrolistcontroller extends Controller
 {
-     public function registrarListaPostulantes(Request $request)
-    {
-        set_time_limit(300);
-        try {
-            // Validación inicial clara
-            $request->validate([
-                'excel' => 'required|file|mimes:xlsx,csv',
-                'id_olimpiada' => 'required|exists:olimpiada,id',
-                'id_encargado' => 'required|exists:encargado,id',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Mensajes claros de validación de Laravel
-            return response()->json([
-                'message' => 'Error de validación en los datos enviados.',
-                'errors' => $e->errors(),
-            ], 422);
-        }
 
-        try {
-            // Intentar importar el archivo Excel
-            Excel::import(new PostulantesImport($request->id_olimpiada, $request->id_encargado), $request->file('excel'));
+public function registrarListaPostulantes(Request $request)
+{
+    set_time_limit(300);
 
-            return response()->json(['message' => 'Importación completada con éxito'], 200);
-        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            // Errores de validación específicos de Maatwebsite Excel
-            $failures = $e->failures();
-
-            return response()->json([
-                'message' => 'Error de validación durante la importación.',
-                'errors' => $failures,
-            ], 422);
-
-        } catch (\Exception $e) {
-            // Cualquier otro error
-            return response()->json([
-                'message' => 'Ocurrió un error durante la importación.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+    // Validación inicial clara
+    try {
+        $request->validate([
+            'excel' => 'required|file|mimes:xlsx,csv',
+            'id_olimpiada' => 'required|exists:olimpiada,id',
+            'id_encargado' => 'required|exists:encargado,id',
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'message' => 'Error de validación en los datos enviados.',
+            'errors' => $e->errors(),
+        ], 422);
     }
+
+    try {
+        Excel::import(
+            new PostulantesImport($request->id_olimpiada, $request->id_encargado),
+            $request->file('excel')
+        );
+
+        return response()->json(['message' => 'Importación completada con éxito'], 200);
+
+    } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+        // Errores de validación específicos de Maatwebsite Excel
+        $failures = $e->failures();
+        return response()->json([
+            'message' => 'Error de validación durante la importación.',
+            'errors' => $failures,
+        ], 422);
+
+    } catch (\Exception $e) {
+        // Si el mensaje es un JSON con errores personalizados, decodifícalo y retorna con 422
+        $mensaje = $e->getMessage();
+        $json = json_decode($mensaje, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+            return response()->json([
+                'message' => $json['message'] ?? 'Errores durante la importación.',
+                'errors' => $json['errors'] ?? [$mensaje],
+            ], 422);
+        }
+
+        // Si no es JSON, retorna el mensaje normal
+        return response()->json([
+            'message' => 'Ocurrió un error durante la importación.',
+            'error' => $mensaje,
+        ], 500);
+    }
+}
     
 
 

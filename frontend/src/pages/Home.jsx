@@ -272,6 +272,8 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+
       {/* INFORMACIÓN DE ÁREA Y CONTACTO */}
       <section className="container mx-auto px-6 py-5">
         <div className="text-center mb-8">

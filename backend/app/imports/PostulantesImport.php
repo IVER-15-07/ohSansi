@@ -98,27 +98,29 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         Log::info("Catálogos precargados y normalizados.");
     }
 
+
     public function collection(Collection $rows)
     {
         set_time_limit(300); // 5 minutos
-        DB::transaction(function () use ($rows) {
+        $errores = [];
+
+        DB::transaction(function () use ($rows, &$errores) {
             // Convertir los datos a UTF-8
             $rows = $rows->map(function ($fila) {
                 return $fila->map(function ($valor) {
                     return is_string($valor) ? mb_convert_encoding($valor, 'UTF-8', 'auto') : $valor;
                 });
             });
+
             foreach ($rows as $index => $row) {
                 try {
-                    // Convertir todos los valores de la fila a cadenas
+                    // ... tu lógica de procesamiento ...
                     $fila = array_map(function ($valor) {
                         return is_numeric($valor) ? (string) $valor : $valor;
                     }, $row->toArray());
 
-                    // Registrar fila para depuración
                     Log::info("Procesando fila #$index:", $fila);
 
-                    // Validar si la fila está vacía
                     if (empty(array_filter($fila))) {
                         Log::info("Fila #$index vacía, se omite.");
                         continue;
@@ -129,11 +131,21 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                     Log::info("Fila #$index procesada correctamente.");
                 } catch (\Exception $e) {
                     Log::error("Error en la fila #$index: " . $e->getMessage());
-                    throw new \Exception("Error en la fila #$index: " . $e->getMessage());
+                    // Guarda el error pero NO detiene el proceso
+                    $errores["Fila " . ($index + 2)] = $e->getMessage(); // +2 para reflejar la fila real en Excel
                 }
             }
         });
+
+        // Si hubo errores, lánzalos todos juntos
+        if (!empty($errores)) {
+            throw new \Exception(json_encode([
+                'message' => 'Errores encontrados en el archivo.',
+                'errors' => $errores
+            ]));
+        }
     }
+
 
 
 
@@ -142,38 +154,78 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
     private function procesarFila($fila)
     {
+        $erroresFila = [];
+
+        // Validar campos obligatorios
         foreach (['ci', 'nombres', 'apellidos', 'fecha_nacimiento'] as $campo) {
             if (empty($fila[$campo])) {
-                throw new \Exception("El campo '$campo' está vacío.");
+                $erroresFila[] = "El campo '$campo' está vacío.";
             }
         }
 
-        $ci = $fila['ci'];
-        $nombres = $fila['nombres'];
-        $apellidos = $fila['apellidos'];
-        $fechaNacimiento = $fila['fecha_nacimiento'];
+        $ci = $fila['ci'] ?? null;
+        $nombres = $fila['nombres'] ?? null;
+        $apellidos = $fila['apellidos'] ?? null;
+        $fechaNacimiento = $fila['fecha_nacimiento'] ?? null;
 
+        // Validar formato de fecha
+        if ($fechaNacimiento) {
+            try {
+                if (is_numeric($fechaNacimiento)) {
+                    $fechaNacimiento = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($fechaNacimiento)->format('Y-m-d');
+                } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaNacimiento)) {
+                    $erroresFila[] = "La fecha de nacimiento no tiene el formato aaaa-mm-dd.";
+                }
+            } catch (\Exception $e) {
+                $erroresFila[] = "Error al procesar la fecha de nacimiento: " . $e->getMessage();
+            }
+        }
+
+        // Si hay errores hasta aquí, no continuar con la inserción
+        if (!empty($erroresFila)) {
+            throw new \Exception(implode(' | ', $erroresFila));
+        }
+
+        // Procesar postulante
         try {
-            if (is_numeric($fechaNacimiento)) {
-                $fechaNacimiento = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($fechaNacimiento)->format('Y-m-d');
-            } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaNacimiento)) {
-                throw new \Exception("La fecha de nacimiento no tiene el formato aaaa-mm-dd.");
-            }
+            $postulante = Postulante::firstOrCreate(
+                ['ci' => $ci],
+                ['nombres' => $nombres, 'apellidos' => $apellidos, 'fecha_nacimiento' => $fechaNacimiento]
+            );
         } catch (\Exception $e) {
-            throw new \Exception("Error al procesar la fecha de nacimiento: " . $e->getMessage());
+            $erroresFila[] = "Error al crear postulante: " . $e->getMessage();
         }
 
-        $postulante = Postulante::firstOrCreate(
-            ['ci' => $ci],
-            ['nombres' => $nombres, 'apellidos' => $apellidos, 'fecha_nacimiento' => $fechaNacimiento]
-        );
+        // Insertar datos del postulante
+        try {
+            $this->insertarDatosPostulante($fila, $postulante->id);
+        } catch (\Exception $e) {
+            $erroresFila[] = $e->getMessage();
+        }
 
-        $this->insertarDatosPostulante($fila, $postulante->id);
-        return $this->insertarRegistroEInscripcion($fila, $postulante->id);
+        // Insertar registro e inscripción
+        try {
+            return $this->insertarRegistroEInscripcion($fila, $postulante->id);
+        } catch (\Exception $e) {
+            $erroresFila[] = $e->getMessage();
+        }
+
+        // Si hubo errores en cualquier parte, lánzalos todos juntos
+        if (!empty($erroresFila)) {
+            throw new \Exception(implode(' | ', $erroresFila));
+        }
     }
+
+
+
+
+
+
 
     private function insertarDatosPostulante($fila, $idPostulante)
     {
+        $errores = [];
+
         $camposObligatorios = OlimpiadaCampoPostulante::where('id_olimpiada', $this->idOlimpiada)
             ->where('esObligatorio', true)
             ->with('campoPostulante')
@@ -184,7 +236,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         foreach ($camposObligatorios as $campoObligatorio) {
             $campoNormalizado = $this->limpiarTexto($campoObligatorio);
             if (!array_key_exists($campoNormalizado, $fila) || empty($fila[$campoNormalizado])) {
-                throw new \Exception("El campo obligatorio '$campoObligatorio' es requerido para esta olimpiada y no está presente o está vacío en el Excel.");
+                $errores[] = "El campo obligatorio '$campoObligatorio' es requerido para esta olimpiada y no está presente o está vacío en el Excel.";
             }
         }
 
@@ -203,11 +255,12 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             }
             $olimpiadaCampoPostulante = $this->olimpiadaCamposPostulante[$campoPostulanteId] ?? null;
             if (!$olimpiadaCampoPostulante) {
-                throw new \Exception("El campo '$campo' no está habilitado para esta olimpiada.");
+                $errores[] = "El campo '$campo' no está habilitado para esta olimpiada.";
+                continue;
             }
 
             if ($olimpiadaCampoPostulante->esObligatorio && empty($valor)) {
-                throw new \Exception("El campo '$campo' es obligatorio para esta olimpiada y no puede estar vacío.");
+                $errores[] = "El campo '$campo' es obligatorio para esta olimpiada y no puede estar vacío.";
             }
 
             $clavesParaBuscar[] = [
@@ -219,7 +272,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                 'id_postulante' => $idPostulante,
                 'id_olimpiada_campo_postulante' => $olimpiadaCampoPostulante->id,
                 'valor' => $valor,
-              
             ];
         }
 
@@ -241,10 +293,18 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             });
         }
 
+        // Si hubo errores, lánzalos todos juntos
+        if (!empty($errores)) {
+            throw new \Exception(implode(' | ', $errores));
+        }
+
         if (!empty($datosParaInsertar)) {
             DatoPostulante::insert($datosParaInsertar);
         }
     }
+
+
+
 
     private function procesarTutores($fila, $idRegistro)
     {
@@ -253,6 +313,8 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         $rolesNormalizados = $this->roles;
         Log::info("Roles normalizados: " . json_encode($rolesNormalizados));
 
+        $erroresTutores = [];
+
         foreach ($rolesNormalizados as $rol => $idRolTutor) {
             $ciTutor = $fila["ci$rol"] ?? null;
             $nombresTutor = $fila["nombres$rol"] ?? null;
@@ -260,39 +322,76 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
             Log::info("Intentando extraer tutor: rol=$rol, ci=$ciTutor, nombres=$nombresTutor, apellidos=$apellidosTutor");
 
-            if ($ciTutor && $nombresTutor && $apellidosTutor) {
+            // Validaciones para cada tutor
+            $erroresRol = [];
+            if (!$ciTutor) {
+                $erroresRol[] = "El campo 'ci$rol' del tutor '$rol' está vacío.";
+            }
+            if (!$nombresTutor) {
+                $erroresRol[] = "El campo 'nombres$rol' del tutor '$rol' está vacío.";
+            }
+            if (!$apellidosTutor) {
+                $erroresRol[] = "El campo 'apellidos$rol' del tutor '$rol' está vacío.";
+            }
+
+            // Si hay errores en los datos básicos, los acumulamos y pasamos al siguiente rol
+            if (!empty($erroresRol)) {
+                $erroresTutores[] = implode(' ', $erroresRol);
+                continue;
+            }
+
+            try {
                 $tutor = Tutor::firstOrCreate(
                     ['ci' => $ciTutor],
                     ['nombres' => $nombresTutor, 'apellidos' => $apellidosTutor]
                 );
                 Log::info("Tutor creado o encontrado: " . json_encode($tutor->toArray()));
+            } catch (\Exception $e) {
+                $erroresTutores[] = "Error al crear tutor '$rol': " . $e->getMessage();
+                continue;
+            }
 
+            // Insertar datos del tutor
+            try {
                 $this->insertarDatosTutor($fila, $tutor->id, $rol);
+            } catch (\Exception $e) {
+                $erroresTutores[] = "Error en los datos del tutor '$rol': " . $e->getMessage();
+            }
 
+            // RegistroTutor
+            try {
                 $registroTutor = RegistroTutor::firstOrCreate([
                     'id_registro' => $idRegistro,
                     'id_tutor' => $tutor->id,
                     'id_rol_tutor' => $idRolTutor,
                 ]);
                 Log::info("RegistroTutor creado o encontrado: " . json_encode($registroTutor->toArray()));
-
                 $tutoresPorRol[$rol] = $tutor->id;
-            } else {
-                Log::debug("Datos incompletos para el tutor '$rol': ci='$ciTutor', nombres='$nombresTutor', apellidos='$apellidosTutor'.");
+            } catch (\Exception $e) {
+                $erroresTutores[] = "Error al crear RegistroTutor para el tutor '$rol': " . $e->getMessage();
             }
         }
 
         if (empty($tutoresPorRol)) {
             Log::error("No se creó ningún tutor. Roles normalizados: " . json_encode($rolesNormalizados));
             Log::error("Fila recibida: " . json_encode($fila));
-            throw new \Exception("No se creó ningún tutor para el registro $idRegistro. Revisa los encabezados, los datos y los roles en la base de datos.");
+            $erroresTutores[] = "No se creó ningún tutor para el registro $idRegistro. Revisa los encabezados, los datos y los roles en la base de datos.";
         }
+
+        // Si hubo errores, lánzalos todos juntos
+        if (!empty($erroresTutores)) {
+            throw new \Exception(implode(' | ', $erroresTutores));
+        }
+
         Log::info("Tutores asociados para registro $idRegistro: " . json_encode($tutoresPorRol));
     }
 
 
+
     private function insertarDatosTutor($fila, $idTutor, $rol)
     {
+        $errores = [];
+
         $camposObligatorios = \App\Models\OlimpiadaCampoTutor::where('id_olimpiada', $this->idOlimpiada)
             ->where('esObligatorio', true)
             ->with('campo_tutor')
@@ -308,7 +407,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                 (!array_key_exists($campoExcel1, $fila) || empty($fila[$campoExcel1])) &&
                 (!array_key_exists($campoExcel2, $fila) || empty($fila[$campoExcel2]))
             ) {
-                throw new \Exception("El campo obligatorio '$campoObligatorio' es requerido para el tutor '$rol' en esta olimpiada y no está presente o está vacío en el Excel.");
+                $errores[] = "El campo obligatorio '$campoObligatorio' es requerido para el tutor '$rol' en esta olimpiada y no está presente o está vacío en el Excel.";
             }
         }
 
@@ -334,11 +433,12 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
                 $olimpiadaCampoTutor = $this->olimpiadaCamposTutor[$campoTutorId] ?? null;
                 if (!$olimpiadaCampoTutor) {
-                    throw new \Exception("El campo '$campoNombre' no está habilitado para el tutor '$rol' en esta olimpiada.");
+                    $errores[] = "El campo '$campoNombre' no está habilitado para el tutor '$rol' en esta olimpiada.";
+                    continue;
                 }
 
                 if ($olimpiadaCampoTutor->esObligatorio && empty($valor)) {
-                    throw new \Exception("El campo '$campoNombre' es obligatorio para el tutor '$rol' en esta olimpiada y no puede estar vacío.");
+                    $errores[] = "El campo '$campoNombre' es obligatorio para el tutor '$rol' en esta olimpiada y no puede estar vacío.";
                 }
 
                 $clavesParaBuscar[] = [
@@ -350,7 +450,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                     'id_tutor' => $idTutor,
                     'id_olimpiada_campo_tutor' => $olimpiadaCampoTutor->id,
                     'valor' => $valor,
-                  
                 ];
             }
         }
@@ -373,33 +472,62 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             });
         }
 
+        // Si hubo errores, lánzalos todos juntos
+        if (!empty($errores)) {
+            throw new \Exception(implode(' | ', $errores));
+        }
+
         if (!empty($datosParaInsertar)) {
             DatoTutor::insert($datosParaInsertar);
         }
     }
 
+
     private function insertarRegistroEInscripcion($fila, $idPostulante)
     {
+        $errores = [];
+
         if (empty($fila['grado'])) {
-            throw new \Exception("El campo 'grado' está vacío en la fila.");
+            $errores[] = "El campo 'grado' está vacío en la fila.";
         }
 
-        $nombreGrado = $this->limpiarTexto($fila['grado']);
+        $nombreGrado = $this->limpiarTexto($fila['grado'] ?? '');
         $idGrado = $this->grados[$nombreGrado] ?? null;
         if (!$idGrado) {
-            throw new \Exception("El grado '{$fila['grado']}' no existe o no está habilitado para esta olimpiada.");
+            $errores[] = "El grado '{$fila['grado']}' no existe o no está habilitado para esta olimpiada.";
         }
 
-        $nombreArea = $this->limpiarTexto($fila['area']);
+        $nombreArea = $this->limpiarTexto($fila['area'] ?? '');
         $idArea = $this->areas[$nombreArea] ?? null;
         if (!$idArea) {
-            throw new \Exception("El área '{$fila['area']}' no existe o no está habilitada para esta olimpiada.");
+            $errores[] = "El área '{$fila['area']}' no existe o no está habilitada para esta olimpiada.";
         }
 
-        $nombreCategoria = $this->limpiarTexto($fila['nivel_categoria']);
+        $nombreCategoria = $this->limpiarTexto($fila['nivel_categoria'] ?? '');
         $idCategoria = $this->categorias[$nombreCategoria] ?? null;
         if (!$idCategoria) {
-            throw new \Exception("La categoría '{$fila['nivel_categoria']}' no existe o no está habilitada para esta olimpiada.");
+            $errores[] = "La categoría '{$fila['nivel_categoria']}' no existe o no está habilitada para esta olimpiada.";
+        }
+
+
+        // Validar máximo de áreas por olimpiada
+        $olimpiada = \App\Models\Olimpiada::find($this->idOlimpiada);
+        if ($olimpiada && $olimpiada->max_areas) {
+            $inscripcionesActuales = \App\Models\Inscripcion::whereHas('registro', function ($q) use ($idPostulante) {
+                $q->where('id_postulante', $idPostulante)
+                    ->where('id_olimpiada', $this->idOlimpiada);
+            })->count();
+
+            if ($inscripcionesActuales >= $olimpiada->max_areas) {
+                $errores[] = "El postulante ya está inscrito en el máximo de áreas permitidas ({$olimpiada->max_areas}) para esta olimpiada.";
+            }
+        }
+
+
+
+        // Si hubo errores de validación, lánzalos todos juntos
+        if (!empty($errores)) {
+            throw new \Exception(implode(' | ', $errores));
         }
 
         $registro = Registro::firstOrCreate([
