@@ -420,7 +420,7 @@ const CrearOlimpiada = () => {
         </form>
 
         {/* Botones siempre visibles */}
-        <div className="sticky bottom-0 flex justify-end mt-4 p-3 gap-2 bg-black rounded-b-xl border-t border-gray-200">
+        <div className="sticky bottom-0 flex justify-end mt-4 p-3 gap-2 bg-transparent rounded-b-xl border-t border-gray-200">
           <button
             type="button"
             onClick={() => redirigir('/AdminLayout/Olympiad')}
