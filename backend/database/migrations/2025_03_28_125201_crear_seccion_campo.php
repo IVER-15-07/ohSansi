@@ -15,7 +15,9 @@ class CrearSeccionCampo extends Migration
     {
         Schema::create('seccion_campo', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
+            $table->string('nombre')->collation('texto_insensible');
+            
+            $table->foreignId('id_olimpiada')->constrained('olimpiada')->onDelete('cascade');
         });
     }
 

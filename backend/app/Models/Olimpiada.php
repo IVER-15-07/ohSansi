@@ -14,16 +14,35 @@ class Olimpiada extends Model
     
     protected $fillable = [
         'nombre',
+        'convocatoria',
         'descripcion',
         'costo',
-        'ubicacion',
+        'max_areas',
         'fecha_inicio',
-        'fecha_fin'
+        'fecha_fin',
+        'inicio_inscripcion',
+        'fin_inscripcion'
     ];
 
-    // Relación uno a muchos con Configuracion
-    public function configuraciones()
+    // Una olimpiada puede tener ser de muchas opciones de inscripcion
+    public function opciones_inscripcion()
     {
-        return $this->hasMany(Configuracion::class, 'id_olimpiada');
+        return $this->hasMany(OpcionInscripcion::class, 'id_olimpiada');
     }
+
+    public function registros()
+    {
+        return $this->hasMany(Registro::class, 'id_olimpiada');
+    }
+
+    public function olimpiadaCamposPostulante()
+    {
+        return $this->hasMany(OlimpiadaCampoPostulante::class, 'id_olimpiada');
+    }
+
+    public function olimpiadaCamposTutor()
+    {
+        return $this->hasMany(olimpiadaCampoTutor::class, 'id_olimpiada');
+    }
+
 }

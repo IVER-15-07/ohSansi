@@ -10,16 +10,19 @@ class Pago extends Model
     use HasFactory;
 
     protected $table = 'pago';
+    public $timestamps = false;
 
     protected $fillable = [
-        'codigo',
-        'fecha',
         'monto',
-        'estado'
+        'fecha_generado',
+        'concepto',
+        'orden',
+        'comprobante',
+        'fecha_pago'
     ];
 
-    public function registros()
+    public function inscripciones()
     {
-        return $this->hasMany(Registro::class, 'id_pago');
+        return $this->hasMany(Inscripcion::class, 'id_pago');
     }
 }

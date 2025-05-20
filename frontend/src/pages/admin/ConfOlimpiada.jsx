@@ -1,134 +1,59 @@
-import React from 'react'
-import { useState, useEffect } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getAreas } from '../../../service/areas.api';
-import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
-import { createConfiguracion, getAreasByOlimpiada, getMapOfOlimpiada, deleteConfigurationByOlimpiada} from '../../../service/configuraciones.api';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getAreas } from '../../../service/areas.api';
+
+import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
+import { getAreasByOlimpiada, getMapOfOlimpiada, deleteOpcionesInscripcionByOlimpiada, createOpcionInscripcion } from '../../../service/opciones_inscripcion.api';
 import Cargando from '../Cargando';
 import Error from '../Error';
+import ElegirAreas from './ElegirAreas';
+import ElegirNiveles from './ElegirNiveles';
 
 const ConfOlimpiada = () => {
-  const queryClient = useQueryClient();
-
-  const {data: areasCatalogo, isLoading: isLoadingAreasCatalogo, error: errorAreasCatalogo} = useQuery({
-    queryKey: ['areas'],
-    queryFn: getAreas,
-  });
-  
-  const {data: nivelesCatalogo, isLoading: isLoadingNivelesCatalogo, error: errorNivelesCatalogo} = useQuery({
-    queryKey: ['niveles_categorias'],
-    queryFn: getNivelesCategorias,
-  });
-
   const { id, nombreOlimpiada } = useParams();
-  const [areasDisponibles, setAreasDisponibles] = useState([]);
-  const [nivelesDisponibles, setNivelesDisponibles] = useState([]);
+  const [step, setStep] = useState(1);
+
   const [areasSeleccionadas, setAreasSeleccionadas] = useState([]);
-  const [areaActiva, setAreaActiva] = useState(null);
   const [nivelesPorArea, setNivelesPorArea] = useState({});
   const [error, setError] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);	
+
+  const { data: areasCatalogo, isLoading: isLoadingAreas, error: errorAreas } = useQuery({
+    queryKey: ['areas'],
+    queryFn: getAreas,
+  });
+
+  const { data: nivelesCatalogo, isLoading: isLoadingNiveles, error: errorNiveles } = useQuery({
+    queryKey: ['niveles_categorias'],
+    queryFn: getNivelesCategorias,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const areasOlimpiada = await getAreasByOlimpiada(id);
-        setAreasSeleccionadas(areasOlimpiada.data || []);
-
-        const mapaOlimpiada = await getMapOfOlimpiada(id);
-        setNivelesPorArea(mapaOlimpiada.data || {});
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        const areasRes = await getAreasByOlimpiada(id);
+        const mapaRes = await getMapOfOlimpiada(id);
+        setAreasSeleccionadas(areasRes.data || []);
+        setNivelesPorArea(mapaRes.data || {});
+      } catch (e) {
+        console.error(e);
         setError("Error al cargar los datos. Intenta nuevamente.");
-      } finally {
-        setIsLoading(false);
+      }finally {	
+        setIsLoading(false);	
       }
     };
-  
-    if (id) {
-      fetchData();
-    }
+    if (id) fetchData();
   }, [id]);
-
-  useEffect(() => {
-    if (areasCatalogo) {
-      // Filtrar las áreas disponibles excluyendo las seleccionadas
-      const disponibles = areasCatalogo.data.filter(
-        (areaCatalogo) => !areasSeleccionadas.some((areaSeleccionada) => areaSeleccionada.id === areaCatalogo.id)
-      );
-      setAreasDisponibles(disponibles);
-    }
-  }, [areasCatalogo, areasSeleccionadas]);
-
-  // Sincronizar niveles disponibles con el catálogo de niveles
-  useEffect(() => {
-    if (nivelesCatalogo) {
-      setNivelesDisponibles(nivelesCatalogo.data); // Inicializa los niveles disponibles con el catálogo
-    }
-  }, [nivelesCatalogo]);
-
-    
-  if (isLoadingNivelesCatalogo || isLoadingAreasCatalogo || isLoading ) return <Cargando/>;
-  if (errorNivelesCatalogo) return <Error error ={errorNivelesCatalogo}/>;
-  if (errorAreasCatalogo) return <Error error ={errorAreasCatalogo}/>;
-
-  const handleSeleccionarArea = (area) => setAreaActiva(area.id);
-
-  const handleAniadirArea = (area) => {
-
-    setAreasSeleccionadas([...areasSeleccionadas, area]);
-
-    setAreasDisponibles(areasDisponibles.filter((a) => a.id !== area.id));
-
-    setNivelesPorArea({ ...nivelesPorArea, [area.id]: [] });
-
-    if (!areaActiva) setAreaActiva(area.id);
-  };
-
-  const handleQuitarArea = (area) => {
-
-    setAreasSeleccionadas(areasSeleccionadas.filter((a) => a.id !== area.id));
-
-    setAreasDisponibles([...areasDisponibles, area]);
-
-    const nuevosNiveles = { ...nivelesPorArea };
-
-    delete nuevosNiveles[area.id];
-
-    setNivelesPorArea(nuevosNiveles);
-    if (areaActiva === area.id) {
-
-      const nuevasAreas = areasSeleccionadas.filter((a) => a.id !== area.id);
-
-      setAreaActiva(nuevasAreas.length > 0 ? nuevasAreas[0].id : null);
-    }
-  };
-
-  const handleAñadirNivel = (nivel) => {
-    const actuales = nivelesPorArea[areaActiva] || [];
-    if (!actuales.includes(nivel.nombre)) {
-      setNivelesPorArea({
-        ...nivelesPorArea,
-        [areaActiva]: [...actuales, nivel],
-      });
-    }
-  };
-
-  const handleQuitarNivel = (nivel) => {
-    setNivelesPorArea({
-      ...nivelesPorArea,
-      [areaActiva]: nivelesPorArea[areaActiva].filter((n) => n.nombre !== nivel.nombre),
-    });
-  };
 
   const handleGuardarConfiguracion = async () => {
     setIsAdding(true);
     try {
-      await deleteConfigurationByOlimpiada(id);
+      await deleteOpcionesInscripcionByOlimpiada(id);
       const configuraciones = [];
+
       areasSeleccionadas.forEach((area) => {
         const niveles = nivelesPorArea[area.id] || [];
         niveles.forEach((nivel) => {
@@ -139,160 +64,94 @@ const ConfOlimpiada = () => {
           });
         });
       });
-      await Promise.all(configuraciones.map((config) => createConfiguracion(config)));
-      alert('Configuraciones guardadas exitosamente.');
+
+      await Promise.all(configuraciones.map((config) => createOpcionInscripcion(config)));
+      alert('Configuracion guardada exitosamente.');
     } catch (error) {
       console.error(error);
-      setError('Error al guardar configuraciones. Intenta nuevamente.');
-    }finally{
+      setError('Error al guardar opciones de inscripcion.');
+    } finally {
       setIsAdding(false);
     }
   };
 
-  const areaActivaObj = areasSeleccionadas.find((a) => a.id === areaActiva);
-  
+  if (isLoadingAreas || isLoadingNiveles || isLoading) return <Cargando />;
+  if (errorAreas) return <Error error={errorAreas} />;
+  if (errorNiveles) return <Error error={errorNiveles} />;
+
+  console.log("Areas Seleccionadas", areasSeleccionadas);
+  console.log("Niveles catalogo", nivelesCatalogo.data);
+  console.log("Niveles por area", nivelesPorArea);
   return (
-    <div className="p-2 w-full h-[calc(100vh-80px)] bg-gray-50 overflow-hidden">
+    <div className="p-6 flex flex-col gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
+    <div className="flex flex-col gap-4 h-full">
       
-      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 h-full">
-        <h2 className="text-xl font-bold text-gray-800">Configuración de la Olimpiada {nombreOlimpiada}</h2>
-
-        <div className="flex gap-4 flex-1 overflow-hidden">
-
-          {/* Áreas disponibles */}
-          <div className="flex-1 overflow-y-auto rounded-2xl border border-gray-200 p-4">
-
-            <h3 className="font-semibold text-gray-600 mb-2">Áreas disponibles</h3>
-            <div className="flex flex-wrap gap-2">
-
-              {areasDisponibles.map((area) => (
-                <div key={`area-disponible-${area.id}`} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
-
-                  <span>{area.nombre}</span>
-
-                  <button
-                    onClick={() => handleAniadirArea(area)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-md text-sm"
-                  >
-                    Añadir
-                  </button>
-
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Áreas seleccionadas */}
-          <div className="flex-1 overflow-y-auto rounded-2xl border border-gray-200 p-4">
-            <h3 className="font-semibold text-gray-600 mb-2">Áreas seleccionadas</h3>
-
-            <div className="flex flex-wrap gap-2">
-              {areasSeleccionadas.map((area) => (
-                <div key={`area-seleccionada-${area.id}`} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
-                  <span>{area.nombre}</span>
-                  <button
-                    onClick={() => handleQuitarArea(area)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md text-sm"
-                  >
-                    Quitar
-                  </button>
-                </div>
-              ))}
-            </div>
-
-          </div>
-
-        </div>
-
-      {/* Carrusel de áreas seleccionadas activas */}
-      <div className="mt-2 overflow-x-auto whitespace-nowrap flex gap-2 pb-2">
-
-        {areasSeleccionadas.map((area) => (
-
+      {/* Contenido principal de la configuración */}
+      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 min-h-[460px] max-h-[540px] overflow-y-auto">
+        <h2 className="text-xl font-bold text-gray-800">
+          Configuración de la Olimpiada {nombreOlimpiada}
+        </h2>
+  
+        {step === 1 && (
+          <ElegirAreas
+            catalogo={areasCatalogo.data}
+            seleccionadas={areasSeleccionadas}
+            setSeleccionadas={setAreasSeleccionadas}
+            setNivelesPorArea={setNivelesPorArea}
+          />
+        )}
+  
+        {step === 2 && (
+          <ElegirNiveles
+            areas={areasSeleccionadas}
+            nivelesCatalogo={nivelesCatalogo.data}
+            nivelesPorArea={nivelesPorArea}
+            setNivelesPorArea={setNivelesPorArea}
+          />
+        )}
+      </div>
+  
+      {/* Botones de navegación */}
+      <div className="flex justify-between items-center p-4 bg-white rounded-2xl shadow-md border border-gray-200">
+        {step > 1 && (
           <button
-            key={area.id}
-            className={`px-4 py-1 rounded-full text-sm font-medium transition whitespace-nowrap ${
-              areaActiva === area.id
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-            }`}
-            onClick={() => handleSeleccionarArea(area)}
+            onClick={() => setStep(step - 1)}
+            className="px-5 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
           >
-            {area.nombre}
+            Atrás
           </button>
-        ))}
-      </div>
-
-      {/* Configuración de niveles */}
-      {areaActivaObj && (
-        <div className="flex flex-1 gap-4 overflow-hidden">
-          {/* Niveles disponibles */}
-          <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto h-full">
-            <h3 className="font-semibold text-gray-600 mb-2">Niveles disponibles</h3>
-            <div className="flex flex-wrap gap-2">
-              {nivelesDisponibles.map((nivel) => (
-                <div key={`nivel-diponible-${nivel.id}`} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
-                  <span>{nivel.nombre}</span>
-                  <button
-                    onClick={() => handleAñadirNivel(nivel)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-md text-sm"
-                  >
-                    Añadir
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Niveles seleccionados */}
-          <div className="flex-1 rounded-2xl border border-gray-200 p-4 overflow-y-auto h-full">
-
-            <h3 className="font-semibold text-gray-600 mb-2">
-              Niveles de {areaActivaObj.nombre}
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {nivelesPorArea[areaActiva]?.map((nivel) => (
-                <>
-                {console.log(areaActiva)}
-                <div key={`${areaActiva}-${nivel.id}`} className="flex items-center gap-2 bg-gray-100 p-2 rounded-md">
-                  <span>{nivel.nombre}</span>
-                  <button
-                    onClick={() => handleQuitarNivel({ nombre: nivel.nombre })}
-                    className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md text-sm"
-                  >
-                    Quitar
-                  </button>
-                </div>
-                </>
-              ))}
-            </div>
-
-          </div>
-
-        </div>
-      )}
-
-      {/* Botón para guardar configuraciones */}
-      <div className="flex justify-end gap-4 mt-4">
-
-        {error && <p className="text-red-600">{error}</p>}
-
-        <button
-          onClick={handleGuardarConfiguracion}
-          disabled={isAdding} // Desactiva el botón mientras se está cargando
-          className={`px-5 py-2 rounded-md text-sm font-medium transition ${
-            isAdding
-              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-              : "bg-blue-900 text-white hover:bg-blue-800 transition"
+        )}
+  
+        {step === 1 && (
+          <button
+            onClick={() => setStep(2)}
+            disabled={areasSeleccionadas.length === 0}
+            className="px-5 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Siguiente
+          </button>
+        )}
+  
+        {step === 2 && (
+          <button
+            onClick={handleGuardarConfiguracion}
+            disabled={isAdding}
+            className={`px-5 py-2 rounded-md text-white ${
+              isAdding
+                ? "bg-gray-400"
+                : "bg-blue-900 hover:bg-blue-800"
             }`}
-        >
-          {isAdding ? "Cargando..." : "Guardar Configuración"}
-
-        </button>
+          >
+            {isAdding ? "Guardando..." : "Guardar Configuración"}
+          </button>
+        )}
       </div>
+  
+      {/* {error && <p className="text-red-600">{error}</p>} */}
     </div>
   </div>
-  )
-}
+  
+  );
+};
 
 export default ConfOlimpiada

@@ -15,10 +15,9 @@ class CrearTablaDatoInscripcion extends Migration
     {
         Schema::create('dato_inscripcion', function (Blueprint $table) {
             $table->id();
-            $table->string('valor');
-
-            $table->foreignId('campo_inscripcion_id')->constrained('campo_inscripcion')->onDelete('cascade');
-            $table->foreignId('registro_id')->constrained('registro')->onDelete('cascade');
+            $table->string('valor')->collation('texto_insensible');
+            $table->foreignId('id_campo_inscripcion')->constrained('campo_inscripcion')->onDelete('cascade');
+            $table->foreignId('id_registro')->constrained('registro')->onDelete('cascade');
         });
     }
 

@@ -19,3 +19,27 @@ export const createEncargado = async (data) => {
     throw error;
   }
 }
+
+export const verificarEncargado = async (ci) => {
+  return await axiosInstance.get(`/encargados/verificar/${ci}`);
+};
+
+export const getEncargado = async (idEncargado) => {
+  try {
+    const response = await axiosInstance.get(`/encargados/${idEncargado}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching encargado:", error);
+    throw error;
+  }
+}
+
+export const obtenerConteoRegistrosPorEncargado = async (idEncargado, idOlimpiada) => {
+  try {
+    const response = await axiosInstance.get(`/encargados/registrosTotales/${idEncargado}/${idOlimpiada}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching conteo de registros:", error);
+    throw error;
+  }
+};

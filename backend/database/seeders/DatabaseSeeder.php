@@ -13,6 +13,36 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // User::factory(10)->create();
+        $this->call(TipoCampoSeeder::class);
+
+        $this->call(GradoSeeder::class);
+        
+        $this->call(NivelCategoriaSeeder::class);
+        
+        $this->call(AreaSeeder::class);
+
+        $this->call(OlimpiadaSeeder::class);
+
+        $this->call(OpcionInscripcionSeeder::class);
+
+        $this->call(EncargadoSeeder::class);
+
+        $this->call(PostulanteSeeder::class);
+
+        $this->call(RegistroSeeder::class);
+
+        $this->call(InscripcionSeeder::class);
+
+        $this->call(TutorSeeder::class);
+        
+        $this->call(CampoTutorSeeder::class);
+
+        $this->call(CampoPostulanteSeeder::class);
+
+        $this->call(OlimpiadaCampoPostulanteSeeder::class);
+
+        $this->call(OlimpiadaCampoTutorSeeder::class);
+
+        $this->call(RolTutorSeeder::class);
     }
 }
