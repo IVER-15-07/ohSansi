@@ -1,7 +1,7 @@
 import React from 'react'
-import { PlusCircle, XCircle,CheckCheck,X} from 'lucide-react';
+import { PlusCircle, XCircle, CheckCheck, X, Info } from 'lucide-react';
 
-const ElegirAreas = ({ catalogo, seleccionadas, setSeleccionadas, setNivelesPorArea }) => {
+const ElegirAreas = ({ catalogo, seleccionadas, setSeleccionadas, setNivelesPorArea, areasConPostulantes = [] }) => {
 
     const disponibles = catalogo.filter(
         (area) => !seleccionadas.some((s) => s.id === area.id)
@@ -13,6 +13,7 @@ const ElegirAreas = ({ catalogo, seleccionadas, setSeleccionadas, setNivelesPorA
     };
 
     const handleRemove = (area) => {
+        // Eliminar el área sin importar si tiene postulantes
         setSeleccionadas(seleccionadas.filter((a) => a.id !== area.id));
         setNivelesPorArea(prev => {
             const newState = { ...prev };
@@ -56,22 +57,26 @@ const ElegirAreas = ({ catalogo, seleccionadas, setSeleccionadas, setNivelesPorA
                 <h3 className="font-semibold text-gray-700 text-lg mb-2">Áreas seleccionadas</h3>
                 <div className="overflow-y-auto max-h-[360px] px-1 sm:px-2 md:px-4">
                     <ul className="flex flex-col gap-3">
-                        {seleccionadas.map((area) => (
-                            <li
-                                key={area.id}
-                                className={`flex justify-between items-center gap-4 p-4 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01]
-                                    ${area.id % 2 === 0 ? 'bg-gradient-to-r from-blue-50 to-blue-100' : 'bg-gradient-to-r from-red-50 to-red-100'}`}
-                            >
-                                <span className="text-blue-900 font-medium">{area.nombre}</span>
-                                <button
-                                    onClick={() => handleRemove(area)}
-                                    className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm font-medium"
+                        {seleccionadas.map((area) => {
+                            return (
+                                <li
+                                    key={area.id}
+                                    className={`flex justify-between items-center gap-4 p-4 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01]
+                                        ${area.id % 2 === 0 ? 'bg-gradient-to-r from-blue-50 to-blue-100' : 'bg-gradient-to-r from-red-50 to-red-100'}`}
                                 >
-                                    <X size={18} />
-                                    Quitar
-                                </button>
-                            </li>
-                        ))}
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-blue-900 font-medium">{area.nombre}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => handleRemove(area)}
+                                        className="flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-800"
+                                    >
+                                        <X size={18} />
+                                        Quitar
+                                    </button>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             </div>

@@ -33,18 +33,29 @@ class AreaController extends Controller
     public function almacenarArea(Request $request)
     {
         try {
+            // Normalizar el nombre antes de validar: quitar espacios y reducir espacios internos
+            $nombre = preg_replace('/\s+/', ' ', trim($request->input('nombre')));
+            $nombre = ucfirst(mb_strtolower($nombre, 'UTF-8'));
+
             // Validar los datos enviados
             $validated = $request->validate([
                 'nombre' => [
                     'required',
                     'string',
-                    'max:50'
+                    'max:50',
+                    'regex:/^[a-zA-ZÁÉÍÓÚáéíóúÜüÑñ0-9\s]+$/',
+                    function ($attribute, $value, $fail) use ($nombre) {
+                        // Validar duplicados usando solo el nombre normalizado
+                    if (Area::where('nombre', ($nombre))->exists()) {
+                        $fail('El nombre del área ya existe en el catálogo.');
+                        }
+                    },
                 ],
             ]);
     
             // Crear el área con nombre normalizado
             $area = Area::create([
-                'nombre' => ucfirst(mb_strtolower($validated['nombre'], 'UTF-8')),
+                'nombre' => $nombre,
             ]);
     
             // Limpiar caché para asegurar que la próxima consulta tenga datos actualizados

@@ -181,6 +181,30 @@ class OpcionInscripcionController extends Controller
     public function eliminarOpcionesIncripcionPorOlimpiada($idOlimpiada)
     {
         try {
+            // Verificar si hay opciones con inscripciones
+            $opcionesConInscripciones = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)
+                ->whereHas('inscripciones')
+                ->with(['area', 'nivel_categoria'])
+                ->get();
+                
+            if ($opcionesConInscripciones->count() > 0) {
+                $areasConProblemas = [];
+                $nivelesConProblemas = [];
+                
+                foreach ($opcionesConInscripciones as $opcion) {
+                    $areasConProblemas[] = $opcion->area->nombre;
+                    $nivelesConProblemas[] = $opcion->nivel_categoria->nombre;
+                }
+                
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'No se pueden eliminar opciones de inscripción que ya tienen postulantes registrados.',
+                    'areas_con_postulantes' => array_unique($areasConProblemas),
+                    'niveles_con_postulantes' => array_unique($nivelesConProblemas),
+                ], 400);
+            }
+            
             // Eliminar las configuraciones asociadas a la olimpiada
             $deleted = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)->delete();
 
@@ -202,4 +226,51 @@ class OpcionInscripcionController extends Controller
         }
     }
     
+    /**
+     * Verificar qué opciones de inscripción tienen postulantes o inscripciones asociadas.
+     *
+     * @param int $idOlimpiada
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function verificarOpcionesConPostulantes($idOlimpiada)
+    {
+        try {
+            // Obtener todas las opciones de inscripción de la olimpiada
+            $opciones = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)
+                ->with(['area', 'nivel_categoria', 'inscripciones'])
+                ->get();
+            
+            // Filtrar solo las opciones que tienen inscripciones asociadas
+            $opcionesConInscripciones = $opciones->filter(function($opcion) {
+                return $opcion->inscripciones->count() > 0;
+            });
+            
+            // Preparar respuesta con las áreas y niveles en uso
+            $resultado = [];
+            foreach ($opcionesConInscripciones as $opcion) {
+                $resultado[] = [
+                    'id' => $opcion->id,
+                    'id_area' => $opcion->id_area,
+                    'area_nombre' => $opcion->area->nombre,
+                    'id_nivel_categoria' => $opcion->id_nivel_categoria,
+                    'nivel_categoria_nombre' => $opcion->nivel_categoria->nombre,
+                    'num_inscripciones' => $opcion->inscripciones->count()
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $resultado,
+                'message' => count($resultado) > 0 
+                    ? 'Hay opciones de inscripción con postulantes registrados' 
+                    : 'No hay opciones de inscripción con postulantes registrados'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al verificar opciones con postulantes: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

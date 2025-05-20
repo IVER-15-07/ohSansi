@@ -79,6 +79,7 @@ Route::post('/opciones_inscripcion', [OpcionInscripcionController::class, 'almac
 Route::get('/opciones_inscripcion/{idOlimpiada}/areas', [OpcionInscripcionController::class, 'obtenerAreasPorOlimpiada']);
 Route::get('/opciones_inscripcion/{idOlimpiada}/mapa', [OpcionInscripcionController::class, 'obtenerMapaOlimpiada']);
 Route::delete('/opciones_inscripcion/{idOlimpiada}', [OpcionInscripcionController::class, 'eliminarOpcionesIncripcionPorOlimpiada']);
+Route::get('/opciones_inscripcion/{idOlimpiada}/con-postulantes', [OpcionInscripcionController::class, 'verificarOpcionesConPostulantes']);
 
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE OLIMPIADAS
 Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);

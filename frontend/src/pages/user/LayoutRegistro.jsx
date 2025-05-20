@@ -21,7 +21,7 @@ const LayoutRegistro = () => {
     { id: 1, label: 'Registro de postulante', icon: <UserPlus className="w-4 h-4" /> },
     { id: 2, label: 'Registro de lista de postulantes', icon: <ListChecks className="w-4 h-4" /> },
     { id: 3, label: 'Generar comprobante de pago', icon: <FileText className="w-4 h-4" /> },
-    { id: 4, label: 'Verificar comprobante de pago', icon: <FileCheck2 className="w-4 h-4" /> },
+    { id: 4, label: 'Verificar comprobante de pago', icon: <FileCheck2 className="w-4 h-4" /> }
   ];
 
   return (
