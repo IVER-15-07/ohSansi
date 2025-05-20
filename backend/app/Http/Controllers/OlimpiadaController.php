@@ -112,10 +112,10 @@ class OlimpiadaController extends Controller
             // Crear la olimpiada de forma controlada
             $olimpiada = Olimpiada::create([
                 'nombre' => $validated['nombre'],
-                'convocatoria' => $validated['convocatoria'] ? $request->file('convocatoria')->store('convocatorias') : null, // Guardar el archivo de convocatoria
-                'descripcion' => $validated['descripcion'],
-                'costo' => $validated['costo'],
-                'max_areas' => $validated['max_areas'],
+                'convocatoria' => isset($validated['convocatoria']) && $request->hasFile('convocatoria') ? $request->file('convocatoria')->store('convocatorias') : null, // Guardar el archivo de convocatoria si existe
+                'descripcion' => $validated['descripcion'] ?? null,
+                'costo' => $validated['costo'] ?? null,
+                'max_areas' => $validated['max_areas'] ?? null,
                 'fecha_inicio' => $validated['fecha_inicio'],
                 'fecha_fin' => $validated['fecha_fin'],
                 'inicio_inscripcion' => $validated['inicio_inscripcion'],

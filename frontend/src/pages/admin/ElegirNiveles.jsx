@@ -1,8 +1,8 @@
 import React from 'react'
 import { useState } from 'react';
-import { CheckCheck,X} from 'lucide-react';
+import { CheckCheck, X, Info } from 'lucide-react';
 
-const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorArea }) => {
+const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorArea, nivelesConPostulantesPorArea = {} }) => {
     console.log("Eligiendo Niveles", areas, nivelesCatalogo, nivelesPorArea);
     const [areaActiva, setAreaActiva] = useState(areas[0]?.id || null);
 
@@ -16,6 +16,7 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
     };
 
     const handleQuitar = (nivel) => {
+        // Eliminar el nivel sin importar si tiene postulantes
         setNivelesPorArea({
             ...nivelesPorArea,
             [areaActiva]: nivelesPorArea[areaActiva]?.filter(n => n.id !== nivel.id),
@@ -76,24 +77,29 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
                             <h3 className="font-semibold text-gray-700 text-lg mb-2">Niveles de {area.nombre}</h3>
                             <div className="overflow-y-auto max-h-[320px] px-1 sm:px-2 md:px-1">
                                 <ul className="flex flex-col gap-2">
-                                    {(nivelesPorArea[areaActiva] || []).map((nivel) => (
-                                        <li
-                                            key={nivel.id}
-                                            className={`flex justify-between items-center gap-4 p-4 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01]
-                                                ${nivel.id % 2 === 0 ? 'bg-gradient-to-r from-blue-50 to-blue-100' : 'bg-gradient-to-r from-red-50 to-red-100'}`}
-                                        >
-                                            <span className="text-blue-900 font-medium">{nivel.nombre}</span>
-                                            Grados: {obtenerGradosAsociados(nivel.grados).join(', ')}
-                                            <button
-                                                onClick={() => handleQuitar(nivel)}
-                                                className="flex items-center gap-1 text-red-600 hover:text-red-800 text-sm font-medium"
+                                    {(nivelesPorArea[areaActiva] || []).map((nivel) => {
+                                        return (
+                                            <li
+                                                key={nivel.id}
+                                                className={`flex justify-between items-center gap-4 p-4 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01]
+                                                    ${nivel.id % 2 === 0 ? 'bg-gradient-to-r from-blue-50 to-blue-100' : 'bg-gradient-to-r from-red-50 to-red-100'}`}
                                             >
-                                                
-                                                <X size={18} />
-                                                Quitar
-                                            </button>
-                                        </li>
-                                    ))}
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-blue-900 font-medium">{nivel.nombre}</span>
+                                                    </div>
+                                                    <div className="text-sm text-gray-600 mt-1">Grados: {obtenerGradosAsociados(nivel.grados).join(', ')}</div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleQuitar(nivel)}
+                                                    className="flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-800"
+                                                >
+                                                    <X size={18} />
+                                                    Quitar
+                                                </button>
+                                            </li>
+                                        );
+                                    })}
                                 </ul>
                             </div>
                         </div>
