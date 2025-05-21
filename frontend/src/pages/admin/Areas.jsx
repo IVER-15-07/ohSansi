@@ -44,11 +44,6 @@ const Areas = () => {
     const area_input = Array.from(value);
     let error = '';
 
-    // Validar longitud (error si >= 50)
-    if (area_input.length >= 50) {
-      error = 'El nombre del área no puede exceder los 50 caracteres.';
-    }
-
     // Validar caracteres permitidos
     const upperCaseValue = value.toUpperCase();
     if (value && !contieneSoloPermitidos(upperCaseValue)) {
@@ -148,7 +143,10 @@ const Areas = () => {
               }}
             />
             {errorMessage && <p className="text-red-600 text-sm mt-1">{errorMessage}</p>}
-            <p className={`text-sm mt-1 ${Array.from(newArea).length >= 49 ? 'text-orange-600 font-bold' : 'text-gray-500'}`}>{Array.from(newArea).length}/50 caracteres</p>
+            <p className={`text-sm mt-1 ${Array.from(newArea).length >= 40 ? 'text-yellow-600 font-bold' : 'text-gray-500'}`}>{Array.from(newArea).length}/50 caracteres</p>
+            {Array.from(newArea).length === 50 && (
+              <p className="text-orange-600 text-xs mt-1">El nombre del área no puede exceder los 50 caracteres.</p>
+            )}
           </div>
 
           <div className="flex justify-center">
