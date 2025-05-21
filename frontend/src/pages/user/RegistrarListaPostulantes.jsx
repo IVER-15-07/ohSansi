@@ -231,17 +231,28 @@ const RegistrarListaPostulantes = () => {
                     ))}
                   </tr>
                 </thead>
-                <tbody>
-                  {data.map((row, rowIndex) => (
-                    <tr key={rowIndex} className="hover:bg-gray-50 even:bg-gray-50">
-                      <td className="px-4 py-2 border font-bold text-blue-700 text-center">{rowIndex + 2}</td>
-                      {row.map((cell, colIndex) => (
-                        <td key={colIndex} className="px-4 py-2 border">
-                          {cell}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  <tbody>
+                    {data.map((row, rowIndex) => (
+                      <tr key={rowIndex} className="hover:bg-gray-50 even:bg-gray-50">
+                        <td className="px-4 py-2 border font-bold text-blue-700 text-center">{rowIndex + 2}</td>
+                        {row.map((cell, colIndex) => {
+                          const header = headers[colIndex]?.toLowerCase();
+                          let displayValue = cell;
+
+                          if (header === "fecha_nacimiento" && cell !== "" && !isNaN(cell)) {
+                            const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                            const date = new Date(excelEpoch.getTime() + (Number(cell) * 86400000));
+                            displayValue = date.toISOString().slice(0, 10);
+                          }
+
+                          return (
+                            <td key={colIndex} className="px-4 py-2 border">
+                              {displayValue}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
