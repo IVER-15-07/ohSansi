@@ -161,7 +161,7 @@ const OrdenesDePago = () => {
     <div className="p-4 max-w-6xl mx-auto">
   {cargando ? (
     <div className="text-center text-blue-900 font-medium text-lg">
-      <h2>Cargando...</h2>
+      <h2>Buscando ordenes de pago...</h2>
     </div>
   ) : (
     <>

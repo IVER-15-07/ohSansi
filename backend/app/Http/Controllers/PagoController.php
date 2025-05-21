@@ -290,7 +290,7 @@ class PagoController extends Controller
             if (!$encargado) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Encargado no encontrado.',
+                    'message' => 'No se encontró una orden de pago asociada al encargado.',
                 ], 404);
             }
 
@@ -303,7 +303,7 @@ class PagoController extends Controller
             if (!$pago) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No se encontró un pago que coincida con los criterios proporcionados.',
+                    'message' => 'No se encontró un pago que coincida con el monto proporcionado.',
                 ], 404);
             }
 
