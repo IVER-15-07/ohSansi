@@ -24,6 +24,10 @@ const MenuOlimpiada = () => {
         detallesOlimpiada();
     }, [idOlimpiada]);
 
+    const handleVolver = () => {
+        navigate("/");
+    };
+
 
     const handleInscripcion = () => {
         navigate(`/identificarEncargado`, { state: { idOlimpiada } });
@@ -39,7 +43,7 @@ const MenuOlimpiada = () => {
         <div className="pt-24 container mx-auto max-w-2xl bg-white rounded-lg shadow-md p-8">
             <div className="mb-4">
                 <button
-                    onClick={() => navigate(-1)}
+                    onClick={handleVolver}
                     className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-blue-900 font-semibold"
                 >
                     ← Volver atrás

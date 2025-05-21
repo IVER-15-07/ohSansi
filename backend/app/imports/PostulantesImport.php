@@ -304,14 +304,37 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
     }
 
 
+    private function obtenerRolesEnExcel($fila)
+    {
+        $rolesEnExcel = [];
+        foreach (array_keys($fila) as $campo) {
+            if (preg_match('/^ci([a-z]+)/i', $campo, $matches)) {
+                $rol = $this->limpiarTexto($matches[1]);
+                $rolesEnExcel[$rol] = true;
+            }
+        }
+        return array_keys($rolesEnExcel);
+    }
+
+
 
 
     private function procesarTutores($fila, $idRegistro)
     {
         Log::info("Entrando a procesarTutores para registro: $idRegistro");
         $tutoresPorRol = [];
-        $rolesNormalizados = $this->roles;
-        Log::info("Roles normalizados: " . json_encode($rolesNormalizados));
+
+        // Solo los roles presentes en el Excel
+        $rolesEnExcel = $this->obtenerRolesEnExcel($fila);
+        $rolesNormalizados = collect($this->roles)
+            ->only($rolesEnExcel);
+
+        Log::info("Roles detectados en Excel: " . json_encode($rolesNormalizados));
+
+
+
+
+
 
         $erroresTutores = [];
 
@@ -530,6 +553,28 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             throw new \Exception(implode(' | ', $errores));
         }
 
+        // --- VALIDACIÓN DE DUPLICADOS ---
+        // Buscar registro existente para este postulante, olimpiada y grado
+        $registroExistente = Registro::where('id_postulante', $idPostulante)
+            ->where('id_olimpiada', $this->idOlimpiada)
+            ->where('id_grado', $idGrado)
+            ->first();
+
+        if ($registroExistente) {
+            // Buscar inscripción existente para este registro, área y categoría
+            $inscripcionExistente = Inscripcion::where('id_registro', $registroExistente->id)
+                ->whereHas('opcionInscripcion', function ($q) use ($idArea, $idCategoria) {
+                    $q->where('id_area', $idArea)
+                        ->where('id_nivel_categoria', $idCategoria);
+                })
+                ->first();
+
+            if ($inscripcionExistente) {
+                throw new \Exception("Registro duplicado: El postulante '{$fila['nombres']} {$fila['apellidos']}' con CI '{$fila['ci']}' ya está inscrito en el área '{$fila['area']}' y categoría '{$fila['nivel_categoria']}'. Este registro fue omitido.");
+            }
+        }
+
+        // Crear o buscar el registro
         $registro = Registro::firstOrCreate([
             'id_postulante' => $idPostulante,
             'id_olimpiada' => $this->idOlimpiada,
