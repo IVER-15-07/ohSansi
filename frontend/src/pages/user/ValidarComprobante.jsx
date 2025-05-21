@@ -106,18 +106,23 @@ const ValidarComprobante = () => {
   };
 
   const buscarPagoAsociado = async () => {
-    try {
-      const data = { id: parseInt(idOrden), nombre_completo: nombreCompleto, monto: parseFloat(monto) };
-      console.log("Datos enviados al backend:", data); // Depuración
-      const response = await obtenerPagoAsociado(data);
-      setPagoAsociado(response.data);
-      setMensajeError("");
-    } catch (error) {
-      console.error("Error al buscar el pago asociado:", error);
-      setPagoAsociado(null);
-      setMensajeError("Comprobante de pago ya validado.");
+  try {
+    const data = { id: parseInt(idOrden), nombre_completo: nombreCompleto, monto: parseFloat(monto) };
+    console.log("Datos enviados al backend:", data); // Depuración
+    const response = await obtenerPagoAsociado(data);
+    setPagoAsociado(response.data);
+    setMensajeError("");
+  } catch (error) {
+    console.error("Error al buscar el pago asociado:", error);
+    setPagoAsociado(null);
+    // Mostrar el mensaje del backend si existe
+    if (error.response && error.response.data && error.response.data.message) {
+      setMensajeError(error.response.data.message);
+    } else {
+      setMensajeError("Ocurrió un error al buscar el pago asociado.");
     }
-  };
+  }
+};
 
   const verificarComprobante = async () => {
     try {
@@ -165,20 +170,10 @@ const ValidarComprobante = () => {
             <FileText className="w-5 h-5 text-blue-600" />
             Datos extraídos del comprobante:
           </h3>
-          <p><strong>ID Orden:</strong> {idOrden || "No disponible"}</p>
-          <p><strong>Nombre del Encargado:</strong> {nombreCompleto || "No disponible"}</p>
-          <p><strong>Monto:</strong> {monto || "No disponible"} Bs</p>
+          <p><strong>ID Orden:</strong> {idOrden || "No fue posible extraer el dato"}</p>
+          <p><strong>Nombre del Encargado:</strong> {nombreCompleto || "No fue posible extraer el dato"}</p>
+          <p><strong>Monto:</strong> {monto || "No fue posible extraer el dato"} </p>
         </div>
-
-        {idOrden && nombreCompleto && monto && (
-          <button
-            onClick={buscarPagoAsociado}
-            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center gap-2"
-          >
-            <Search className="w-4 h-4" />
-            Buscar Pago Asociado
-          </button>
-        )}
 
         {pagoAsociado ? (
           <div className="mt-5 space-y-1 text-gray-700">
