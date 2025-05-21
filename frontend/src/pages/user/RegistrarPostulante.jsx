@@ -275,13 +275,74 @@ const RegistrarPostulante = () => {
   };
 
   {/**ESTA PARTE SE ENCARGA DE LOS TUTORES**/}
-  const agregarTutor = () => {
+  const agregarTutor = async () => {
     const existeTutorSinCI = tutores.some(tutor => !tutor.ci.trim());
   
     // Si hay algún tutor con CI vacío, mostrar alerta y no permitir agregar más
     if (existeTutorSinCI) {
       alert("No puedes agregar otro tutor hasta completar el CI de los tutores existentes");
       return;
+    }
+    if(tutores.length >= 1) {
+      const ultimoTutor = tutores[tutores.length - 1];
+      if(!ultimoTutor.idTutor) {
+        if(ultimoTutor.ci.trim() === "") {
+          alert("El CI del tutor es obligatorio. Completa el campo antes de agregar otro tutor.");
+          return;
+        }
+        if(ultimoTutor.nombres.trim() === "") {
+          alert("El nombre del tutor es obligatorio. Completa el campo antes de agregar otro tutor.");
+          return;
+        }
+        if(ultimoTutor.apellidos.trim() === "") {
+          alert("El apellido del tutor es obligatorio. Completa el campo antes de agregar otro tutor.");
+          return;
+        }
+
+        if(!ultimoTutor.idRol) {
+          alert("La relación del tutor es obligatoria. Completa el campo antes de agregar otro tutor.");
+          return;
+        }
+
+        for (const campo of ultimoTutor.datos) {
+          if (campo.esObligatorio && !campo.valor.trim()) {
+            alert(`El campo "${campo.nombre_campo}" del tutor es obligatorio. Completa el campo antes de agregar otro tutor.`);
+            return;
+          }
+        }
+        try {
+          setIsLoading(true);
+          const nuevoTutor = {
+            ci: ultimoTutor.ci,
+            nombres: ultimoTutor.nombres,
+            apellidos: ultimoTutor.apellidos,
+          }
+          const tutorCreado = (await createTutor(nuevoTutor)).data;
+          ultimoTutor.idTutor = tutorCreado.id;
+          
+          const datosTutorGuardados = {
+            id_tutor: ultimoTutor.idTutor,
+            datos: ultimoTutor.datos
+          }
+          await saveDatosTutor(datosTutorGuardados);
+          setTutores(prevTutores => {
+            const nuevosTutores = [...prevTutores];
+            nuevosTutores[nuevosTutores.length - 1] = {
+              ...nuevosTutores[nuevosTutores.length - 1],
+              idTutor: tutorCreado.id,
+              buscado: true,
+            };
+            return nuevosTutores;
+          });
+        } catch (error) {
+          console.error(error);
+          alert("Error al guardar el tutor previo: " + error.message);
+          setIsLoading(false);
+          return;
+        } finally {
+          setIsLoading(false);
+        }
+      }
     }
     setTutores([...tutores, { idRegistroTutor: null, idTutor: null, ci: '', nombres: '', apellidos: '', idRol: '', buscado: false, datos: []}]);
   }
@@ -436,9 +497,50 @@ const RegistrarPostulante = () => {
   };
 
   const validarDatos = () => {
+    // Validar campos básicos del postulante
+    if (!postulante.ci.trim()) return "El Carnet de Identidad es obligatorio.";
+    if (!postulante.nombres.trim()) return "El nombre es obligatorio.";
+    if (!postulante.apellidos.trim()) return "El apellido es obligatorio.";
+    if (!postulante.fecha_nacimiento.trim()) return "La fecha de nacimiento es obligatoria.";
+    // Validar formato dd/mm/aaaa o aaaa-mm-dd
+    const esFechaValida =
+      /^\d{2}\/\d{2}\/\d{4}$/.test(postulante.fecha_nacimiento) ||
+      /^\d{4}-\d{2}-\d{2}$/.test(postulante.fecha_nacimiento);
+    if (!esFechaValida) return "La fecha de nacimiento debe tener el formato dd/mm/aaaa.";
+    if (!postulante.grado?.id) return "El grado es obligatorio.";
+    // Validar campos dinámicos obligatorios del postulante
+    for (const campo of postulante.datos) {
+      if (campo.esObligatorio && !campo.valor.trim()) {
+        return `El campo "${campo.nombre_campo}" es obligatorio.`;
+      }
+    }
+    // Validar al menos un tutor (si aplica)
+    if (tutores.length === 0) return "Debe registrar al menos un tutor.";
+    for (const [i, tutor] of tutores.entries()) {
+      if (!tutor.ci.trim()) return `El CI del tutor #${i + 1} es obligatorio.`;
+      if (!tutor.nombres.trim()) return `El nombre del tutor #${i + 1} es obligatorio.`;
+      if (!tutor.apellidos.trim()) return `El apellido del tutor #${i + 1} es obligatorio.`;
+      if (!tutor.idRol) return `La relación del tutor #${i + 1} es obligatoria.`;
+      for (const campo of tutor.datos) {
+        if (campo.esObligatorio && !campo.valor.trim()) {
+          return `El campo "${campo.nombre_campo}" del tutor #${i + 1} es obligatorio.`;
+        }
+      }
+    }
+    // Validar al menos un área de inscripción
+    if (opcionesSeleccionadas.length === 0) return "Debe seleccionar al menos un área de inscripción.";
+    for (const [i, opcion] of opcionesSeleccionadas.entries()) {
+      if (!opcion.idOpcionInscripcion) return `Debe seleccionar un área y categoría en la opción #${i + 1}.`;
+    }
+    return null; // Todo OK
   };
   
   const enviarDatos = async () => {
+    const errorValidandoDatos = validarDatos();
+    if (errorValidandoDatos) {
+      alert(errorValidandoDatos);
+      return;
+    }
     setIsLoading(true);
     try {
       const postulanteGuardado = {...postulante};
@@ -540,7 +642,7 @@ const RegistrarPostulante = () => {
       <div className="flex flex-col md:flex-row gap-4 items-center">
 
         <div>
-          <label className="text-sm font-medium text-gray-700">Carnet de Identidad</label>
+          <label className="text-sm font-medium text-gray-700">Carnet de Identidad <span className="text-red-500">*</span> </label>
           <input type="text" disabled={postulante.idPostulante} value={postulante.ci} onChange={(e) => handlePostulanteChange("ci", e.target.value)} 
           className={`w-full px-3 py-2 border rounded-md
             ${postulante.idPostulante ? "bg-gray-200" : "bg-white"}
@@ -560,7 +662,7 @@ const RegistrarPostulante = () => {
         {postulante.buscado && (
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div>
-              <label className="text-sm font-medium text-gray-700">Nombres</label>
+              <label className="text-sm font-medium text-gray-700">Nombre(s) <span className="text-red-500">*</span> </label>
               <input type="text" disabled={postulante.idPostulante} value={postulante.nombres} onChange={(e) => handlePostulanteChange("nombres", e.target.value)} 
               className={`w-full px-3 py-2 border rounded-md
                 ${postulante.idPostulante ? "bg-gray-200" : "bg-white"}
@@ -569,7 +671,7 @@ const RegistrarPostulante = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">Apellidos</label>
+              <label className="text-sm font-medium text-gray-700">Apellido(s)   <span className="text-red-500">*</span> </label>
               <input type="text" disabled={postulante.idPostulante} value={postulante.apellidos} onChange={(e) => handlePostulanteChange("apellidos", e.target.value)} 
               className={`w-full px-3 py-2 border rounded-md 
                 ${postulante.idPostulante ? "bg-gray-200" : "bg-white"}
@@ -578,7 +680,7 @@ const RegistrarPostulante = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+              <label className="text-sm font-medium text-gray-700">Fecha de Nacimiento <span className="text-red-500">*</span> </label>
               <input
                 type="text"
                 placeholder="dd/mm/aaaa"
@@ -603,7 +705,7 @@ const RegistrarPostulante = () => {
             </div>
             
             <div>
-              <label className="text-sm font-medium text-gray-700">Grado</label>
+              <label className="text-sm font-medium text-gray-700">Grado <span className="text-red-500">*</span> </label>
               <div>
                 <select 
                   value={postulante.grado?.id || ""} 
@@ -637,35 +739,35 @@ const RegistrarPostulante = () => {
                 case "text":
                   return (
                     <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo}</label>
+                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
                       <input type="text" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                     </div>
                   );
                 case "number":
                   return (
                     <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo}</label>
+                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
                       <input type="number" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                     </div>
                   );
                 case "date":
                   return (
                     <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo}</label>
+                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
                       <input type="date" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                     </div>
                   );
                 case "tel":
                   return (
                     <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo}</label>
+                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
                       <input type="tel" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                     </div>
                   );
                 case "email":
                   return (
                     <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo}</label>
+                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
                       <input type="email" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                     </div>
                   );
@@ -682,11 +784,16 @@ const RegistrarPostulante = () => {
             {tutores.map((tutor, index) => (
               <div key={index} className="flex flex-col md:flex-row gap-4 items-center">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Carnet de Identidad</label>
-                  <input type="text" disabled={tutor.encontrado} value={tutor.ci} onChange={(e) => handleTutorChange(index, "ci", e.target.value)} className="w-full px-3 py-2 border rounded-md" />
+                  <label className="text-sm font-medium text-gray-700" >Carnet de Identidad <span className="text-red-500">*</span> </label>
+                  <input 
+                    type="text" 
+                    disabled={tutor.idTutor} 
+                    value={tutor.ci} onChange={(e) => handleTutorChange(index, "ci", e.target.value)} 
+                    className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idTutor ? "bg-gray-200" : "bg-white"}`}
+                  />
                 </div>
     
-                <button type="button" onClick={() => buscarTutor(index)} className="p-2 bg-blue-500 text-white rounded-md">
+                <button type="button" onClick={() => buscarTutor(index)} disabled={tutor.idTutor} className="p-2 bg-blue-500 text-white rounded-md">
                   <Search size={16} />
                 </button>
     
@@ -697,47 +804,58 @@ const RegistrarPostulante = () => {
                 {tutor.buscado && (
                   <div className="w-full mt-3">
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Nombre</label>
-                      <input type="text" disabled={tutor.idTutor} value={tutor.nombres} onChange={(e) => handleTutorChange(index, "nombres", e.target.value)} className="w-full px-3 py-2 border rounded-md"/>
+                      <label className="text-sm font-medium text-gray-700">Nombre(s) <span className="text-red-500">*</span></label>
+                      <input 
+                        type="text" 
+                        disabled={tutor.idTutor} 
+                        value={tutor.nombres} 
+                        onChange={(e) => handleTutorChange(index, "nombres", e.target.value)} 
+                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idTutor ? "bg-gray-200" : "bg-white"}`}
+                      />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Apellidos</label>
-                      <input type="text" disabled={tutor.idTutor} value={tutor.apellidos} onChange={(e) => handleTutorChange(index, "apellidos", e.target.value)} className="w-full px-3 py-2 border rounded-md"  />
+                      <label className="text-sm font-medium text-gray-700">Apellido(s) <span className="text-red-500">*</span></label>
+                      <input 
+                        type="text" 
+                        disabled={tutor.idTutor} 
+                        value={tutor.apellidos} onChange={(e) => handleTutorChange(index, "apellidos", e.target.value)} 
+                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idTutor ? "bg-gray-200" : "bg-white"}`}
+                      />
                     </div>
                     {tutor.datos.map((campo, idx) => {
                       switch (campo.tipo_campo) {
                         case "text":
                           return (
                             <div key={idx} className="mb-4">
-                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo}</label>
+                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
                               <input type="text" value={campo.valor} onChange={(e) => handleTutorChange(index, campo.nombre_campo, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                             </div>
                           );
                         case "number":
                           return (
                             <div key={idx} className="mb-4">
-                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo}</label>
+                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
                               <input type="number" value={campo.valor} onChange={(e) => handleTutorChange(index, campo.nombre_campo, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                             </div>
                           );
                         case "date":
                           return (
                             <div key={idx} className="mb-4">
-                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo}</label>
+                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
                               <input type="date" value={campo.valor} onChange={(e) => handleTutorChange(index, campo.nombre_campo, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                             </div>
                           );
                         case "tel":
                           return (
                             <div key={idx} className="mb-4">
-                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo}</label>
+                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
                               <input type="tel" value={campo.valor} onChange={(e) => handleTutorChange(index, campo.nombre_campo, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                             </div>
                           );
                         case "email":
                           return (
                             <div key={idx} className="mb-4">
-                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo}</label>
+                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
                               <input type="email" value={campo.valor} onChange={(e) => handleTutorChange(index, campo.nombre_campo, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                             </div>
                           );
@@ -746,9 +864,14 @@ const RegistrarPostulante = () => {
                       }
                     })}
                     <div >
-                      <label className="text-sm font-medium text-gray-700">Relación con el Postulante</label>
+                      <label className="text-sm font-medium text-gray-700">Relación con el Postulante <span className="text-red-500">*</span> </label>
                       <div>
-                        <select value={tutor.idRol} onChange={(e) => handleTutorChange(index, 'idRol', e.target.value)} className="flex-1 px-3 py-2 border rounded-md">
+                        <select 
+                          value={tutor.idRol} 
+                          onChange={(e) => handleTutorChange(index, 'idRol', e.target.value)} 
+                          className={`flex-1 px-3 py-2 border rounded-md ${tutor.idRegistroTutor ? "bg-gray-200" : "bg-white"}`}
+                          disabled={tutor.idRegistroTutor}
+                        >
                           <option value="">Seleccione un Rol</option>
                           {Object.entries(rolesTutor).map(([id, rolTutor]) => (
                             <option key={rolTutor.id} value={rolTutor.id}>{rolTutor.nombre}</option>
@@ -806,7 +929,7 @@ const RegistrarPostulante = () => {
               type="button" 
               onClick={agregarOpcionSeleccionda}
               className={`flex items-center gap-2 px-4 py-2 ${((typeof maxArea === 'number' && opcionesSeleccionadas.length >= maxArea) || opcionesSeleccionadas.length === opcionesInscripcion.reduce((acc, area) => acc + area.niveles_categorias.length, 0) || opcionesInscripcion.length === 0) ? "bg-gray-200" : "bg-blue-600 text-white rounded-md hover:bg-blue-700" } `}
-              disabled={(typeof maxArea === 'number' && opcionesSeleccionadas.length >= maxArea) || opcionesSeleccionadas.length === opcionesInscripcion.reduce((acc, area) => acc + area.niveles_categorias.length, 0) || opcionesInscripcion.length === 0}
+              
             >
               <Plus size={16} /> Agregar Área
             </button>

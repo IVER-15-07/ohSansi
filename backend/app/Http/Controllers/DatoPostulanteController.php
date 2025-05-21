@@ -21,6 +21,9 @@ class DatoPostulanteController extends Controller
 
         $datosGuardados = [];
         foreach ($datos as $dato) {
+            if(!isset($dato['idOlimpiadaCampoTutor']) || !isset($dato['valor'])) {
+                continue; // Skip if the required fields are not set
+            }
             $datoPostulante = DatoPostulante::updateOrCreate(
                 [
                     'id_postulante' => $idPostulante,
