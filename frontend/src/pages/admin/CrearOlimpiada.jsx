@@ -57,8 +57,9 @@ const CrearOlimpiada = () => {
   const normalizarTexto = (texto) =>
     texto && texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
+  const ERROR_NOMBRE_DUPLICADO = 'El nombre de la olimpiada ya existe. Por favor, elija otro nombre.';
+
   const validarCampo = (campo, valor, datosPersonalizados = null) => {
-    // Usar datos personalizados o el estado global
     const datos = datosPersonalizados || datosFormulario;
     const nuevosErrores = { ...errores };
     const hoy = new Date().toISOString().split("T")[0];
@@ -70,7 +71,13 @@ const CrearOlimpiada = () => {
         } else if (/[!"#$%&/{}[\]*]/.test(valor)) {
           nuevosErrores.nombre = 'El nombre no debe contener caracteres especiales como !"#$%&/{}[]*';
         } else {
-          delete nuevosErrores.nombre;
+            const nombreNormalizado = normalizarTexto(valor);
+            const existe = olimpiadas.some(o => normalizarTexto(o.nombre) === nombreNormalizado);
+          if (existe) {
+            nuevosErrores.nombre = ERROR_NOMBRE_DUPLICADO;
+          } else {
+            delete nuevosErrores.nombre;
+          }
         }
         break;
 
@@ -149,52 +156,6 @@ const CrearOlimpiada = () => {
       return;
     }
 
-    // Validación en tiempo real del nombre de la olimpiada
-    if (name === 'nombre') {
-      const nombreNormalizado = normalizarTexto(value);
-      const existe = olimpiadas.some(o => normalizarTexto(o.nombre) === nombreNormalizado);
-      setDatosFormulario(prev => ({ ...prev, nombre: value }));
-      setErrores(prev => {
-        const nuevos = { ...prev };
-        if (!value || value.trim() === '') {
-          nuevos.nombre = 'El nombre es obligatorio.';
-        } else if (/[!"#$%&/{}[\]*]/.test(value)) {
-          nuevos.nombre = 'El nombre no debe contener caracteres especiales como !"#$%&/{}[]*';
-        } else if (existe) {
-          nuevos.nombre = 'El nombre de la olimpiada ya existe. Por favor, elija otro nombre.';
-        } else {
-          delete nuevos.nombre;
-        }
-        return nuevos;
-      });
-      return;
-    }
-
-    // Para campos de tipo fecha, realizar validación inmediata
-    if (name === 'fechaInicio' || name === 'fechaFin' || name === 'inicioInscripcion' || name === 'finInscripcion') {
-      // Crear objeto con los datos actualizados
-      const datosActualizados = { ...datosFormulario, [name]: value };
-      
-      // Validar el campo actual
-      validarCampo(name, value, datosActualizados);
-      
-      // Si se cambia fechaInicio o fechaFin, revalidar fechas de inscripción
-      if (name === 'fechaInicio' || name === 'fechaFin') {
-        if (datosActualizados.inicioInscripcion) {
-          validarCampo('inicioInscripcion', datosActualizados.inicioInscripcion, datosActualizados);
-        }
-        
-        if (datosActualizados.finInscripcion) {
-          validarCampo('finInscripcion', datosActualizados.finInscripcion, datosActualizados);
-        }
-      }
-      
-      // Actualizar el estado después de validar
-      setDatosFormulario(datosActualizados);
-      return;
-    }
-    
-    // Para otros campos, usar el enfoque normal
     setDatosFormulario(prev => {
       const datosActualizados = { ...prev, [name]: value };
       validarCampo(name, value, datosActualizados);
