@@ -134,6 +134,8 @@ const CrearOlimpiada = () => {
           nuevosErrores.finInscripcion = 'La fecha de fin de inscripción no puede ser anterior a la fecha de inicio de la olimpiada.';
         } else if (datos.inicioInscripcion && valor < datos.inicioInscripcion) {
           nuevosErrores.finInscripcion = 'La fecha de fin de inscripción no puede ser anterior a la fecha de inicio de inscripción.';
+        } else if (datos.inicioInscripcion && valor <= datos.inicioInscripcion) {
+          nuevosErrores.finInscripcion = 'La fecha de fin de inscripción debe ser posterior a la fecha de inicio de inscripción.';
         } else {
           delete nuevosErrores.finInscripcion;
         }
