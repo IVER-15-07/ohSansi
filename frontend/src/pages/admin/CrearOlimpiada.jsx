@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import SubirArchivo from '../../components/SubirArchivo';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import Modal from '../../components/Modal';
 
 
 const CrearOlimpiada = () => {
@@ -14,6 +15,7 @@ const CrearOlimpiada = () => {
   const [olimpiadas, setOlimpiadas] = useState([]);
   const [agregando, setAgregando] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
 
   const [datosFormulario, setDatosFormulario] = useState({
     nombre: '',
@@ -227,7 +229,6 @@ const CrearOlimpiada = () => {
   const handleConfirmCrear = async () => {
     setShowConfirmModal(false);
     setAgregando(true);
-    
     try {
       // Crear FormData para enviar datos incluyendo el archivo
       const formData = new FormData();
@@ -276,8 +277,7 @@ const CrearOlimpiada = () => {
 
       await createOlimpiada(formData);
       clienteQuery.invalidateQueries(['olimpiadas']);
-      alert('Olimpiada creada exitosamente.');
-      redirigir('/AdminLayout/Olympiad');
+      setSuccessModalOpen(true); // Mostrar modal de éxito
     } catch (error) {
       console.error('Error al crear la olimpiada:', error);
       
@@ -417,6 +417,16 @@ const CrearOlimpiada = () => {
         isLoading={agregando}
         confirmButtonColor="blue"
       />
+      {/* Modal de éxito */}
+      {successModalOpen && (
+        <Modal
+          message="La olimpiada se ha registrado exitosamente."
+          onClose={() => {
+            setSuccessModalOpen(false);
+            redirigir('/AdminLayout/Olympiad');
+          }}
+        />
+      )}
     </div>
   );
 };
