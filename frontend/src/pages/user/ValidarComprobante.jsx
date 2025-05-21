@@ -138,7 +138,7 @@ const ValidarComprobante = () => {
    <div className="p-6">
   <SubirArchivo
     nombreArchivo="Subir Comprobante"
-    tipoArchivo="jpg, pdf"
+    tipoArchivo="jpg"
     handleArchivo={handleArchivo}
     inputRef={inputRef}
   />
