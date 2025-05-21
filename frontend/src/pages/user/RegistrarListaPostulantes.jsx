@@ -83,6 +83,7 @@ const RegistrarListaPostulantes = () => {
 
 
     reader.readAsBinaryString(file);
+    e.target.value = "";
   };
 
 
@@ -127,6 +128,21 @@ const RegistrarListaPostulantes = () => {
     }
     setEnviar(false);
   };
+
+  const limpiarLista = () => {
+    setHeaders([]);
+    setData([]);
+    setFileName("");
+    setArchivo(null);
+    setFile(null);
+    setError("");
+    setErroresPorCelda({});
+    localStorage.removeItem("postulantes_excel_headers");
+    localStorage.removeItem("postulantes_excel_data");
+    localStorage.removeItem("postulantes_excel_fileName");
+  };
+
+
   return (
     <div className="p-4 max-w-5xl mx-auto">
       <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-6">
@@ -155,9 +171,18 @@ const RegistrarListaPostulantes = () => {
           />
 
           {fileName && (
-            <p className="mt-1 text-green-700 flex items-center gap-2 text-sm">
-              <FileCheck2 className="w-5 h-5" /> {fileName}
-            </p>
+            <div className="flex items-center gap-3 mt-1">
+              <p className="text-green-700 flex items-center gap-2 text-sm">
+                <FileCheck2 className="w-5 h-5" /> {fileName}
+              </p>
+              <button
+                type="button"
+                onClick={limpiarLista}
+                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+              >
+                Borrar lista
+              </button>
+            </div>
           )}
 
 
@@ -206,17 +231,28 @@ const RegistrarListaPostulantes = () => {
                     ))}
                   </tr>
                 </thead>
-                <tbody>
-                  {data.map((row, rowIndex) => (
-                    <tr key={rowIndex} className="hover:bg-gray-50 even:bg-gray-50">
-                      <td className="px-4 py-2 border font-bold text-blue-700 text-center">{rowIndex + 2}</td>
-                      {row.map((cell, colIndex) => (
-                        <td key={colIndex} className="px-4 py-2 border">
-                          {cell}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  <tbody>
+                    {data.map((row, rowIndex) => (
+                      <tr key={rowIndex} className="hover:bg-gray-50 even:bg-gray-50">
+                        <td className="px-4 py-2 border font-bold text-blue-700 text-center">{rowIndex + 2}</td>
+                        {row.map((cell, colIndex) => {
+                          const header = headers[colIndex]?.toLowerCase();
+                          let displayValue = cell;
+
+                          if (header === "fecha_nacimiento" && cell !== "" && !isNaN(cell)) {
+                            const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                            const date = new Date(excelEpoch.getTime() + (Number(cell) * 86400000));
+                            displayValue = date.toISOString().slice(0, 10);
+                          }
+
+                          return (
+                            <td key={colIndex} className="px-4 py-2 border">
+                              {displayValue}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>

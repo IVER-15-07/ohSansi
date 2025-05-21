@@ -15,6 +15,7 @@ const IdentificarEncargado = () => {
   const [mostrarRegistroTutor, setMostrarRegistroTutor] = useState(false); // Estado para alternar contenido
   const navigate = useNavigate();
   const location = useLocation();
+
   const idOlimpiada = location.state?.idOlimpiada; // Recibir el idOlimpiada desde el state
 
 
@@ -28,7 +29,7 @@ const IdentificarEncargado = () => {
       const response = await verificarEncargado(ci);
       if (response.data.existe) {
         // Si el carnet ya está registrado, redirigir a seleccionar olimpiada
-        navigate(`/registros/${response.data.id}/${ idOlimpiada }`);
+        navigate(`/registros/${response.data.id}/${idOlimpiada}`);
 
         //navigate(`/RegistrosPostulantes/${idEncargado}/${olimpiada.id}`); 
       } else {
@@ -44,21 +45,25 @@ const IdentificarEncargado = () => {
     }
   };
 
+  const volverAmenuolimpiadas = () => {
+    navigate(`/olimpiadas/${idOlimpiada}`);
+  };
+
   const handleRegistro = () => {
- 
+
     setMostrarRegistroTutor(true);
   };
 
   const handleVolver = () => {
-    setMostrarRegistroTutor(false); 
+    setMostrarRegistroTutor(false);
   };
 
 
   return (
     <div className="pt-24 container mx-auto py-8 px-4">
       {mostrarRegistroTutor ? (
-      
-        <RegistroTutor handleVolver={handleVolver}/>
+
+        <RegistroTutor handleVolver={handleVolver} />
       ) : (
         // Mostrar el componente IdentificarEncargado
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
@@ -88,11 +93,10 @@ const IdentificarEncargado = () => {
             <button
               type="submit"
               disabled={isLoading || !ci}
-              className={`w-full px-4 py-2 rounded-md text-white ${
-                isLoading || !ci
+              className={`w-full px-4 py-2 rounded-md text-white ${isLoading || !ci
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-black hover:bg-gray-800"
-              }`}
+                }`}
             >
               {isLoading ? "Verificando..." : "Continuar"}
             </button>
@@ -103,6 +107,14 @@ const IdentificarEncargado = () => {
               className="w-full px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700"
             >
               Registrarse como encargado
+            </button>
+
+            <button
+              type="button"
+              onClick={volverAmenuolimpiadas} // Cambiar al componente RegistroTutor
+              className="w-full px-4 py-2 rounded-md text-white bg-blue-800 hover:bg-blue-700"
+            >
+              Cancelar
             </button>
           </form>
         </div>
