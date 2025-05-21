@@ -41,26 +41,22 @@ const Areas = () => {
   // Manejar cambio de texto en el input
   const handleInputChange = (e) => {
     const value = e.target.value;
-    
-    // Limitar a 50 caracteres reales (corregido code units)
     const area_input = Array.from(value);
-    if (area_input.length > 50) {
-      const valorSeguro = area_input.slice(0,50).join('');
-      setNewArea(valorSeguro.toUpperCase());
-      return;
+    let error = '';
+
+    // Validar longitud (error si >= 50)
+    if (area_input.length >= 50) {
+      error = 'El nombre del área no puede exceder los 50 caracteres.';
     }
-    
-    // Convertir a mayúsculas automáticamente, pero manteniendo las tildes
+
+    // Validar caracteres permitidos
     const upperCaseValue = value.toUpperCase();
-    
-    // Validar si contiene caracteres no permitidos
     if (value && !contieneSoloPermitidos(upperCaseValue)) {
-      setErrorMessage('El nombre del área solo puede contener letras, números y espacios.');
-    } else {
-      setErrorMessage('');
+      error = 'El nombre del área solo puede contener letras, números y espacios.';
     }
-    
-    setNewArea(upperCaseValue);
+
+    setErrorMessage(error);
+    setNewArea(area_input.slice(0, 50).join('').toUpperCase());
   };
 
   // Validar antes de mostrar el modal de confirmación
@@ -69,13 +65,6 @@ const Areas = () => {
       setErrorMessage('El campo de nombre del área es obligatorio.');
       return;
     }
-
-    if (Array.from(newArea).length > 50) {
-      setErrorMessage('El nombre del área no puede exceder los 50 caracteres.');
-      return;
-    }
-
-
     // Normalizar el nombre antes de comparar
     const normalizedNewArea = normalizeString(newArea.trim());
 
@@ -150,7 +139,7 @@ const Areas = () => {
             <input
               type="text"
               placeholder="INGRESE EL NOMBRE DEL ÁREA"
-              className="w-full p-2 border rounded-md text-gray-800 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full p-2 border rounded-md text-gray-800 bg-gray-100 focus:outline-none focus:ring-2 text-base ${errorMessage ? 'border-red-500 ring-red-300' : 'focus:ring-blue-500'}`}
               value={newArea}
               onChange={handleInputChange}
               maxLength={50}
@@ -159,25 +148,14 @@ const Areas = () => {
               }}
             />
             {errorMessage && <p className="text-red-600 text-sm mt-1">{errorMessage}</p>}
-            <p className="text-gray-500 text-sm mt-1">{Array.from(newArea).length}/50 caracteres</p>
+            <p className={`text-sm mt-1 ${Array.from(newArea).length >= 49 ? 'text-orange-600 font-bold' : 'text-gray-500'}`}>{Array.from(newArea).length}/50 caracteres</p>
           </div>
 
           <div className="flex justify-center">
             <button
-              onClick={() => {
-                if (newArea.trim() === '') {
-                  setErrorMessage('El campo de nombre del área es obligatorio.');
-                  return;
-                }
-                if (newArea.length > 50) {
-                  setErrorMessage('El nombre del área no puede exceder los 50 caracteres.');
-                  return;
-                }
-                
-                handleAddArea();
-                setIsModalOpen(false);
-              }}
+              onClick={handleShowModal}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              type="button"
             >
               Agregar Área
             </button>
