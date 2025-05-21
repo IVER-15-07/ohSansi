@@ -34,7 +34,7 @@ const IdentificarEncargado = () => {
       } else {
         setError("No se pudo verificar el carnet. Intente nuevamente.");
         // Si no está registrado, redirigir a registro tutor
-        //navigate("/RegistroEncargado", { state: { ci } });
+        navigate("/RegistroEncargado", { state: { ci } });
       }
     } catch (error) {
       console.error("Error al verificar el carnet:", error);

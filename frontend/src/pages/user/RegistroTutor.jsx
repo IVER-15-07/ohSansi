@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { AlertCircle, CheckCircle, X } from "lucide-react"
 import { createEncargado } from "../../../service/encargados.api"
 
-const RegistroTutor = ({ handleVolver }) => {
+const RegistroTutor = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const CIinicial = location.state?.ci || ""; // Obtener el CI inicial del estado de la ubicación
@@ -205,6 +205,9 @@ const RegistroTutor = ({ handleVolver }) => {
     }
   }
 
+  const handleVolver = () => {
+    navigate("/IdentificarEncargado");
+  }
 
 
   return (
