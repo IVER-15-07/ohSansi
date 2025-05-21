@@ -37,7 +37,7 @@ public function registrarListaPostulantes(Request $request)
             $request->file('excel')
         );
 
-        return response()->json(['message' => 'Importación completada con éxito'], 200);
+        return response()->json(['message' => 'Registros completados con éxito'], 200);
 
     } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
         // Errores de validación específicos de Maatwebsite Excel
