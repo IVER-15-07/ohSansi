@@ -30,15 +30,18 @@ const ConfOlimpiada = () => {
   const [areasConPostulantes, setAreasConPostulantes] = useState([]);
   const [nivelesConPostulantesPorArea, setNivelesConPostulantesPorArea] = useState({});
   const [modalError, setModalError] = useState("");
+  const [modalErrorNiveles, setModalErrorNiveles] = useState("");
 
   const { data: areasCatalogo, isLoading: isLoadingAreas, error: errorAreas } = useQuery({
     queryKey: ['areas'],
     queryFn: getAreas,
+    staleTime: 1000 * 60 * 10, //10 min
   });
 
   const { data: nivelesCatalogo, isLoading: isLoadingNiveles, error: errorNiveles } = useQuery({
     queryKey: ['niveles_categorias'],
     queryFn: getNivelesCategorias,
+    staleTime: 1000 * 60 * 5, //5 min
   });
 
   useEffect(() => {
@@ -66,9 +69,11 @@ const ConfOlimpiada = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const areasRes = await getAreasByOlimpiada(id);
-        const mapaRes = await getMapOfOlimpiada(id);
-        const opcionesConPostulantesRes = await getOpcionesConPostulantes(id);
+        const [areasRes, mapaRes, opcionesConPostulantesRes] = await Promise.all([
+        getAreasByOlimpiada(id),
+        getMapOfOlimpiada(id),
+        getOpcionesConPostulantes(id)
+      ]);
         
         setAreasSeleccionadas(areasRes.data || []);
         setNivelesPorArea(mapaRes.data || {});
@@ -101,6 +106,15 @@ const ConfOlimpiada = () => {
   }, [id]);
 
   const handleSaveClick = () => {
+    // Validar que cada área seleccionada tenga al menos un nivel asociado
+    const areasSinNiveles = areasSeleccionadas.filter(area => {
+      const niveles = nivelesPorArea[area.id];
+      return !niveles || niveles.length === 0;
+    });
+    if (areasSinNiveles.length > 0) {
+      setModalErrorNiveles("Cada área seleccionada debe tener al menos un nivel/categoría asociado antes de guardar la configuración.");
+      return;
+    }
     setShowConfirmModal(true);
   };
 
@@ -140,6 +154,11 @@ const ConfOlimpiada = () => {
   if (modalError) {
     return (
       <Modal message={modalError} onClose={() => navigate('/AdminLayout/Olympiad')} />
+    );
+  }
+  if (modalErrorNiveles) {
+    return (
+      <Modal message={modalErrorNiveles} onClose={() => setModalErrorNiveles("")} />
     );
   }
 
