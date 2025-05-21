@@ -170,9 +170,9 @@ const ValidarComprobante = () => {
             <FileText className="w-5 h-5 text-blue-600" />
             Datos extraídos del comprobante:
           </h3>
-          <p><strong>ID Orden:</strong> {idOrden || "No fue posible extraer el dato"}</p>
-          <p><strong>Nombre del Encargado:</strong> {nombreCompleto || "No fue posible extraer el dato"}</p>
-          <p><strong>Monto:</strong> {monto || "No fue posible extraer el dato"} </p>
+          <p><strong>ID Orden:</strong> {idOrden || "Sin datos"}</p>
+          <p><strong>Nombre del Encargado:</strong> {nombreCompleto || "Sin datos"}</p>
+          <p><strong>Monto:</strong> {monto || "Sin datos"} </p>
         </div>
 
         {pagoAsociado ? (
