@@ -15,11 +15,7 @@ class CrearTablaEncargado extends Migration
     {
         Schema::create('encargado', function (Blueprint $table) {
             $table->id();
-            $table->string('ci')->unique();
-            $table->string('nombre')->collation('texto_insensible');
-            $table->string('apellido')->collation('texto_insensible');
-            $table->date('fecha_nacimiento');
-            $table->string('telefono')->unique();
+            $table->foreignId('id_persona')->constrained('persona')->unique()->onDelete('cascade');
             $table->string('correo')->collation('texto_insensible')->unique();
         });
     }

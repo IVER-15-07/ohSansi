@@ -15,6 +15,7 @@ class Inscripcion extends Model
         'id_registro',
         'id_opcion_inscripcion',
         'id_pago',
+        'id_lista_inscripcion',
     ];
 
     public function registro()
@@ -30,5 +31,10 @@ class Inscripcion extends Model
     public function pago()
     {
         return $this->belongsTo(Pago::class, 'id_pago');
+    }
+
+    public function lista()
+    {
+        return $this->belongsTo(ListaInscripcion::class, 'id_lista_inscripcion');
     }
 }

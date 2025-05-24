@@ -34,8 +34,4 @@ class OlimpiadaCampoTutor extends Model
             ->where('id_tutor', $idTutor);
     }
 
-    public function opcionesCampoTutor()
-    {
-        return $this->hasMany(OpcionCampoTutor::class, 'id_olimpiada_campo_tutor');
-    }
 }

@@ -17,6 +17,8 @@ class CrearTablaCampoPostulante extends Migration
             $table->id();
             $table->string('nombre')->collation('texto_insensible')->unique();
 
+            $table->foreignId('id_dependencia')->nullable()->constrained('campo_postulante')->onDelete('cascade');
+            
             $table->foreignId('id_tipo_campo')->constrained('tipo_campo')->onDelete('cascade');
         });
     }

@@ -15,9 +15,7 @@ class CrearTablaTutor extends Migration
     {
         Schema::create('tutor', function (Blueprint $table) {
             $table->id();
-            $table->string('ci')->collation('texto_insensible')->unique();
-            $table->string('nombres')->collation('texto_insensible');
-            $table->string('apellidos')->collation('texto_insensible');
+            $table->foreignId('id_persona')->constrained('persona')->unique()->onDelete('cascade');
         });
     }
 

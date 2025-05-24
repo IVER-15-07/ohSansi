@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CrearTablaPostulante extends Migration
+class CrearTablaPersona extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,12 @@ class CrearTablaPostulante extends Migration
      */
     public function up()
     {
-        Schema::create('postulante', function (Blueprint $table) {
+        Schema::create('persona', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_persona')->constrained('persona')->unique()->onDelete('cascade');
+            $table->string('ci')->unique();
+            $table->string('nombres')->collation('texto_insensible');
+            $table->string('apellidos')->collation('texto_insensible');
+            $table->date('fecha_nacimiento');
         });
     }
 
@@ -26,6 +29,6 @@ class CrearTablaPostulante extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('postulante');
+        Schema::dropIfExists('persona');
     }
 }

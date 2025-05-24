@@ -33,10 +33,4 @@ class OlimpiadaCampoPostulante extends Model
         return $this->hasMany(DatoPostulante::class, 'id_olimpiada_campo_postulante')
             ->where('id_postulante', $idPostulante);
     }
-
-
-    public function opcionesCampoPostulante()
-    {
-        return $this->hasMany(OpcionCampoPostulante::class, 'id_olimpiada_campo_postulante');
-    }
 }

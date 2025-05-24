@@ -15,6 +15,7 @@ class CampoPostulante extends Model
     protected $fillable = [
         'nombre',
         'id_tipo_campo',
+        'id_dependencia'
     ];
 
     public function tipo_campo(){
@@ -24,5 +25,14 @@ class CampoPostulante extends Model
     public function olimpiadasCampoPostulante()
     {
         return $this->hasMany(OlimpiadaCampoPostulante::class, 'id_campo_postulante');
+    }
+
+    public function opcionesCampoPostulante()
+    {
+        return $this->hasMany(OpcionCampoPostulante::class, 'id_campo_postulante');
+    }
+
+    public function dependeDe(){
+        return $this->belongsTo(CampoPostulante::class, 'id_dependencia');
     }
 }

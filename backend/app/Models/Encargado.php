@@ -13,11 +13,7 @@ class Encargado extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'ci',
-        'nombre',
-        'apellido',
-        'fecha_nacimiento',
-        'telefono',	
+        'id_persona',
         'correo',
     ];
 
@@ -39,6 +35,11 @@ class Encargado extends Model
         $this->attributes['telefono'] = strtolower($value);
     }
 
+    public function persona()
+    {
+        return $this->belongsTo(Persona::class, 'id_persona');
+    }
+    
     public function registros()
     {
         return $this->hasMany(Registro::class, 'id_encargado');

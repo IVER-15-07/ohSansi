@@ -13,12 +13,13 @@ class OpcionCampoTutor extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'id_olimpiada_campo_tutor',
-        'nombre'
+        'id_campo_tutor',
+        'valor',
+        'valor_dependencia',
     ];
     
-    public function olimpiadaCampoTutor()
+    public function campoTutor()
     {
-        return $this->belongsTo(OlimpiadaCampoTutor::class, 'id_olimpiada_campo_tutor');
+        return $this->belongsTo(CampoTutor::class, 'id_campo_tutor');
     }
 }
