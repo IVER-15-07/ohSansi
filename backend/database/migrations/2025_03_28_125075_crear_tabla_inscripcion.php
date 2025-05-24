@@ -18,6 +18,7 @@ class CrearTablaInscripcion extends Migration
             $table->foreignId('id_registro')->constrained('registro')->onDelete('cascade'); 
             $table->foreignId('id_opcion_inscripcion')->constrained('opcion_inscripcion')->onDelete('cascade');
             $table->foreignId('id_pago')->nullable()->constrained('pago')->onDelete('cascade');
+            $table->foreignId('id_lista_inscripcion')->nullable()->constrained('lista_inscripcion')->onDelete('cascade');
 
             $table->unique(['id_registro', 'id_opcion_inscripcion'], 'unique_registro_opcion_inscripcion');
         });

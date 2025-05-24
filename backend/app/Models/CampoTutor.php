@@ -14,6 +14,7 @@ class CampoTutor extends Model
     protected $fillable = [
         'nombre',
         'id_tipo_campo',
+        'id_dependencia'
     ];
 
     public function tipo_campo(){
@@ -23,5 +24,14 @@ class CampoTutor extends Model
     public function olimpiadasCampoTutor()
     {
         return $this->hasMany(OlimpiadaCampoTutor::class, 'id_campo_tutor');
+    }
+
+    public function opcionesCampoTutor()
+    {
+        return $this->hasMany(OpcionCampoTutor::class, 'id_campo_tutor');
+    }
+
+    public function dependeDe(){
+        return $this->belongsTo(CampoTutor::class, 'id_dependencia');
     }
 }

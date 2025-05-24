@@ -13,12 +13,13 @@ class OpcionCampoPostulante extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'id_olimpiada_campo_postulante',
-        'nombre'
+        'id_campo_postulante',
+        'valor',
+        'valor_dependencia',
     ];
 
-    public function olimpiadaCampoPostulante()
+    public function campoPostulante()
     {
-        return $this->belongsTo(OlimpiadaCampoPostulante::class, 'id_olimpiada_campo_postulante');
+        return $this->belongsTo(CampoPostulante::class, 'id_campo_postulante');
     }
 }

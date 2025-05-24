@@ -13,19 +13,20 @@ class Postulante extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'ci',
-        'nombres',
-        'apellidos',
-        'fecha_nacimiento',
+        'id_persona',
     ];
     
-
     /**
      * Relación muchos a muchos con Registro a través de la tabla registro_tutor
      */
     public function registros()
     {
         return $this->hasMany(Registro::class, 'id_postulante');
+    }
+
+    public function persona()
+    {
+        return $this->belongsTo(Persona::class, 'id_persona');
     }
     
     public function datos(){

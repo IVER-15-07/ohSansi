@@ -13,9 +13,7 @@ class Tutor extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'ci',
-        'nombres',
-        'apellidos',
+        'id_persona',
     ];
     
 
@@ -27,6 +25,11 @@ class Tutor extends Model
         return $this->belongsToMany(Registro::class, 'registro_tutor', 'id_tutor', 'id_registro')
                     ->withPivot('id_rol_tutor') // Incluir el rol del tutor en la relación
                     ->using(RegistroTutor::class); // Usar el modelo RegistroTutor para la relación
+    }
+    
+    public function persona()
+    {
+        return $this->belongsTo(Persona::class, 'id_persona');
     }
     
     public function datos(){

@@ -15,10 +15,11 @@ class CrearTablaOpcionCampoTutor extends Migration
     {
         Schema::create('opcion_campo_tutor', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre')->collation('texto_insensible');
-            $table->foreignId('id_olimpiada_campo_tutor')->constrained('olimpiada_campo_tutor')->onDelete('cascade');
+            $table->string('valor')->collation('texto_insensible');
+            $table->string('valor_dependencia')->nullable()->collation('texto_insensible');
+            $table->foreignId('id_campo_tutor')->constrained('campo_tutor')->onDelete('cascade');
 
-            $table->unique(['id_olimpiada_campo_tutor', 'nombre'], 'unique_opcion_id_olimpiada_campo_tutor');
+            $table->unique(['id_campo_tutor', 'valor', 'valor_dependencia'], 'unique_id_olimpiada_campo_tutor');
         });
     }
 
