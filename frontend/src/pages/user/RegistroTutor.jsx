@@ -1,9 +1,10 @@
 
 
-import { useState } from "react"
+import { use, useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { AlertCircle, CheckCircle, X } from "lucide-react"
 import { createEncargado } from "../../../service/encargados.api"
+import { getPersonaByCI } from "../../../service/personas.api"
 
 const RegistroTutor = () => {
   const location = useLocation();
@@ -11,11 +12,11 @@ const RegistroTutor = () => {
   const CIinicial = location.state?.ci || ""; // Obtener el CI inicial del estado de la ubicación
   // Estado del formulario
   const [formData, setFormData] = useState({
+    idPersona: "",
     nombre: "",
     apellido: "",
     ci: CIinicial,
     fecha_nacimiento: "",
-    telefono: "",
     correo: "",
     termsAccepted: false,
   })
@@ -28,6 +29,34 @@ const RegistroTutor = () => {
   const [showSuccessAlert, setShowSuccessAlert] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
   const [isAdding, setIsAdding] = useState(false)
+
+  useEffect(() => {
+    // Obtener la persona por CI al cargar el componente
+    console.log("CI inicial:", CIinicial);
+    const fetchPersona = async () => {
+      try {
+        const persona = (await getPersonaByCI(formData.ci)).data;
+        console.log("Respuesta de getPersonaByCI:", persona);
+        if (persona) {
+          const [year, month, day] = persona.fecha_nacimiento.split("-");
+          persona.fecha_nacimiento = `${day}/${month}/${year}`;
+          setFormData((prevState) => ({
+            ...prevState,
+            idPersona: persona.id,
+            nombre: persona.nombres,
+            apellido: persona.apellidos,
+            fecha_nacimiento: persona.fecha_nacimiento,
+          }))
+        }
+      } catch (error) {
+        console.error("Error al obtener la persona por CI:", error)
+      }
+    }
+
+    if (formData.ci) {
+      fetchPersona()
+    }
+  }, [formData.ci]); 
 
   // Manejador de cambios en los inputs
   const handleChange = (e) => {
@@ -90,16 +119,6 @@ const RegistroTutor = () => {
         }
         break
 
-      case "telefono":
-        if (!value) {
-          newErrors.telefono = "El número de celular es obligatorio"
-        } else if (!/^[0-9]+$/.test(value)) {
-          newErrors.telefono = "El número de celular solo debe contener números"
-        } else {
-          delete newErrors.telefono
-        }
-        break
-
       case "fecha_nacimiento":
         if (!value) {
           newErrors.fecha_nacimiento = "La fecha de nacimiento es obligatoria"
@@ -143,7 +162,6 @@ const RegistroTutor = () => {
     if (!formData.apellido) newErrors.apellido = "El apellido(s) es obligatorio"
     if (!formData.ci) newErrors.ci = "El número de carnet es obligatorio"
     if (!formData.correo) newErrors.correo = "El correo electrónico es obligatorio"
-    if (!formData.telefono) newErrors.telefono = "El número de celular es obligatorio"
     if (!formData.fecha_nacimiento) newErrors.fecha_nacimiento = "La fecha de nacimiento es obligatoria"
     if (!formData.termsAccepted) newErrors.termsAccepted = "Debe aceptar los términos y condiciones"
 
@@ -164,11 +182,12 @@ const RegistroTutor = () => {
   // Manejador de confirmación
   const handleConfirm = async () => {
     setShowConfirmDialog(false)
-    const { termsAccepted, ...dataToSend } = formData // Quitamos el campo de terminos del formulario
+    const { termsAccepted, idPersona, ...dataToSend } = formData // Quitamos el campo de terminos del formulario
 
     // Convertir la fecha de nacimiento a un objeto Date
     const [day, month, year] = dataToSend.fecha_nacimiento.split("/");
     dataToSend.fecha_nacimiento = new Date(`${year}-${month}-${day}`); // Formato ISO (aaaa-mm-dd)
+    console.log("Datos a enviar:", dataToSend);
     setIsAdding(true)
     try {
       // Enviar el JSON sin el campo termsAccepted
@@ -189,7 +208,6 @@ const RegistroTutor = () => {
       // Ocultar mensaje de éxito después de 5 segundos
       setTimeout(() => {
         setShowSuccessAlert(false);
-        navigate(`/SeleccionarOlimpiada/${idEncargado}`);
       }, 5000);
     } catch (error) {
       // Manejo de errores
@@ -267,9 +285,11 @@ const RegistroTutor = () => {
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleChange}
+                  disabled={formData.idPersona}
                   placeholder="Ingrese su nombre(s)"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.nombre ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 
+                    ${errors.nombre ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"}
+                    ${formData.idPersona ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
                 {errors.nombre && <p className="mt-1 text-sm text-red-600">{errors.nombre}</p>}
               </div>
@@ -285,9 +305,11 @@ const RegistroTutor = () => {
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleChange}
+                  disabled={formData.idPersona}
                   placeholder="Ingrese su apellido(s)"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.apellido ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 
+                    ${errors.apellido ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"}
+                    ${formData.idPersona ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
                 {errors.apellido && <p className="mt-1 text-sm text-red-600">{errors.apellido}</p>}
               </div>
@@ -302,10 +324,12 @@ const RegistroTutor = () => {
                   id="ci"
                   name="ci"
                   value={formData.ci}
+                  disabled={true}
                   onChange={handleChange}
                   placeholder="Ingrese su número de carnet"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.idNumber ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 
+                    ${errors.idNumber ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"}
+                    ${formData.ci ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
                 {errors.ci && <p className="mt-1 text-sm text-red-600">{errors.ci}</p>}
               </div>
@@ -328,23 +352,7 @@ const RegistroTutor = () => {
                 {errors.correo && <p className="mt-1 text-sm text-red-600">{errors.correo}</p>}
               </div>
 
-              {/* Número de Celular */}
-              <div>
-                <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">
-                  Número de Celular *
-                </label>
-                <input
-                  type="text"
-                  id="telefono"
-                  name="telefono"
-                  value={formData.telefono}
-                  onChange={handleChange}
-                  placeholder="Ingrese su número de celular"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.telefono ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                    }`}
-                />
-                {errors.telefono && <p className="mt-1 text-sm text-red-600">{errors.telefono}</p>}
-              </div>
+              
 
               {/* Fecha de Nacimiento */}
               <div>
@@ -357,9 +365,11 @@ const RegistroTutor = () => {
                   name="fecha_nacimiento"
                   value={formData.fecha_nacimiento}
                   onChange={handleChange}
+                  disabled={formData.idPersona}
                   placeholder="dd/mm/aaaa"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.fecha_nacimiento ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                    }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 
+                    ${errors.fecha_nacimiento ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"}
+                    ${formData.idPersona ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
                 {errors.fecha_nacimiento && <p className="mt-1 text-sm text-red-600">{errors.fecha_nacimiento}</p>}
               </div>

@@ -79,9 +79,8 @@ class EncargadoController extends Controller
             $validated = $request->validate([
                 'nombre' => 'required|string|max:255',
                 'apellido' => 'required|string|max:255',
-                'ci' => 'required|string|max:255|unique:persona,ci',
+                'ci' => 'required|string|max:255',
                 'fecha_nacimiento' => 'required|date',
-                //'telefono' => 'required|string|max:255|unique:encargado,telefono',
                 'correo' => 'required|string|email|max:255|unique:encargado,correo',
             ]);
 

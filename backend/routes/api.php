@@ -21,9 +21,9 @@ use App\Http\Controllers\OlimpiadaCampoTutorController;
 
 use App\Http\Controllers\DatoTutorController;
 
-use App\Http\Controllers\EncargadoController;
+use App\Http\Controllers\PersonaController;
 
-use App\Http\Controllers\FormularioController;
+use App\Http\Controllers\EncargadoController;
 
 use App\Http\Controllers\InscripcionController;
 
@@ -68,6 +68,9 @@ Route::post('/niveles_categorias/{id}/grados', [NivelCategoriaController::class,
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE GRADOS
 Route::get('/grados', [GradoController::class, 'obtenerGrados']);
 
+// RUTAS PARA ADMINISTRAR EL CATÁLOGO DE PERSONAS 
+Route::get('/personas/ci/{ci}', [PersonaController::class, 'verificarPersona']);
+
 // RUTAS PARA OBTENER LOS REIGSTROS DE TUTORES
 Route::get('/registros_tutores/{idRegistro}', [RegistroTutorController::class, 'obtenerRegistrosTutoresPorRegistro']);
 Route::post('/registros_tutores', [RegistroTutorController::class, 'crearRegistroTutor']);
@@ -108,10 +111,6 @@ Route::get('/encargados/verificar/{ci}', [EncargadoController::class, 'verificar
 Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 Route::get('/encargados/{id}', [EncargadoController::class, 'obtenerEncargado']);
 
-
-Route::get('/formulario/{idOlimpiada}', [FormularioController::class, 'obtenerFormulario']);
-
-Route::post('/formulario/guardar-datos-inscripcion/{idRegistro}', [FormularioController::class, 'guardarDatosInscripcion']);
 
 
 // RUTAS PARA REGISTRO DE POSTULANTE A UNA OLIMPIADA
