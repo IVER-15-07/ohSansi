@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use App\Models\OlimpiadaCampoTutor;
+use App\Models\Persona;
 
 
 class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInserts
@@ -101,24 +102,15 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
     public function collection(Collection $rows)
     {
-        set_time_limit(300); // 5 minutos
+        set_time_limit(300);
         $errores = [];
 
         DB::transaction(function () use ($rows, &$errores) {
-            // Convertir los datos a UTF-8
-            $rows = $rows->map(function ($fila) {
-                return $fila->map(function ($valor) {
-                    return is_string($valor) ? mb_convert_encoding($valor, 'UTF-8', 'auto') : $valor;
-                });
-            });
+            $rows = $rows->map(fn($fila) => $fila->map(fn($valor) => is_string($valor) ? mb_convert_encoding($valor, 'UTF-8', 'auto') : $valor));
 
             foreach ($rows as $index => $row) {
                 try {
-                    // ... tu lógica de procesamiento ...
-                    $fila = array_map(function ($valor) {
-                        return is_numeric($valor) ? (string) $valor : $valor;
-                    }, $row->toArray());
-
+                    $fila = array_map(fn($valor) => is_numeric($valor) ? (string) $valor : $valor, $row->toArray());
                     Log::info("Procesando fila #$index:", $fila);
 
                     if (empty(array_filter($fila))) {
@@ -131,13 +123,11 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                     Log::info("Fila #$index procesada correctamente.");
                 } catch (\Exception $e) {
                     Log::error("Error en la fila #$index: " . $e->getMessage());
-                    // Guarda el error pero NO detiene el proceso
-                    $errores["Fila " . ($index + 2)] = $e->getMessage(); // +2 para reflejar la fila real en Excel
+                    $errores["Fila " . ($index + 2)] = $e->getMessage();
                 }
             }
         });
 
-        // Si hubo errores, lánzalos todos juntos
         if (!empty($errores)) {
             throw new \Exception(json_encode([
                 'message' => 'Errores encontrados en el archivo.',
@@ -186,15 +176,25 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             throw new \Exception(implode(' | ', $erroresFila));
         }
 
-        // Procesar postulante
+         // --- CREAR O BUSCAR PERSONA ---
         try {
-            $postulante = Postulante::firstOrCreate(
+            $persona = Persona::firstOrCreate(
                 ['ci' => $ci],
                 ['nombres' => $nombres, 'apellidos' => $apellidos, 'fecha_nacimiento' => $fechaNacimiento]
             );
         } catch (\Exception $e) {
+            $erroresFila[] = "Error al crear persona: " . $e->getMessage();
+        }
+
+
+       // --- CREAR O BUSCAR POSTULANTE ---
+        try {
+            $postulante = Postulante::firstOrCreate(['id_persona' => $persona->id]);
+        } catch (\Exception $e) {
             $erroresFila[] = "Error al crear postulante: " . $e->getMessage();
         }
+
+        
 
         // Insertar datos del postulante
         try {

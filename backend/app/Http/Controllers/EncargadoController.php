@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\Encargado;
 use \Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use App\Models\Persona;
 
 class EncargadoController extends Controller
 {
@@ -20,18 +21,15 @@ class EncargadoController extends Controller
     public function obtenerEncargados(Request $request)
     {
         try {
-            // Intenta obtener los encargados desde la caché
             $encargados = Cache::remember('encargados', 3600, function () {
-                return Encargado::all(); // Consulta a la base de datos si no está en caché
+                return Encargado::with('persona')->get();
             });
-            
-            // Retornar una respuesta exitosa
+
             return response()->json([
                 'success' => true,
                 'data' => $encargados,
             ], 200);
         } catch (\Exception $e) {
-            // Manejar errores y retornar una respuesta
             return response()->json([
                 'success' => false,
                 'status' => 'error',
@@ -43,21 +41,23 @@ class EncargadoController extends Controller
     public function verificarEncargado($ci)
     {
         try {
-            $encargado = Encargado::where('ci', $ci)->first();
-
-            if ($encargado) {
-                return response()->json([
-                    'success' => true,
-                    'existe' => true,
-                    'id' => $encargado->id, // Devolver el ID del encargado
-                ], 200);
-            } else {
-                return response()->json([
-                    'success' => true,
-                    'existe' => false,
-                    'id' => null, // No hay ID porque no existe
-                ], 200);
+            // Buscar persona por ci
+            $persona = Persona::where('ci', $ci)->first();
+            if ($persona) {
+                $encargado = Encargado::where('id_persona', $persona->id)->first();
+                if ($encargado) {
+                    return response()->json([
+                        'success' => true,
+                        'existe' => true,
+                        'id' => $encargado->id,
+                    ], 200);
+                }
             }
+            return response()->json([
+                'success' => true,
+                'existe' => false,
+                'id' => null,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -72,69 +72,72 @@ class EncargadoController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function almacenarEncargado(Request $request){
-        try{
+    public function almacenarEncargado(Request $request)
+    {
+        try {
             // Validar los datos enviados
             $validated = $request->validate([
                 'nombre' => 'required|string|max:255',
                 'apellido' => 'required|string|max:255',
-                'ci' => 'required|string|max:255|unique:encargado,ci',
+                'ci' => 'required|string|max:255|unique:persona,ci',
                 'fecha_nacimiento' => 'required|date',
-                'telefono' => 'required|string|max:255|unique:encargado,telefono',
+                //'telefono' => 'required|string|max:255|unique:encargado,telefono',
                 'correo' => 'required|string|email|max:255|unique:encargado,correo',
             ]);
 
-            // Crear el encargado de forma controlada
+            $persona = Persona::firstOrCreate(
+                ['ci' => $validated['ci']],
+                [
+                    'nombres' => $validated['nombre'],
+                    'apellidos' => $validated['apellido'],
+                    'fecha_nacimiento' => $validated['fecha_nacimiento'],
+                ]
+            );
+
+            if (Encargado::where('id_persona', $persona->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'validation_error',
+                    'message' => 'El encargado ya está registrado.',
+                ], 422);
+            }
+
             $encargado = Encargado::create([
-                'nombre' => $validated['nombre'],
-                'apellido' => $validated['apellido'],
-                'ci' => $validated['ci'],
-                'fecha_nacimiento' => $validated['fecha_nacimiento'],
-                'telefono' => $validated['telefono'],
+                'id_persona' => $persona->id,
                 'correo' => $validated['correo'],
             ]);
 
-            // Elimina la caché para que se actualice en la próxima consulta
             Cache::forget('encargados');
 
-            // Retornar una respuesta
             return response()->json([
                 'success' => true,
-                'message' => 'Encargado creado exitosamente', 
+                'message' => 'Encargado creado exitosamente',
                 'data' => $encargado,
             ], 201);
-        }catch(ValidationException $e){
-                // Capturar errores de validación
+        } catch (ValidationException $e) {
             $errors = $e->errors();
-            // Personalizar el mensaje de error
             $errorMessages = [];
-            if (isset($errors['ci'])) {
-                $errorMessages[] = 'El número de carnet de identidad ya está registrado.';
-            }
-            if (isset($errors['telefono'])) {
-                $errorMessages[] = 'El número de teléfono ya está registrado.';
-            }
             if (isset($errors['correo'])) {
                 $errorMessages[] = 'El correo electrónico ya está registrado.';
             }
-
             return response()->json([
                 'success' => false,
                 'status' => 'validation_error',
-                'message' => implode(' ', $errorMessages), // Combina los mensajes en una sola cadena
+                'message' => implode(' ', $errorMessages),
             ], 422);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => 'Error al crear el encargado: '.$e->getMessage()
+                'message' => 'Error al crear el encargado: ' . $e->getMessage()
             ], 500);
         }
     }
 
+
     public function obtenerEncargado($id)
     {
-        $encargado = Encargado::find($id);
+        $encargado = Encargado::with('persona')->find($id);
 
         if (!$encargado) {
             return response()->json(['message' => 'Encargado no encontrado'], 404);
