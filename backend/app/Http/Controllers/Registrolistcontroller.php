@@ -32,8 +32,10 @@ public function registrarListaPostulantes(Request $request)
     }
 
     try {
+         // 1. Crear la lista de inscripción y obtener su ID
+        $lista = \App\Models\ListaInscripcion::create();
         Excel::import(
-            new PostulantesImport($request->id_olimpiada, $request->id_encargado),
+            new PostulantesImport($request->id_olimpiada, $request->id_encargado, $lista->id),
             $request->file('excel')
         );
 
