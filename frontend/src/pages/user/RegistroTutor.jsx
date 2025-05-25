@@ -189,8 +189,10 @@ const RegistroTutor = () => {
       // Ocultar mensaje de éxito después de 5 segundos
       setTimeout(() => {
         setShowSuccessAlert(false);
-        navigate(`/SeleccionarOlimpiada/${idEncargado}`);
+        navigate("/IdentificarEncargado");
       }, 5000);
+
+
     } catch (error) {
       // Manejo de errores
       console.error("Error al enviar los datos del encargado:", error);
