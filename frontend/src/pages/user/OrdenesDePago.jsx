@@ -12,7 +12,7 @@ const OrdenesDePago = () => {
   const [ordenesDePago, setOrdenesDePago] = useState([]);
   const [sinRegistros, setSinRegistros] = useState(false);
   const [sinOrdenes, setSinOrdenes] = useState(false);
-  const [cargando, setCargando] = useState(true); // Estado para mostrar "Cargando..."
+  const [cargando, setCargando] = useState(true);
 
   // Obtener registros pendientes al cargar el componente
   useEffect(() => {
@@ -157,124 +157,158 @@ const OrdenesDePago = () => {
     }
   };
 
+  const registrosPorLista = registros.filter(
+    (r) => r.id_lista_inscripcion && !isNaN(r.id_lista_inscripcion)
+  );
+  const registrosIndividuales = registros.filter(
+    (r) => !r.id_lista_inscripcion || isNaN(r.id_lista_inscripcion)
+  );
+
   return (
     <div className="p-4 max-w-6xl mx-auto">
-  {cargando ? (
-    <div className="text-center text-blue-900 font-medium text-lg">
-      <h2>Buscando ordenes de pago...</h2>
-    </div>
-  ) : (
-    <>
-      {/* Registros Pendientes */}
-      <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
-        <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
-          Registros Pendientes
-        </h2>
+      {cargando ? (
+        <div className="text-center text-blue-900 font-medium text-lg">
+          <h2>Buscando ordenes de pago...</h2>
+        </div>
+      ) : (
+        <>
+          {/* Registros Pendientes */}
+          <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
+            <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+              Registros Pendientes
+            </h2>
 
-        {sinRegistros ? (
-          <p className="text-center text-gray-700">
-            No hay registros pendientes para generar una orden de pago.
-          </p>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-sm">
-                <thead className="bg-blue-800 text-white">
-                  <tr>
-                    <th className="border border-black p-2">Seleccionar</th>
-                    <th className="border border-black p-2">Nombres</th>
-                    <th className="border border-black p-2">Apellidos</th>
-                    <th className="border border-black p-2">Área</th>
-                    <th className="border border-black p-2">Grado</th>
-                    <th className="border border-black p-2">Nivel/Categoria</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {registros.map((registro) => (
-                    <tr key={registro.id_inscripcion}>
-                      <td className="border border-black p-2 text-center">
-                        <input
-                          type="checkbox"
-                          onChange={() => handleSeleccionarRegistro(registro.id_inscripcion)}
-                          checked={registrosSeleccionados.includes(registro.id_inscripcion)}
-                        />
-                      </td>
-                      <td className="border border-black p-2">{registro.nombres}</td>
-                      <td className="border border-black p-2">{registro.apellidos}</td>
-                      <td className="border border-black p-2">{registro.nombre_area}</td>
-                      <td className="border border-black p-2">{registro.grado}</td>
-                      <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {sinRegistros ? (
+              <p className="text-center text-gray-700">
+                No hay registros pendientes para generar una orden de pago.
+              </p>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse text-sm">
+                    <thead className="bg-blue-800 text-white">
+                      <tr>
+                        <th className="border border-black p-2">Seleccionar</th>
+                        <th className="border border-black p-2">Nombres</th>
+                        <th className="border border-black p-2">Apellidos</th>
+                        <th className="border border-black p-2">Área</th>
+                        <th className="border border-black p-2">Grado</th>
+                        <th className="border border-black p-2">Nivel/Categoria</th>
+                        <th className="border border-black p-2">Tipo Registro</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Registros por lista */}
+                      {registrosPorLista.map((registro) => (
+                        <tr
+                          key={registro.id_inscripcion}
+                          className="bg-yellow-100 hover:bg-yellow-200"
+                        >
+                          <td className="border border-black p-2 text-center">
+                            <input
+                              type="checkbox"
+                              onChange={() => handleSeleccionarRegistro(registro.id_inscripcion)}
+                              checked={registrosSeleccionados.includes(registro.id_inscripcion)}
+                            />
+                          </td>
+                          <td className="border border-black p-2">{registro.nombres}</td>
+                          <td className="border border-black p-2">{registro.apellidos}</td>
+                          <td className="border border-black p-2">{registro.nombre_area}</td>
+                          <td className="border border-black p-2">{registro.grado}</td>
+                          <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
+                          <td className="border border-black p-2 font-semibold text-yellow-800">
+                            Registrado por lista
+                          </td>
+                        </tr>
+                      ))}
+                      {/* Registros individuales */}
+                      {registrosIndividuales.map((registro) => (
+                        <tr key={registro.id_inscripcion} className="hover:bg-gray-50">
+                          <td className="border border-black p-2 text-center">
+                            <input
+                              type="checkbox"
+                              onChange={() => handleSeleccionarRegistro(registro.id_inscripcion)}
+                              checked={registrosSeleccionados.includes(registro.id_inscripcion)}
+                            />
+                          </td>
+                          <td className="border border-black p-2">{registro.nombres}</td>
+                          <td className="border border-black p-2">{registro.apellidos}</td>
+                          <td className="border border-black p-2">{registro.nombre_area}</td>
+                          <td className="border border-black p-2">{registro.grado}</td>
+                          <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
+                          <td className="border border-black p-2 text-gray-500">
+                            Individual
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-            <div className="text-center mt-6">
-              <button
-                onClick={generarOrdenDePago}
-                className={`px-6 py-3 rounded-lg font-medium transition ${
-                  registrosSeleccionados.length > 0
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                }`}
-                disabled={registrosSeleccionados.length === 0}
-              >
-                Generar Orden de Pago
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Órdenes de Pago */}
-      <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
-        <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
-          Órdenes de Pago
-        </h2>
-
-        {sinOrdenes ? (
-          <p className="text-center text-gray-700">
-            No hay órdenes de pago pendientes por pagar.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-sm">
-              <thead className="bg-blue-800 text-white">
-                <tr>
-                  <th className="border p-2 text-left">Monto</th>
-                  <th className="border p-2 text-left">Fecha Generado</th>
-                  <th className="border p-2 text-left">Concepto</th>
-                  <th className="border p-2 text-center">Orden</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ordenesDePago.map((orden) => (
-                  <tr key={orden.id_pago} className="hover:bg-gray-50">
-                    <td className="border p-2">{orden.monto} Bs.</td>
-                    <td className="border p-2">{orden.fecha_generado}</td>
-                    <td className="border p-2">{orden.concepto}</td>
-                    <td className="border p-2 text-center min-w-[130px]">
-                      <a
-                        href={orden.orden}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                      >
-                        Ver Orden
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                <div className="text-center mt-6">
+                  <button
+                    onClick={generarOrdenDePago}
+                    className={`px-6 py-3 rounded-lg font-medium transition ${
+                      registrosSeleccionados.length > 0
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                    }`}
+                    disabled={registrosSeleccionados.length === 0}
+                  >
+                    Generar Orden de Pago
+                  </button>
+                </div>
+              </>
+            )}
           </div>
-        )}
-      </div>
-    </>
-  )}
-</div>
 
+          {/* Órdenes de Pago */}
+          <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
+            <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+              Órdenes de Pago
+            </h2>
+
+            {sinOrdenes ? (
+              <p className="text-center text-gray-700">
+                No hay órdenes de pago pendientes por pagar.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full border-collapse text-sm">
+                  <thead className="bg-blue-800 text-white">
+                    <tr>
+                      <th className="border p-2 text-left">Monto</th>
+                      <th className="border p-2 text-left">Fecha Generado</th>
+                      <th className="border p-2 text-left">Concepto</th>
+                      <th className="border p-2 text-center">Orden</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ordenesDePago.map((orden) => (
+                      <tr key={orden.id_pago} className="hover:bg-gray-50">
+                        <td className="border p-2">{orden.monto} Bs.</td>
+                        <td className="border p-2">{orden.fecha_generado}</td>
+                        <td className="border p-2">{orden.concepto}</td>
+                        <td className="border p-2 text-center min-w-[130px]">
+                          <a
+                            href={orden.orden}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                          >
+                            Ver Orden
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 
