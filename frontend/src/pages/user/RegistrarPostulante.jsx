@@ -23,6 +23,7 @@ import { getTutor, createTutor, getRolesTutor} from "../../../service/tutores.ap
 import { getPostulanteByCI, createPostulante} from "../../../service/postulantes.api";
 import { getGrados } from "../../../service/grados.api";
 import { getOpcionesInscripcion } from "../../../service/opciones_inscripcion.api";
+import { getPersonaByCI } from "../../../service/personas.api";
 
 
 const RegistrarPostulante = () => {
@@ -32,7 +33,7 @@ const RegistrarPostulante = () => {
 
   const [maxArea, setMaxArea] = useState(null);
 
-  const [postulante, setPostulante] = useState({ci: "", nombres: "", apellidos: "", fecha_nacimiento: "", grado: {id: "", nombre:""}, idPostulante: null, idRegistro: null, buscado: false, datos: []});
+  const [postulante, setPostulante] = useState({idPersona: null, ci: "", nombres: "", apellidos: "", fecha_nacimiento: "", grado: {id: "", nombre:""}, idPostulante: null, idRegistro: null, buscado: false, datos: []});
 
   const [catalogoGrados, setCatalogoGrados] = useState([]);
 
@@ -111,11 +112,12 @@ const RegistrarPostulante = () => {
       });
       setPostulante({
         ...postulante,
-        nombres: registroEncontrado.postulante.nombres,
-        apellidos: registroEncontrado.postulante.apellidos,
-        fecha_nacimiento: registroEncontrado.postulante.fecha_nacimiento,
-        grado: registroEncontrado.grado,
+        idPersona: registroEncontrado.postulante.persona.id,
+        nombres: registroEncontrado.postulante.persona.nombres,
+        apellidos: registroEncontrado.postulante.persona.apellidos,
+        fecha_nacimiento: registroEncontrado.postulante.persona.fecha_nacimiento,
         idPostulante: registroEncontrado.id_postulante,
+        grado: registroEncontrado.grado,
         idRegistro: registroEncontrado.id,
         buscado: true,
         datos: datosIniciales,
@@ -144,10 +146,11 @@ const RegistrarPostulante = () => {
           }));
           return {
             idRegistroTutor: registro.id,
+            idPersona: registro.tutor.persona.id, 
             idTutor: registro.id_tutor,
-            ci: registro.tutor.ci,
-            nombres: registro.tutor.nombres,
-            apellidos: registro.tutor.apellidos,
+            ci: registro.tutor.persona.ci,
+            nombres: registro.tutor.persona.nombres,
+            apellidos: registro.tutor.persona.apellidos,
             idRol: registro.id_rol_tutor,
             buscado: true,
             datos: datosIniciales,
@@ -219,7 +222,6 @@ const RegistrarPostulante = () => {
       const postulanteBuscado = await getPostulanteByCI(postulante.ci);
       if (!postulanteBuscado.data) {
         alert("No se encontró algún postulante con ese CI.");
-        
         const camposPostulanteRes = await getOlimpiadaCamposPostulante(idOlimpiada);
         const datosIniciales = [];
         camposPostulanteRes.data.forEach((campo) => {
@@ -233,9 +235,26 @@ const RegistrarPostulante = () => {
           : "";
           datosIniciales.push(campoNuevo);
         });
+
+        const personaBuscada = (await getPersonaByCI(postulante.ci)).data;
+        if(personaBuscada){
+          setPostulante(
+            {
+              ...postulante,
+              buscado: true, 
+              idPersona: personaBuscada.id,
+              nombres: personaBuscada.nombres,
+              apellidos: personaBuscada.apellidos,
+              fecha_nacimiento: personaBuscada.fecha_nacimiento,
+              datos: datosIniciales
+            }
+          );
+          return; 
+        }
         setPostulante( { ...postulante, buscado: true, datos: datosIniciales } );
         return;
       }
+
       const postulanteEncontrado = postulanteBuscado.data;
       const camposPostulanteRes = await getOlimpiadaCamposPostulante(idOlimpiada, postulanteEncontrado.id);
       const datosIniciales = [];
@@ -250,16 +269,19 @@ const RegistrarPostulante = () => {
         : "";
         datosIniciales.push(campoNuevo);
       });
-
+      
       setPostulante({
         ...postulante,
-        nombres: postulanteEncontrado.nombres,
-        apellidos: postulanteEncontrado.apellidos,
+        idPersona: postulanteEncontrado.persona.id,
+        nombres: postulanteEncontrado.persona.nombres,
+        apellidos: postulanteEncontrado.persona.apellidos,
+        fecha_nacimiento: postulanteEncontrado.persona.fecha_nacimiento,
         idPostulante: postulanteEncontrado.id,
         buscado: true,
         datos: datosIniciales,
       });
     }catch (error) {
+      console.error(error);
       alert("Error al buscar el postulante: " + error.message);
     }finally {
       setIsLoading(false);
@@ -268,7 +290,7 @@ const RegistrarPostulante = () => {
   };
 
   const eliminarRegistro = () => {
-    setPostulante({ci: "", nombres: "", apellidos: "", fecha_nacimiento: "", grado: {id: "", nombre:""}, idPostulante: null, idRegistro: null, buscado: false, datos: []});
+    setPostulante({idPersona: null, ci: "", nombres: "", apellidos: "", fecha_nacimiento: "", grado: {id: "", nombre:""}, idPostulante: null, idRegistro: null, buscado: false, datos: []});
     setTutores([]);
     setOpcionesSeleccionadas([]);
     setOpcionesInscripcion([]);
@@ -276,76 +298,89 @@ const RegistrarPostulante = () => {
 
   {/**ESTA PARTE SE ENCARGA DE LOS TUTORES**/}
   const agregarTutor = async () => {
+    // Verifica si hay un tutor sin CI (no permitir agregar otro)
     const existeTutorSinCI = tutores.some(tutor => !tutor.ci.trim());
-  
-    // Si hay algún tutor con CI vacío, mostrar alerta y no permitir agregar más
     if (existeTutorSinCI) {
       alert("No puedes agregar otro tutor hasta completar el CI de los tutores existentes");
       return;
     }
-    if(tutores.length >= 1) {
+
+    // Si hay al menos un tutor, verifica si el último debe guardarse
+    if (tutores.length >= 1) {
       const ultimoTutor = tutores[tutores.length - 1];
-      if(!ultimoTutor.idTutor) {
-        if(ultimoTutor.ci.trim() === "") {
-          alert("El CI del tutor es obligatorio. Completa el campo antes de agregar otro tutor.");
+      // Validaciones de campos obligatorios
+      if (ultimoTutor.ci.trim() === "") {
+        alert("El CI del tutor es obligatorio. Completa el campo antes de agregar otro tutor.");
+        return;
+      }
+      if (ultimoTutor.nombres.trim() === "") {
+        alert("El nombre del tutor es obligatorio. Completa el campo antes de agregar otro tutor.");
+        return;
+      }
+      if (ultimoTutor.apellidos.trim() === "") {
+        alert("El apellido del tutor es obligatorio. Completa el campo antes de agregar otro tutor.");
+        return;
+      }
+      if (!ultimoTutor.idRol) {
+        alert("La relación del tutor es obligatoria. Completa el campo antes de agregar otro tutor.");
+        return;
+      }
+      for (const campo of ultimoTutor.datos) {
+        if (campo.esObligatorio && !campo.valor.trim()) {
+          alert(`El campo "${campo.nombre_campo}" del tutor es obligatorio. Completa el campo antes de agregar otro tutor.`);
           return;
         }
-        if(ultimoTutor.nombres.trim() === "") {
-          alert("El nombre del tutor es obligatorio. Completa el campo antes de agregar otro tutor.");
-          return;
-        }
-        if(ultimoTutor.apellidos.trim() === "") {
-          alert("El apellido del tutor es obligatorio. Completa el campo antes de agregar otro tutor.");
-          return;
-        }
+      }
 
-        if(!ultimoTutor.idRol) {
-          alert("La relación del tutor es obligatoria. Completa el campo antes de agregar otro tutor.");
-          return;
-        }
-
-        for (const campo of ultimoTutor.datos) {
-          if (campo.esObligatorio && !campo.valor.trim()) {
-            alert(`El campo "${campo.nombre_campo}" del tutor es obligatorio. Completa el campo antes de agregar otro tutor.`);
-            return;
-          }
-        }
-        try {
-          setIsLoading(true);
+      try {
+        setIsLoading(true);
+        // Verifica si el tutor ya existe en la BD
+        const tutorBuscado = await getTutor(ultimoTutor.ci);
+        let idTutor = null;
+        if (tutorBuscado.data) {
+          idTutor = tutorBuscado.data.id;
+        } else {
+          // Si no existe, créalo
           const nuevoTutor = {
             ci: ultimoTutor.ci,
             nombres: ultimoTutor.nombres,
             apellidos: ultimoTutor.apellidos,
-          }
+          };
           const tutorCreado = (await createTutor(nuevoTutor)).data;
-          ultimoTutor.idTutor = tutorCreado.id;
-          
-          const datosTutorGuardados = {
-            id_tutor: ultimoTutor.idTutor,
-            datos: ultimoTutor.datos
-          }
-          await saveDatosTutor(datosTutorGuardados);
-          setTutores(prevTutores => {
-            const nuevosTutores = [...prevTutores];
-            nuevosTutores[nuevosTutores.length - 1] = {
-              ...nuevosTutores[nuevosTutores.length - 1],
-              idTutor: tutorCreado.id,
-              buscado: true,
-            };
-            return nuevosTutores;
-          });
-        } catch (error) {
-          console.error(error);
-          alert("Error al guardar el tutor previo: " + error.message);
-          setIsLoading(false);
-          return;
-        } finally {
-          setIsLoading(false);
+          idTutor = tutorCreado.id;
         }
+        // Guarda los datos dinámicos del tutor
+        const datosTutorGuardados = {
+          id_tutor: idTutor,
+          datos: ultimoTutor.datos
+        };
+        await saveDatosTutor(datosTutorGuardados);
+
+        // Actualiza el tutor en la lista con el idTutor y buscado=true
+        setTutores(prevTutores => {
+          const nuevosTutores = [...prevTutores];
+          nuevosTutores[nuevosTutores.length - 1] = {
+            ...nuevosTutores[nuevosTutores.length - 1],
+            idTutor: idTutor,
+            buscado: true,
+          };
+          return nuevosTutores;
+        });
+      } catch (error) {
+        alert("Error al guardar el tutor previo: " + error.message);
+        setIsLoading(false);
+        return;
+      } finally {
+        setIsLoading(false);
       }
     }
-    setTutores([...tutores, { idRegistroTutor: null, idTutor: null, ci: '', nombres: '', apellidos: '', idRol: '', buscado: false, datos: []}]);
-  }
+
+    // Ahora sí, agrega el nuevo tutor vacío
+    setTutores(prev => [
+      ...prev,
+      { idPersona: null, idRegistroTutor: null, idTutor: null, ci: '', nombres: '', apellidos: '', fecha_nacimiento: '', idRol: '', buscado: false, datos: [] }
+    ]);
+  };
 
   const handleTutorChange = (index, field, value) => {
     setTutores(prevTutores => prevTutores.map((tutor, i) => {
@@ -414,8 +449,23 @@ const RegistrarPostulante = () => {
           : "";
         datosIniciales.push(campoNuevo);
       });
-      console.log("campos", camposTutor);
+
       const nuevosTutores = [...tutores];
+
+      const personaBuscada = (await getPersonaByCI(tutor.ci)).data;
+      if(personaBuscada){
+        nuevosTutores[index] = {
+          ...nuevosTutores[index],
+          buscado: true, 
+          idPersona: personaBuscada.id,
+          nombres: personaBuscada.nombres,
+          apellidos: personaBuscada.apellidos,
+          fecha_nacimiento: personaBuscada.fecha_nacimiento,
+          datos: datosIniciales,
+        }
+        setTutores(nuevosTutores);
+        return;
+      }
       nuevosTutores[index] = { 
         ...nuevosTutores[index], 
         buscado: true,
@@ -441,9 +491,11 @@ const RegistrarPostulante = () => {
     const nuevosTutores = [...tutores];
     nuevosTutores[index] = {
       ...nuevosTutores[index],
+      idPersona: tutorBuscado.data.persona.id,
       idTutor: tutorBuscado.data.id,
-      nombres: tutorBuscado.data.nombres,
-      apellidos: tutorBuscado.data.apellidos,
+      nombres: tutorBuscado.data.persona.nombres,
+      apellidos: tutorBuscado.data.persona.apellidos,
+      fecha_nacimiento: tutorBuscado.data.persona.fecha_nacimiento,
       buscado: true,
       datos: datosIniciales,
     };
@@ -633,7 +685,6 @@ const RegistrarPostulante = () => {
     }
   };
 
-
   if(isLoading) { return <Cargando />; }
   
   return (
@@ -643,9 +694,9 @@ const RegistrarPostulante = () => {
 
         <div>
           <label className="text-sm font-medium text-gray-700">Carnet de Identidad <span className="text-red-500">*</span> </label>
-          <input type="text" disabled={postulante.idPostulante} value={postulante.ci} onChange={(e) => handlePostulanteChange("ci", e.target.value)} 
+          <input type="text" disabled={postulante.idPersona} value={postulante.ci} onChange={(e) => handlePostulanteChange("ci", e.target.value)} 
           className={`w-full px-3 py-2 border rounded-md
-            ${postulante.idPostulante ? "bg-gray-200" : "bg-white"}
+            ${postulante.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}
           `}
           />
         </div>
@@ -663,18 +714,18 @@ const RegistrarPostulante = () => {
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div>
               <label className="text-sm font-medium text-gray-700">Nombre(s) <span className="text-red-500">*</span> </label>
-              <input type="text" disabled={postulante.idPostulante} value={postulante.nombres} onChange={(e) => handlePostulanteChange("nombres", e.target.value)} 
+              <input type="text" disabled={postulante.idPersona} value={postulante.nombres} onChange={(e) => handlePostulanteChange("nombres", e.target.value)} 
               className={`w-full px-3 py-2 border rounded-md
-                ${postulante.idPostulante ? "bg-gray-200" : "bg-white"}
+                ${postulante.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}
               `}
               />
             </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700">Apellido(s)   <span className="text-red-500">*</span> </label>
-              <input type="text" disabled={postulante.idPostulante} value={postulante.apellidos} onChange={(e) => handlePostulanteChange("apellidos", e.target.value)} 
+              <input type="text" disabled={postulante.idPersona} value={postulante.apellidos} onChange={(e) => handlePostulanteChange("apellidos", e.target.value)} 
               className={`w-full px-3 py-2 border rounded-md 
-                ${postulante.idPostulante ? "bg-gray-200" : "bg-white"}
+                ${postulante.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}
               `}
               />
             </div>
@@ -684,7 +735,7 @@ const RegistrarPostulante = () => {
               <input
                 type="text"
                 placeholder="dd/mm/aaaa"
-                disabled={postulante.idPostulante}
+                disabled={postulante.idPersona}
                 value={
                   /^\d{4}-\d{2}-\d{2}$/.test(postulante.fecha_nacimiento)
                     ? defaultFormatDate(postulante.fecha_nacimiento)
@@ -700,7 +751,7 @@ const RegistrarPostulante = () => {
                     handlePostulanteChange("fecha_nacimiento", val);
                   }
                 }}
-                className={`w-full px-3 py-2 border rounded-md ${postulante.idPostulante ? "bg-gray-200" : "bg-white"}`}
+                className={`w-full px-3 py-2 border rounded-md ${postulante.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
               />
             </div>
             
@@ -787,9 +838,9 @@ const RegistrarPostulante = () => {
                   <label className="text-sm font-medium text-gray-700" >Carnet de Identidad <span className="text-red-500">*</span> </label>
                   <input 
                     type="text" 
-                    disabled={tutor.idTutor} 
+                    disabled={tutor.idPersona} 
                     value={tutor.ci} onChange={(e) => handleTutorChange(index, "ci", e.target.value)} 
-                    className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idTutor ? "bg-gray-200" : "bg-white"}`}
+                    className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
                   />
                 </div>
     
@@ -807,19 +858,19 @@ const RegistrarPostulante = () => {
                       <label className="text-sm font-medium text-gray-700">Nombre(s) <span className="text-red-500">*</span></label>
                       <input 
                         type="text" 
-                        disabled={tutor.idTutor} 
+                        disabled={tutor.idPersona} 
                         value={tutor.nombres} 
                         onChange={(e) => handleTutorChange(index, "nombres", e.target.value)} 
-                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idTutor ? "bg-gray-200" : "bg-white"}`}
+                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
                       />
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">Apellido(s) <span className="text-red-500">*</span></label>
                       <input 
                         type="text" 
-                        disabled={tutor.idTutor} 
+                        disabled={tutor.idPersona} 
                         value={tutor.apellidos} onChange={(e) => handleTutorChange(index, "apellidos", e.target.value)} 
-                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idTutor ? "bg-gray-200" : "bg-white"}`}
+                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
                       />
                     </div>
                     {tutor.datos.map((campo, idx) => {
@@ -869,7 +920,7 @@ const RegistrarPostulante = () => {
                         <select 
                           value={tutor.idRol} 
                           onChange={(e) => handleTutorChange(index, 'idRol', e.target.value)} 
-                          className={`flex-1 px-3 py-2 border rounded-md ${tutor.idRegistroTutor ? "bg-gray-200" : "bg-white"}`}
+                          className={`flex-1 px-3 py-2 border rounded-md ${tutor.idRegistroTutor ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
                           disabled={tutor.idRegistroTutor}
                         >
                           <option value="">Seleccione un Rol</option>

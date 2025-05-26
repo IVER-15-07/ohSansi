@@ -13,7 +13,7 @@ class OlimpiadaCampoTutorController extends Controller
         try {
             // Obtener los campos de postulante filtrados por id_olimpiada y cargar las relaciones necesarias
             $campos_tutor =OlimpiadaCampoTutor::where('id_olimpiada', $idOlimpiada)
-                    ->with(['campo_tutor.tipo_campo', 'opcionesCampoTutor'])
+                    ->with(['campo_tutor.tipo_campo'])
                     ->get();
         
             if($idTutor) {

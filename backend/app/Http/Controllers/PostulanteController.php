@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Postulante;
+use App\Models\Persona;
 use Illuminate\Validation\ValidationException;
 
 class PostulanteController extends Controller
@@ -26,13 +27,21 @@ class PostulanteController extends Controller
             }
 
             // Buscar el postulante por su CI
-            $postulante = Postulante::where('ci', $ci)->first();
+            $persona = Persona::where('ci', $ci)->first();
+            if (!$persona) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Persona no encontrada',
+                    'data' => null,
+                ], 200);
+            }
 
-            // Retornar una respuesta exitosa
+            $postulante = Postulante::where('id_persona', $persona->id)->with(['persona'])->first();
             return response()->json([
                 'success' => true,
+                'message' => $postulante ? 'Postulante encontrado exitosamente' : 'Postulante no encontrado',
                 'data' => $postulante,
-            ]);
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
