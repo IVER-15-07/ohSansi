@@ -66,17 +66,29 @@ class TutorController extends Controller
                 'ci' => 'required||string||max:50||unique:tutor,ci',
             ]);
 
-            // Crear el tutor con nombre normalizado
+            $persona = Persona::firstOrCreate(
+                ['ci' => $validated['ci']],
+                [
+                    'nombres' => $validated['nombres'],
+                    'apellidos' => $validated['apellidos']
+                ]
+            );
+
+            if (Tutor::where('id_persona', $persona->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'validation_error',
+                    'message' => 'El tutor ya está registrado.',
+                ], 422);
+            }
+
             $tutor = Tutor::create([
-                'nombres' => ucwords(mb_strtolower($validated['nombres'], 'UTF-8')),
-                'apellidos' => ucwords(mb_strtolower($validated['apellidos'], 'UTF-8')),
-                'ci' => $validated['ci'],
+                'id_persona' => $persona->id,
             ]);
 
-            // Retornar una respuesta
             return response()->json([
                 'success' => true,
-                'message' => 'Tutor creado exitosamente.',
+                'message' => 'Tutor creado exitosamente',
                 'data' => $tutor,
             ], 201);
         } catch (\Exception $e) {

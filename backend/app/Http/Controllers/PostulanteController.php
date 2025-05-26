@@ -55,23 +55,41 @@ class PostulanteController extends Controller
         try {
             // Validar los datos enviados
             $validated = $request->validate([
-                'ci' => 'required|string|max:20|unique:postulante,ci',
                 'nombres' => 'required|string|max:255',
                 'apellidos' => 'required|string|max:255',
+                'ci' => 'required|string|max:255',
                 'fecha_nacimiento' => 'required|date',
             ]);
 
+            $persona = Persona::firstOrCreate(
+                ['ci' => $validated['ci']],
+                [
+                    'nombres' => $validated['nombres'],
+                    'apellidos' => $validated['apellidos'],
+                    'fecha_nacimiento' => $validated['fecha_nacimiento'],
+                ]
+            );
+            // Si la persona ya existía y su fecha de nacimiento es null, actualizarla
+            if ($persona->wasRecentlyCreated === false && $persona->fecha_nacimiento === null) {
+                $persona->fecha_nacimiento = $validated['fecha_nacimiento'];
+                $persona->save();
+            }
+
+            if (Postulante::where('id_persona', $persona->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'validation_error',
+                    'message' => 'El encargado ya está registrado.',
+                ], 422);
+            }
+
             $postulante = Postulante::create([
-                'ci' => $validated['ci'],
-                'nombres' => ucfirst(mb_strtolower($validated['nombres'], 'UTF-8')),
-                'apellidos' => ucfirst(mb_strtolower($validated['apellidos'], 'UTF-8')),
-                'fecha_nacimiento' => $validated['fecha_nacimiento'],
+                'id_persona' => $persona->id,
             ]);
 
-            // Retornar una respuesta
             return response()->json([
                 'success' => true,
-                'message' => 'Postulante creado exitosamente.',
+                'message' => 'Postulante creado exitosamente',
                 'data' => $postulante,
             ], 201);
 

@@ -33,6 +33,7 @@ const RegistrarPostulante = () => {
 
   const [maxArea, setMaxArea] = useState(null);
 
+  const [personaPostulante, setPersonaPostulate] = useState(null); 
   const [postulante, setPostulante] = useState({idPersona: null, ci: "", nombres: "", apellidos: "", fecha_nacimiento: "", grado: {id: "", nombre:""}, idPostulante: null, idRegistro: null, buscado: false, datos: []});
 
   const [catalogoGrados, setCatalogoGrados] = useState([]);
@@ -122,6 +123,9 @@ const RegistrarPostulante = () => {
         buscado: true,
         datos: datosIniciales,
       });
+
+      setPersonaPostulate(registroEncontrado.postulante.persona);
+
       handleGradoChange(registroEncontrado.grado.id);
 
       {/**CARGAR LAS OPCIONES INSCRIPCION YA HECHAS*/}
@@ -237,6 +241,7 @@ const RegistrarPostulante = () => {
         });
 
         const personaBuscada = (await getPersonaByCI(postulante.ci)).data;
+        setPersonaPostulate(personaBuscada);
         if(personaBuscada){
           setPostulante(
             {
@@ -269,7 +274,7 @@ const RegistrarPostulante = () => {
         : "";
         datosIniciales.push(campoNuevo);
       });
-      
+      setPersonaPostulate(postulanteEncontrado.persona);
       setPostulante({
         ...postulante,
         idPersona: postulanteEncontrado.persona.id,
@@ -735,7 +740,7 @@ const RegistrarPostulante = () => {
               <input
                 type="text"
                 placeholder="dd/mm/aaaa"
-                disabled={postulante.idPersona}
+                disabled={personaPostulante?.fecha_nacimiento}
                 value={
                   /^\d{4}-\d{2}-\d{2}$/.test(postulante.fecha_nacimiento)
                     ? defaultFormatDate(postulante.fecha_nacimiento)
@@ -751,7 +756,7 @@ const RegistrarPostulante = () => {
                     handlePostulanteChange("fecha_nacimiento", val);
                   }
                 }}
-                className={`w-full px-3 py-2 border rounded-md ${postulante.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
+                className={`w-full px-3 py-2 border rounded-md ${personaPostulante?.fecha_nacimiento ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
               />
             </div>
             

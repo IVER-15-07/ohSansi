@@ -30,23 +30,29 @@ const RegistroTutor = () => {
   const [errorMessage, setErrorMessage] = useState(null)
   const [isAdding, setIsAdding] = useState(false)
 
+  // Estado de la persona en la BB.DD.
+  const [persona, setPersona] = useState(null)
+
   useEffect(() => {
     // Obtener la persona por CI al cargar el componente
     console.log("CI inicial:", CIinicial);
     const fetchPersona = async () => {
       try {
-        const persona = (await getPersonaByCI(formData.ci)).data;
-        console.log("Respuesta de getPersonaByCI:", persona);
-        if (persona) {
-          const [year, month, day] = persona.fecha_nacimiento.split("-");
-          persona.fecha_nacimiento = `${day}/${month}/${year}`;
+        const personaRes = (await getPersonaByCI(formData.ci)).data;
+        console.log("Respuesta de getPersonaByCI:", personaRes);
+        if (personaRes) {
+          if( personaRes.fecha_nacimiento) {
+            const [year, month, day] = personaRes.fecha_nacimiento.split("-");
+            personaRes.fecha_nacimiento = `${day}/${month}/${year}`;
+          }
           setFormData((prevState) => ({
             ...prevState,
-            idPersona: persona.id,
-            nombre: persona.nombres,
-            apellido: persona.apellidos,
-            fecha_nacimiento: persona.fecha_nacimiento,
+            idPersona: personaRes.id,
+            nombre: personaRes.nombres,
+            apellido: personaRes.apellidos,
+            fecha_nacimiento: personaRes.fecha_nacimiento,
           }))
+          setPersona(personaRes);
         }
       } catch (error) {
         console.error("Error al obtener la persona por CI:", error)
@@ -365,11 +371,11 @@ const RegistroTutor = () => {
                   name="fecha_nacimiento"
                   value={formData.fecha_nacimiento}
                   onChange={handleChange}
-                  disabled={formData.idPersona}
+                  disabled={persona?.fecha_nacimiento}
                   placeholder="dd/mm/aaaa"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 
                     ${errors.fecha_nacimiento ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"}
-                    ${formData.idPersona ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                    ${persona?.fecha_nacimiento ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 />
                 {errors.fecha_nacimiento && <p className="mt-1 text-sm text-red-600">{errors.fecha_nacimiento}</p>}
               </div>

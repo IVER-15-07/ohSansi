@@ -92,6 +92,11 @@ class EncargadoController extends Controller
                     'fecha_nacimiento' => $validated['fecha_nacimiento'],
                 ]
             );
+            // Si la persona ya existía y su fecha de nacimiento es null, actualizarla
+            if ($persona->wasRecentlyCreated === false && $persona->fecha_nacimiento === null) {
+                $persona->fecha_nacimiento = $validated['fecha_nacimiento'];
+                $persona->save();
+            }
 
             if (Encargado::where('id_persona', $persona->id)->exists()) {
                 return response()->json([
