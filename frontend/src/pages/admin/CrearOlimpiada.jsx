@@ -66,6 +66,17 @@ const CrearOlimpiada = () => {
     const nuevosErrores = { ...errores };
     const hoy = new Date().toISOString().split("T")[0];
 
+    // Debug logging
+    if (['fechaInicio', 'fechaFin', 'inicioInscripcion', 'finInscripcion'].includes(campo)) {
+      console.log(`🔍 Validando ${campo} con valor "${valor}"`);
+      console.log(`📅 Datos disponibles:`, {
+        fechaInicio: datos.fechaInicio,
+        fechaFin: datos.fechaFin,
+        inicioInscripcion: datos.inicioInscripcion,
+        finInscripcion: datos.finInscripcion
+      });
+    }
+
     switch (campo) {
       case 'nombre':
         if (!valor || valor.trim() === '') {
@@ -152,6 +163,38 @@ const CrearOlimpiada = () => {
     return !nuevosErrores[campo]; // Retorna true si el campo es válido
   };
 
+  // Función para revalidar campos relacionados cuando cambian las dependencias
+  const validarCamposRelacionados = (campoModificado, datosActualizados) => {
+    const camposParaRevalidar = [];
+
+    switch (campoModificado) {
+      case 'fechaInicio':
+        // Si cambia la fecha de inicio, revalidar fechaFin, inicioInscripcion y finInscripcion
+        camposParaRevalidar.push('fechaFin', 'inicioInscripcion', 'finInscripcion');
+        break;
+      case 'fechaFin':
+        // Si cambia la fecha de fin, revalidar inicioInscripcion y finInscripcion
+        camposParaRevalidar.push('inicioInscripcion', 'finInscripcion');
+        break;
+      case 'inicioInscripcion':
+        // Si cambia inicio de inscripción, revalidar fin de inscripción
+        camposParaRevalidar.push('finInscripcion');
+        break;
+      case 'finInscripcion':
+        // Si cambia fin de inscripción, revalidar inicio de inscripción
+        camposParaRevalidar.push('inicioInscripcion');
+        break;
+    }
+
+    // Revalidar cada campo relacionado inmediatamente
+    // IMPORTANTE: Validamos tanto campos con valor como campos vacíos
+    // porque un campo vacío puede ahora tener errores debido al cambio de dependencias
+    camposParaRevalidar.forEach(campo => {
+      const valorCampo = datosActualizados[campo] || '';
+      validarCampo(campo, valorCampo, datosActualizados);
+    });
+  };
+
   const manejarCambio = (e) => {
     const { name, value } = e.target;
 
@@ -162,7 +205,15 @@ const CrearOlimpiada = () => {
 
     setDatosFormulario(prev => {
       const datosActualizados = { ...prev, [name]: value };
+      
+      // Validar el campo actual
       validarCampo(name, value, datosActualizados);
+      
+      // Revalidar campos relacionados si es necesario
+      if (['fechaInicio', 'fechaFin', 'inicioInscripcion', 'finInscripcion'].includes(name)) {
+        validarCamposRelacionados(name, datosActualizados);
+      }
+      
       return datosActualizados;
     });
   };
