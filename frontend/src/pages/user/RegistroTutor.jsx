@@ -1,6 +1,6 @@
 
 
-import { use, useState, useEffect } from "react"
+import {  useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { AlertCircle, CheckCircle, X } from "lucide-react"
 import { createEncargado } from "../../../service/encargados.api"

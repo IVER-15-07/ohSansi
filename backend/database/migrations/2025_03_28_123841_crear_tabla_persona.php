@@ -18,7 +18,7 @@ class CrearTablaPersona extends Migration
             $table->string('ci')->unique();
             $table->string('nombres')->collation('texto_insensible');
             $table->string('apellidos')->collation('texto_insensible');
-            $table->date('fecha_nacimiento');
+            $table->date('fecha_nacimiento')->nullable();
         });
     }
 
