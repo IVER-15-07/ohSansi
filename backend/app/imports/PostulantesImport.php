@@ -119,7 +119,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         // Validar postulante
         foreach (['ci', 'nombres', 'apellidos', 'fecha_nacimiento'] as $campo) {
             if (empty($fila[$campo])) {
-                $errores[] = "El campo '$campo' está vacío.";
+                $errores[] = "El campo '$campo' está vacío o el encabezado del documento no es correcto.";
             }
             // Validar caracteres especiales en CI del postulante
             if ($campo === 'ci' && !empty($fila[$campo]) && !preg_match('/^[a-zA-Z0-9\-]+$/', $fila[$campo])) {
