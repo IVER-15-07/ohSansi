@@ -76,8 +76,8 @@ class OlimpiadaController extends Controller
      */
     public function almacenarOlimpiada(Request $request){
         try{
-            // Validar los datos enviados
-            $validated = $request->validate([
+            // Definir reglas base de validación
+            $rules = [
                 'nombre' => 'required|string|max:255',
                 'convocatoria' => 'nullable|file|mimes:pdf|max:2048', 
                 'descripcion' => 'nullable|string|max:255',
@@ -95,19 +95,25 @@ class OlimpiadaController extends Controller
                     'after_or_equal:today', // Validar que la fecha de fin sea mayor o igual a hoy
                 ],
                 'inicio_inscripcion' => [
-                    'required',
+                    'nullable',
                     'date',
-                    'after_or_equal:today', // Validar que la fecha de inicio de inscripción sea mayor o igual a hoy
-                    'after_or_equal:fecha_inicio', // Validar que la fecha de inicio de inscripción sea mayor o igual a la fecha de inicio de la olimpiada
-                    'before_or_equal:fecha_fin', // Validar que la fecha de inicio de inscripción sea menor o igual a la fecha de fin de la olimpiada
+                    'after_or_equal:today', // Solo validar si se proporciona
+                    'before_or_equal:fecha_fin', // Solo validar si se proporciona
                 ],
                 'fin_inscripcion' => [
-                    'required',
+                    'nullable',
                     'date',
-                    'after_or_equal:fecha_inicio_inscripcion', // Validar que la fecha de fin de inscripción sea mayor o igual a la fecha de inicio de inscripción
-                    'before_or_equal:fecha_fin', // Validar que la fecha de fin de inscripción sea menor o igual a la fecha de fin de la olimpiada
+                    'after_or_equal:today', // Solo validar si se proporciona
+                    'before_or_equal:fecha_fin', // Solo validar si se proporciona
                 ],
-            ]);
+            ];
+
+            // Si se proporciona inicio_inscripcion, validar que fin_inscripcion sea posterior
+            if ($request->filled('inicio_inscripcion') && $request->filled('fin_inscripcion')) {
+                $rules['fin_inscripcion'][] = 'after_or_equal:inicio_inscripcion';
+            }
+
+            $validated = $request->validate($rules);
 
             // Crear la olimpiada de forma controlada
             $olimpiada = Olimpiada::create([
@@ -118,8 +124,8 @@ class OlimpiadaController extends Controller
                 'max_areas' => $validated['max_areas'] ?? null,
                 'fecha_inicio' => $validated['fecha_inicio'],
                 'fecha_fin' => $validated['fecha_fin'],
-                'inicio_inscripcion' => $validated['inicio_inscripcion'],
-                'fin_inscripcion' => $validated['fin_inscripcion'],
+                'inicio_inscripcion' => $validated['inicio_inscripcion'] ?? null,
+                'fin_inscripcion' => $validated['fin_inscripcion'] ?? null,
             ]);
 
             // Elimina la caché para que se actualice en la próxima consulta
