@@ -255,9 +255,9 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
         $camposObligatorios = OlimpiadaCampoPostulante::where('id_olimpiada', $this->idOlimpiada)
             ->where('esObligatorio', true)
-            ->with('campoPostulante')
+            ->with('campo_postulante')
             ->get()
-            ->pluck('campoPostulante.nombre')
+            ->pluck('campo_postulante.nombre')
             ->toArray();
 
         foreach ($camposObligatorios as $campoObligatorio) {
@@ -364,7 +364,8 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             $ciTutor = $fila["ci$rol"] ?? null;
             $nombresTutor = $fila["nombres$rol"] ?? null;
             $apellidosTutor = $fila["apellidos$rol"] ?? null;
-            
+            $fechaNacimientoTutor = $fila["fecha_nacimiento$rol"] ?? null;
+
 
             Log::info("Intentando extraer tutor: rol=$rol, ci=$ciTutor, nombres=$nombresTutor, apellidos=$apellidosTutor");
 
@@ -378,6 +379,18 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             }
             if (!$apellidosTutor) {
                 $erroresRol[] = "El campo 'apellidos$rol' del tutor '$rol' está vacío.";
+            }
+
+            if ($fechaNacimientoTutor) {
+                try {
+                    if (is_numeric($fechaNacimientoTutor)) {
+                        $fechaNacimientoTutor = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($fechaNacimientoTutor)->format('Y-m-d');
+                    } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaNacimientoTutor)) {
+                        $erroresRol[] = "La fecha de nacimiento del tutor '$rol' no tiene el formato aaaa-mm-dd.";
+                    }
+                } catch (\Exception $e) {
+                    $erroresRol[] = "Error al procesar la fecha de nacimiento del tutor '$rol': " . $e->getMessage();
+                }
             }
 
 
@@ -396,7 +409,8 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                     [
                         'nombres' => $nombresTutor,
                         'apellidos' => $apellidosTutor,
-                     
+                         'fecha_nacimiento' => $fechaNacimientoTutor // <-- aquí
+
 
                     ]
                 );
@@ -445,6 +459,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
         Log::info("Tutores asociados para registro $idRegistro: " . json_encode($tutoresPorRol));
     }
+
 
 
 
