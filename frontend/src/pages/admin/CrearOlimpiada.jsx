@@ -66,6 +66,17 @@ const CrearOlimpiada = () => {
     const nuevosErrores = { ...errores };
     const hoy = new Date().toISOString().split("T")[0];
 
+    // Debug logging
+    if (['fechaInicio', 'fechaFin', 'inicioInscripcion', 'finInscripcion'].includes(campo)) {
+      console.log(`🔍 Validando ${campo} con valor "${valor}"`);
+      console.log(`📅 Datos disponibles:`, {
+        fechaInicio: datos.fechaInicio,
+        fechaFin: datos.fechaFin,
+        inicioInscripcion: datos.inicioInscripcion,
+        finInscripcion: datos.finInscripcion
+      });
+    }
+
     switch (campo) {
       case 'nombre':
         if (!valor || valor.trim() === '') {
@@ -86,8 +97,8 @@ const CrearOlimpiada = () => {
       case 'fechaInicio':
         if (!valor || valor.trim() === '') {
           nuevosErrores.fechaInicio = 'La fecha de inicio es obligatoria.';
-        } else if (valor <= hoy) {
-          nuevosErrores.fechaInicio = 'La fecha de inicio no puede ser anterior o igual a hoy.';
+        } else if (valor < hoy) {
+          nuevosErrores.fechaInicio = 'La fecha de inicio no puede ser anterior a hoy.';
         } else {
           delete nuevosErrores.fechaInicio;
         }
@@ -132,8 +143,8 @@ const CrearOlimpiada = () => {
           delete nuevosErrores.finInscripcion;
         } else if (datos.fechaFin && valor > datos.fechaFin) {
           nuevosErrores.finInscripcion = 'La fecha de fin de inscripción no puede ser posterior a la fecha de finalización de la olimpiada.';
-        } else if (datos.fechaInicio && valor < datos.fechaInicio) {
-          nuevosErrores.finInscripcion = 'La fecha de fin de inscripción no puede ser anterior a la fecha de inicio de la olimpiada.';
+        } else if (datos.fechaInicio && valor <= datos.fechaInicio) {
+          nuevosErrores.finInscripcion = 'La fecha de fin de inscripción no puede ser anterior o igual a la fecha de inicio de la olimpiada.';
         } else if (datos.inicioInscripcion && valor < datos.inicioInscripcion) {
           nuevosErrores.finInscripcion = 'La fecha de fin de inscripción no puede ser anterior a la fecha de inicio de inscripción.';
         } else if (datos.inicioInscripcion && valor <= datos.inicioInscripcion) {
@@ -152,6 +163,38 @@ const CrearOlimpiada = () => {
     return !nuevosErrores[campo]; // Retorna true si el campo es válido
   };
 
+  // Función para revalidar campos relacionados cuando cambian las dependencias
+  const validarCamposRelacionados = (campoModificado, datosActualizados) => {
+    const camposParaRevalidar = [];
+
+    switch (campoModificado) {
+      case 'fechaInicio':
+        // Si cambia la fecha de inicio, revalidar fechaFin, inicioInscripcion y finInscripcion
+        camposParaRevalidar.push('fechaFin', 'inicioInscripcion', 'finInscripcion');
+        break;
+      case 'fechaFin':
+        // Si cambia la fecha de fin, revalidar inicioInscripcion y finInscripcion
+        camposParaRevalidar.push('inicioInscripcion', 'finInscripcion');
+        break;
+      case 'inicioInscripcion':
+        // Si cambia inicio de inscripción, revalidar fin de inscripción
+        camposParaRevalidar.push('finInscripcion');
+        break;
+      case 'finInscripcion':
+        // Si cambia fin de inscripción, revalidar inicio de inscripción
+        camposParaRevalidar.push('inicioInscripcion');
+        break;
+    }
+
+    // Revalidar cada campo relacionado inmediatamente
+    // IMPORTANTE: Validamos tanto campos con valor como campos vacíos
+    // porque un campo vacío puede ahora tener errores debido al cambio de dependencias
+    camposParaRevalidar.forEach(campo => {
+      const valorCampo = datosActualizados[campo] || '';
+      validarCampo(campo, valorCampo, datosActualizados);
+    });
+  };
+
   const manejarCambio = (e) => {
     const { name, value } = e.target;
 
@@ -162,7 +205,15 @@ const CrearOlimpiada = () => {
 
     setDatosFormulario(prev => {
       const datosActualizados = { ...prev, [name]: value };
+      
+      // Validar el campo actual
       validarCampo(name, value, datosActualizados);
+      
+      // Revalidar campos relacionados si es necesario
+      if (['fechaInicio', 'fechaFin', 'inicioInscripcion', 'finInscripcion'].includes(name)) {
+        validarCamposRelacionados(name, datosActualizados);
+      }
+      
       return datosActualizados;
     });
   };
@@ -257,15 +308,13 @@ const CrearOlimpiada = () => {
       
       if (datosFormulario.inicioInscripcion) {
         formData.append('inicio_inscripcion', datosFormulario.inicioInscripcion);
-      } else {
-        formData.append('inicio_inscripcion', datosFormulario.fechaInicio);
       }
+      // Si no se especifica, no se envía el campo para que sea null
       
       if (datosFormulario.finInscripcion) {
         formData.append('fin_inscripcion', datosFormulario.finInscripcion);
-      } else {
-        formData.append('fin_inscripcion', datosFormulario.fechaFin);
       }
+      // Si no se especifica, no se envía el campo para que sea null
       
       // Agregar el archivo solo si existe y es un objeto File válido
       if (datosFormulario.convocatoria && datosFormulario.convocatoria instanceof File) {
@@ -333,9 +382,9 @@ const CrearOlimpiada = () => {
           className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 bg-white p-4 rounded-2xl shadow border border-gray-200 text-sm"
         >
           {/* Campos obligatorios */}
-          {campoFormulario('Nombre de la olimpiada', 'nombre', 'text', 'Ingrese el nombre (sin caracteres especiales)', 3, true)}
-          {campoFormulario('Fecha de inicio', 'fechaInicio', 'date', '', 1, true)}
-          {campoFormulario('Fecha de finalización', 'fechaFin', 'date', '', 1, true)}
+          {campoFormulario('Nombre de la Olimpiada', 'nombre', 'text', 'Ingrese el nombre (sin caracteres especiales)', 3, true)}
+          {campoFormulario('Fecha de Inicio', 'fechaInicio', 'date', '', 1, true)}
+          {campoFormulario('Fecha de Finalización', 'fechaFin', 'date', '', 1, true)}
           
           {/* Campos opcionales */}
           <div className="col-span-1 md:col-span-3 mt-3 mb-1">
@@ -344,17 +393,17 @@ const CrearOlimpiada = () => {
 
           {/* Campos de inscripción sin estilos especiales */}
           <div className="col-span-1 md:col-span-1">
-            {campoFormulario('Inicio de inscripción', 'inicioInscripcion', 'date', '', 1, false, "Si se deja vacío, se usará la fecha de inicio")}
+            {campoFormulario('Inicio de Inscripción', 'inicioInscripcion', 'date', '', 1, false, "Si se deja vacío, se usará la fecha de inicio")}
           </div>
           <div className="col-span-1 md:col-span-1">
-            {campoFormulario('Fin de inscripción', 'finInscripcion', 'date', '', 1, false, "Si se deja vacío, se usará la fecha de finalización")}
+            {campoFormulario('Fin de Inscripción', 'finInscripcion', 'date', '', 1, false, "Si se deja vacío, se usará la fecha de finalización")}
           </div>
           
           {campoFormulario('Costo', 'costo', 'number', '00.00 Bs', 1, false, "Costo de la inscripción")}
           {campoFormulario('Máxima Cantidad de Áreas por Persona', 'max_areas', 'number', "SIN MÁXIMO", 3, false, "Máximo de áreas que un participante puede inscribirse")}
           
           <div className="col-span-1 md:col-span-3">
-            <label className="block font-medium text-gray-600 mb-1 text-sm">Descripción (máx. 500 caracteres)</label>
+            <label className="block font-medium text-gray-600 mb-1 text-sm">Descripción (Máx. 500 caracteres)</label>
             <textarea
               name="descripcion"
               value={datosFormulario.descripcion}
