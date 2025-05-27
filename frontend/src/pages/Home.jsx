@@ -46,7 +46,12 @@ const Home = () => {
   if (error) return <Error error={error} />;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+
+
+    
+    <div className=" flex flex-col min-h-screen  bg-gray-50">
+
+      
 
 
 
@@ -330,6 +335,8 @@ const Home = () => {
       <div className="container mx-auto px-6 py-12">
         <Outlet />
       </div>
+
+     
 
     </div>
   );
