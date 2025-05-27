@@ -20,30 +20,14 @@ class TutorSeeder extends Seeder
 
         $tutores = [
             [
-                'ci' => '12748339',
-                'nombres' => 'Dylan Alexander',
-                'apellidos' => 'Becerra Ricaldi',
+                'id_persona' => 2,
             ], 
             [
-                'ci' => '11111111',
-                'nombres' => 'Lili',
-                'apellidos' => 'Lili',
+                'id_persona' => 4,
             ],
             [
-                'ci' => '22222222',
-                'nombres' => 'Lala',
-                'apellidos' => 'Lala',
+                'id_persona' => 5,
             ],
-            [
-                'ci' => '33333333',
-                'nombres' => 'Lolo',
-                'apellidos' => 'Lolo',
-            ],
-            [
-                'ci' => '44444444',
-                'nombres' => 'Lulu',
-                'apellidos' => 'Lulu',
-            ]
         ];
 
         foreach ($tutores as $tutor) {

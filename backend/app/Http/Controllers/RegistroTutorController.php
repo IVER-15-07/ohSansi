@@ -10,7 +10,7 @@ class RegistroTutorController extends Controller
 {
     public function obtenerRegistrosTutoresPorRegistro($idRegistro){
         try{
-            $registrosTutores = RegistroTutor::with(['tutor'])
+            $registrosTutores = RegistroTutor::with(['tutor.persona'])
                 ->where('id_registro', $idRegistro)
                 ->get();
             return response()->json([

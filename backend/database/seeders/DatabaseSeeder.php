@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call(OpcionInscripcionSeeder::class);
 
+        $this->call(PersonaSeeder::class);
+
         $this->call(EncargadoSeeder::class);
 
         $this->call(PostulanteSeeder::class);

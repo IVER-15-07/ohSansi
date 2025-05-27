@@ -4,16 +4,26 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Tutor;
+use App\Models\Persona;
 use App\Models\RolTutor;
 
 
 class TutorController extends Controller
 {
-    public function obtenerTutor(Request $request, $ciTutor)
+    public function obtenerTutor($ciTutor)
     {
         try {
             // Intenta obtener las áreas desde la caché
-            $tutor = Tutor::where('ci', $ciTutor)->first();
+            $persona = Persona::where('ci', $ciTutor)->first();
+            if (!$persona) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Persona no encontrada',
+                    'data' => null,
+                ], 200);
+            }
+
+            $tutor = Tutor::where('id_persona', $persona->id)->with(['persona'])->first();
 
             return response()->json([
                 'success' => true,
@@ -56,17 +66,29 @@ class TutorController extends Controller
                 'ci' => 'required||string||max:50||unique:tutor,ci',
             ]);
 
-            // Crear el tutor con nombre normalizado
+            $persona = Persona::firstOrCreate(
+                ['ci' => $validated['ci']],
+                [
+                    'nombres' => $validated['nombres'],
+                    'apellidos' => $validated['apellidos']
+                ]
+            );
+
+            if (Tutor::where('id_persona', $persona->id)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'validation_error',
+                    'message' => 'El tutor ya está registrado.',
+                ], 422);
+            }
+
             $tutor = Tutor::create([
-                'nombres' => ucwords(mb_strtolower($validated['nombres'], 'UTF-8')),
-                'apellidos' => ucwords(mb_strtolower($validated['apellidos'], 'UTF-8')),
-                'ci' => $validated['ci'],
+                'id_persona' => $persona->id,
             ]);
 
-            // Retornar una respuesta
             return response()->json([
                 'success' => true,
-                'message' => 'Tutor creado exitosamente.',
+                'message' => 'Tutor creado exitosamente',
                 'data' => $tutor,
             ], 201);
         } catch (\Exception $e) {

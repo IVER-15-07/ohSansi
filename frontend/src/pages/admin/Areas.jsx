@@ -5,6 +5,8 @@ import Cargando from '../Cargando';
 import Error from '../Error';
 import Modal from '../../components/Modal';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import Button from '../../components/Button';
+import Input from '../../components/Input';
 
 const Areas = () => {
   const queryClient = useQueryClient();
@@ -131,13 +133,12 @@ const Areas = () => {
         <div className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del área (máx. 50 caracteres)</label>
-            <input
-              type="text"
-              placeholder="INGRESE EL NOMBRE DEL ÁREA"
-              className={`w-full p-2 border rounded-md text-gray-800 bg-gray-100 focus:outline-none focus:ring-2 text-base ${errorMessage ? 'border-red-500 ring-red-300' : 'focus:ring-blue-500'}`}
+            <Input
               value={newArea}
               onChange={handleInputChange}
               maxLength={50}
+              placeholder="INGRESE EL NOMBRE DEL ÁREA"
+              error={!!errorMessage}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !errorMessage && newArea.trim() !== '') handleShowModal();
               }}
@@ -150,13 +151,17 @@ const Areas = () => {
           </div>
 
           <div className="flex justify-center">
-            <button
+
+
+            <Button
               onClick={handleShowModal}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
               type="button"
             >
               Agregar Área
-            </button>
+            </Button>
+
+
+
           </div>
         </div>
       </div>
@@ -173,12 +178,12 @@ const Areas = () => {
         isLoading={isAdding}
         confirmButtonColor="blue"
       />
-      
+
       {/* Modal de Éxito */}
       {successMessage && (
-        <Modal 
-          message={successMessage} 
-          onClose={() => setSuccessMessage('')} 
+        <Modal
+          message={successMessage}
+          onClose={() => setSuccessMessage('')}
         />
       )}
     </div>
