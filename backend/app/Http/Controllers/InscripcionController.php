@@ -33,6 +33,7 @@ class InscripcionController extends Controller
                 ->join('registro', 'inscripcion.id_registro', '=', 'registro.id')
                 ->join('grado', 'registro.id_grado', '=', 'grado.id')
                 ->join('postulante', 'registro.id_postulante', '=', 'postulante.id')
+                ->join('persona', 'postulante.id_persona', '=', 'persona.id')
                 ->join('opcion_inscripcion', 'inscripcion.id_opcion_inscripcion', '=', 'opcion_inscripcion.id')
                 ->join('area', 'opcion_inscripcion.id_area', '=', 'area.id')
                 ->join('nivel_categoria', 'opcion_inscripcion.id_nivel_categoria', '=', 'nivel_categoria.id')
@@ -42,21 +43,22 @@ class InscripcionController extends Controller
                 ->where('registro.id_olimpiada', $idOlimpiada) // Filtrar por id_olimpiada en la tabla encargado
                 ->select(
                     'inscripcion.id as id_inscripcion', // Incluir id_inscripcion en la respuesta
-                    'postulante.nombres',
-                    'postulante.apellidos',
-                    'postulante.ci',
+                    DB::raw('COALESCE(inscripcion.id_lista_inscripcion, NULL) as id_lista_inscripcion'),
+                    'persona.nombres',
+                    'persona.apellidos',
+                    'persona.ci',
                     'grado.nombre as grado', // Obtener el nombre del grado
                     'area.nombre as nombre_area',
                     'nivel_categoria.nombre as nombre_nivel_categoria'
                 )
                 ->get();
             
-                if ($inscripciones->isEmpty()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'No se encontraron registros pendientes por generar una orden de pago.',
-                    ], 404);
-                }
+            if ($inscripciones->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontraron registros pendientes por generar una orden de pago.',
+                ], 404);
+            }
 
             // Retornar una respuesta exitosa con las inscripciones
             return response()->json([
@@ -72,7 +74,6 @@ class InscripcionController extends Controller
             ], 500);
         }
     }
-
     public function obtenerInscripcionesPorRegistro($idRegistro)
     {
         try {

@@ -5,6 +5,18 @@ import autoTable from "jspdf-autotable";
 import { obtenerInscripciones } from "../../../service/inscripcion.api";
 import { generarDatosDeOrden, guardarOrdenPago, obtenerOrdenesDePago } from "../../../service/pagos.api";
 
+// Paleta de colores pastel para listas
+const listaColors = [
+  "bg-yellow-100 hover:bg-yellow-200",
+  "bg-green-100 hover:bg-green-200",
+  "bg-blue-100 hover:bg-blue-200",
+  "bg-pink-100 hover:bg-pink-200",
+  "bg-purple-100 hover:bg-purple-200",
+  "bg-orange-100 hover:bg-orange-200",
+  "bg-teal-100 hover:bg-teal-200",
+  "bg-red-100 hover:bg-red-200",
+];
+
 const OrdenesDePago = () => {
   const { idEncargado, idOlimpiada } = useParams();
   const [registros, setRegistros] = useState([]);
@@ -12,21 +24,17 @@ const OrdenesDePago = () => {
   const [ordenesDePago, setOrdenesDePago] = useState([]);
   const [sinRegistros, setSinRegistros] = useState(false);
   const [sinOrdenes, setSinOrdenes] = useState(false);
-  const [cargando, setCargando] = useState(true); // Estado para mostrar "Cargando..."
+  const [cargando, setCargando] = useState(true);
 
-  // Obtener registros pendientes al cargar el componente
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        // Obtener inscripciones
         const inscripcionesResponse = await obtenerInscripciones(idEncargado, idOlimpiada);
         if (inscripcionesResponse.data.length === 0) {
           setSinRegistros(true);
         } else {
           setRegistros(inscripcionesResponse.data);
         }
-
-        // Obtener órdenes de pago
         const ordenesResponse = await obtenerOrdenesDePago(idEncargado, idOlimpiada);
         if (ordenesResponse.data.length === 0) {
           setSinOrdenes(true);
@@ -36,22 +44,54 @@ const OrdenesDePago = () => {
       } catch (error) {
         console.error("Error al cargar datos:", error);
       } finally {
-        setCargando(false); // Finalizar la carga
+        setCargando(false);
       }
     };
-
     cargarDatos();
   }, [idEncargado, idOlimpiada]);
 
-  // Manejar selección de registros
-  const handleSeleccionarRegistro = (idInscripcion) => {
-    setRegistrosSeleccionados((prevSeleccionados) =>
-      prevSeleccionados.includes(idInscripcion)
-        ? prevSeleccionados.filter((id) => id !== idInscripcion)
-        : [...prevSeleccionados, idInscripcion]
-    );
-    // Agregar console.log para verificar los registros seleccionados
-    console.log("Registros seleccionados:", registrosSeleccionados);
+  // Agrupar registros por id_lista_inscripcion
+  const listasMap = {};
+  registros.forEach((r) => {
+    if (r.id_lista_inscripcion && !isNaN(r.id_lista_inscripcion)) {
+      if (!listasMap[r.id_lista_inscripcion]) listasMap[r.id_lista_inscripcion] = [];
+      listasMap[r.id_lista_inscripcion].push(r);
+    }
+  });
+  const registrosPorLista = Object.entries(listasMap); // [ [id_lista, [registros...]], ... ]
+  const registrosIndividuales = registros.filter(
+    (r) => !r.id_lista_inscripcion || isNaN(r.id_lista_inscripcion)
+  );
+
+  // Selección múltiple por lista
+  const handleSeleccionarRegistro = (idInscripcion, idLista = null) => {
+    if (idLista) {
+      // Seleccionar/deseleccionar todos los de la lista
+      const idsLista = listasMap[idLista].map((r) => r.id_inscripcion);
+      const todosSeleccionados = idsLista.every((id) => registrosSeleccionados.includes(id));
+      if (todosSeleccionados) {
+        setRegistrosSeleccionados((prev) => prev.filter((id) => !idsLista.includes(id)));
+      } else {
+        setRegistrosSeleccionados((prev) => Array.from(new Set([...prev, ...idsLista])));
+      }
+    } else {
+      // Individual
+      setRegistrosSeleccionados((prev) =>
+        prev.includes(idInscripcion)
+          ? prev.filter((id) => id !== idInscripcion)
+          : [...prev, idInscripcion]
+      );
+    }
+  };
+
+  // Seleccionar todos
+  const handleSeleccionarTodos = () => {
+    const todosIds = registros.map((r) => r.id_inscripcion);
+    if (registrosSeleccionados.length === todosIds.length) {
+      setRegistrosSeleccionados([]);
+    } else {
+      setRegistrosSeleccionados(todosIds);
+    }
   };
   
   // Generar orden de pago
@@ -159,122 +199,163 @@ const OrdenesDePago = () => {
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
-  {cargando ? (
-    <div className="text-center text-blue-900 font-medium text-lg">
-      <h2>Buscando ordenes de pago...</h2>
-    </div>
-  ) : (
-    <>
-      {/* Registros Pendientes */}
-      <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
-        <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
-          Registros Pendientes
-        </h2>
+      {cargando ? (
+        <div className="text-center text-blue-900 font-medium text-lg">
+          <h2>Buscando ordenes de pago...</h2>
+        </div>
+      ) : (
+        <>
+          {/* Registros Pendientes */}
+          <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
+            <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+              Registros Pendientes
+            </h2>
 
-        {sinRegistros ? (
-          <p className="text-center text-gray-700">
-            No hay registros pendientes para generar una orden de pago.
-          </p>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-sm">
-                <thead className="bg-blue-800 text-white">
-                  <tr>
-                    <th className="border border-black p-2">Seleccionar</th>
-                    <th className="border border-black p-2">Nombres</th>
-                    <th className="border border-black p-2">Apellidos</th>
-                    <th className="border border-black p-2">Área</th>
-                    <th className="border border-black p-2">Grado</th>
-                    <th className="border border-black p-2">Nivel/Categoria</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {registros.map((registro) => (
-                    <tr key={registro.id_inscripcion}>
-                      <td className="border border-black p-2 text-center">
-                        <input
-                          type="checkbox"
-                          onChange={() => handleSeleccionarRegistro(registro.id_inscripcion)}
-                          checked={registrosSeleccionados.includes(registro.id_inscripcion)}
-                        />
-                      </td>
-                      <td className="border border-black p-2">{registro.nombres}</td>
-                      <td className="border border-black p-2">{registro.apellidos}</td>
-                      <td className="border border-black p-2">{registro.nombre_area}</td>
-                      <td className="border border-black p-2">{registro.grado}</td>
-                      <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {sinRegistros ? (
+              <p className="text-center text-gray-700">
+                No hay registros pendientes para generar una orden de pago.
+              </p>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse text-sm">
+                    <thead className="bg-blue-800 text-white">
+                      <tr>
+                        <th className="border border-black p-2">Seleccionar</th>
+                        <th className="border border-black p-2">Nombres</th>
+                        <th className="border border-black p-2">Apellidos</th>
+                        <th className="border border-black p-2">Área</th>
+                        <th className="border border-black p-2">Grado</th>
+                        <th className="border border-black p-2">Nivel/Categoria</th>
+                        <th className="border border-black p-2">Tipo Registro</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Registros por lista, cada grupo con color distinto */}
+                      {registrosPorLista.map(([idLista, listaRegistros], idx) =>
+                        listaRegistros.map((registro, i) => (
+                          <tr
+                            key={registro.id_inscripcion}
+                            className={`${listaColors[idx % listaColors.length]} ${
+                              i === 0 ? "border-t-4 border-black" : ""
+                            }`}
+                          >
+                            <td className="border border-black p-2 text-center">
+                              <input
+                                type="checkbox"
+                                onChange={() => handleSeleccionarRegistro(registro.id_inscripcion, idLista)}
+                                checked={listaRegistros.every((r) =>
+                                  registrosSeleccionados.includes(r.id_inscripcion)
+                                )}
+                              />
+                            </td>
+                            <td className="border border-black p-2">{registro.nombres}</td>
+                            <td className="border border-black p-2">{registro.apellidos}</td>
+                            <td className="border border-black p-2">{registro.nombre_area}</td>
+                            <td className="border border-black p-2">{registro.grado}</td>
+                            <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
+                            <td className="border border-black p-2 font-semibold text-blue-900">
+                              Registrado por lista
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                      {/* Registros individuales */}
+                      {registrosIndividuales.map((registro) => (
+                        <tr key={registro.id_inscripcion} className="hover:bg-gray-50">
+                          <td className="border border-black p-2 text-center">
+                            <input
+                              type="checkbox"
+                              onChange={() => handleSeleccionarRegistro(registro.id_inscripcion)}
+                              checked={registrosSeleccionados.includes(registro.id_inscripcion)}
+                            />
+                          </td>
+                          <td className="border border-black p-2">{registro.nombres}</td>
+                          <td className="border border-black p-2">{registro.apellidos}</td>
+                          <td className="border border-black p-2">{registro.nombre_area}</td>
+                          <td className="border border-black p-2">{registro.grado}</td>
+                          <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
+                          <td className="border border-black p-2 text-gray-500">
+                            Individual
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-            <div className="text-center mt-6">
-              <button
-                onClick={generarOrdenDePago}
-                className={`px-6 py-3 rounded-lg font-medium transition ${
-                  registrosSeleccionados.length > 0
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                }`}
-                disabled={registrosSeleccionados.length === 0}
-              >
-                Generar Orden de Pago
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Órdenes de Pago */}
-      <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
-        <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
-          Órdenes de Pago
-        </h2>
-
-        {sinOrdenes ? (
-          <p className="text-center text-gray-700">
-            No hay órdenes de pago pendientes por pagar.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-sm">
-              <thead className="bg-blue-800 text-white">
-                <tr>
-                  <th className="border p-2 text-left">Monto</th>
-                  <th className="border p-2 text-left">Fecha Generado</th>
-                  <th className="border p-2 text-left">Concepto</th>
-                  <th className="border p-2 text-center">Orden</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ordenesDePago.map((orden) => (
-                  <tr key={orden.id_pago} className="hover:bg-gray-50">
-                    <td className="border p-2">{orden.monto} Bs.</td>
-                    <td className="border p-2">{orden.fecha_generado}</td>
-                    <td className="border p-2">{orden.concepto}</td>
-                    <td className="border p-2 text-center min-w-[130px]">
-                      <a
-                        href={orden.orden}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                      >
-                        Ver Orden
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                <div className="text-center mt-6 flex flex-wrap gap-4 justify-center">
+                  <button
+                    onClick={handleSeleccionarTodos}
+                    className="px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition"
+                  >
+                    {registrosSeleccionados.length === registros.length
+                      ? "Deseleccionar todo"
+                      : "Seleccionar todo"}
+                  </button>
+                  <button
+                    onClick={generarOrdenDePago}
+                    className={`px-6 py-3 rounded-lg font-medium transition ${
+                      registrosSeleccionados.length > 0
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-gray-400 text-gray-700 cursor-not-allowed"
+                    }`}
+                    disabled={registrosSeleccionados.length === 0}
+                  >
+                    Generar Orden de Pago
+                  </button>
+                </div>
+              </>
+            )}
           </div>
-        )}
-      </div>
-    </>
-  )}
-</div>
 
+          {/* Órdenes de Pago */}
+          <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
+            <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+              Órdenes de Pago
+            </h2>
+
+            {sinOrdenes ? (
+              <p className="text-center text-gray-700">
+                No hay órdenes de pago pendientes por pagar.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full border-collapse text-sm">
+                  <thead className="bg-blue-800 text-white">
+                    <tr>
+                      <th className="border p-2 text-left">Monto</th>
+                      <th className="border p-2 text-left">Fecha Generado</th>
+                      <th className="border p-2 text-left">Concepto</th>
+                      <th className="border p-2 text-center">Orden</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ordenesDePago.map((orden) => (
+                      <tr key={orden.id_pago} className="hover:bg-gray-50">
+                        <td className="border p-2">{orden.monto} Bs.</td>
+                        <td className="border p-2">{orden.fecha_generado}</td>
+                        <td className="border p-2">{orden.concepto}</td>
+                        <td className="border p-2 text-center min-w-[130px]">
+                          <a
+                            href={orden.orden}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                          >
+                            Ver Orden
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 
