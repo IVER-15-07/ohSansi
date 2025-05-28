@@ -65,7 +65,7 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
                                 Niveles/Categorías Disponibles
                             </h3>
                             {/* Contenedor con overflow específico */}
-                            <div className="overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            <div className="overflow-y-auto max-h-[400px]">
                                 <div className="space-y-3 pr-2">
                                     {nivelesCatalogo.map((nivel) => (
                                         <div
@@ -108,7 +108,7 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
                                 Niveles/Categorías de {area.nombre}
                             </h3>
                             {/* Contenedor con overflow específico */}
-                            <div className="overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                            <div className="overflow-y-auto max-h-[400px]">
                                 {(nivelesPorArea[areaActiva] || []).length > 0 ? (
                                     <div className="space-y-3 pr-2">
                                         {(nivelesPorArea[areaActiva] || []).map((nivel) => (

@@ -123,38 +123,48 @@ const ConfOlimpiada = () => {
     }
     setShowConfirmModal(true);
   };
-
   const handleGuardarConfiguracion = async () => {
-    setIsAdding(true);
-    setShowConfirmModal(false);
+  setIsAdding(true);
+  setShowConfirmModal(false);
+  try {
+    // Intentar eliminar, pero continuar si falla
     try {
-      // Se permite eliminar áreas y niveles con postulantes
-      // Se ha eliminado la validación que impedía eliminar áreas y niveles con postulantes
-      
-      // Continuar con el proceso de guardado
       await deleteOpcionesInscripcionByOlimpiada(id);
-      const configuraciones = [];
+      console.log('Opciones anteriores eliminadas exitosamente');
+    } catch (deleteError) {
+      console.warn('No se pudieron eliminar las opciones anteriores:', deleteError);
+      // Continuar con la creación de las nuevas opciones
+    }
+    
+    // Crear nuevas configuraciones
+    const configuraciones = [];
 
-      areasSeleccionadas.forEach((area) => {
-        const niveles = nivelesPorArea[area.id] || [];
-        niveles.forEach((nivel) => {
-          configuraciones.push({
-            id_olimpiada: id,
-            id_area: area.id,
-            id_nivel_categoria: nivel.id,
-          });
+    areasSeleccionadas.forEach((area) => {
+      const niveles = nivelesPorArea[area.id] || [];
+      niveles.forEach((nivel) => {
+        configuraciones.push({
+          id_olimpiada: id,
+          id_area: area.id,
+          id_nivel_categoria: nivel.id,
         });
       });
+    });
 
-      await Promise.all(configuraciones.map((config) => createOpcionInscripcion(config)));
-      setSuccessMessage('Configuración guardada exitosamente.');
-    } catch (error) {
-      console.error(error);
-      setError('Error al guardar opciones de inscripcion.');
-    } finally {
-      setIsAdding(false);
-    }
-  };
+    // Crear las nuevas opciones
+    await Promise.all(configuraciones.map((config) => createOpcionInscripcion(config)));
+    
+    setSuccessMessage('Configuración guardada exitosamente.');
+    setTimeout(() => {
+        navigate('/AdminLayout/Olympiad');
+    }, 2000);
+  } catch (error) {
+    console.error(error);
+    const errorMessage = error.response?.data?.message || 'Error al guardar opciones de inscripcion.';
+    setError(errorMessage);
+  } finally {
+    setIsAdding(false);
+  }
+};
 
   // Mostrar modal de error si corresponde
   if (modalError) {
@@ -264,9 +274,14 @@ const ConfOlimpiada = () => {
       
       {/* Modal de éxito */}
       {successMessage && (
-        <Modal 
+        <Modal
           message={successMessage} 
-          onClose={() => setSuccessMessage('')} 
+          onClose={() => 
+          {
+            setSuccessMessage('');
+            navigate('/AdminLayout/Olympiad');
+          }
+          } 
         />
       )}
   
