@@ -166,15 +166,27 @@ class OlimpiadaController extends Controller
         }
     }
 
-    public function obtenerOlimpiada($id)
-    {
+    public function obtenerOlimpiada($id){
+    try {
         $olimpiada = Olimpiada::find($id);
 
         if (!$olimpiada) {
-            return response()->json(['message' => 'Olimpiada no encontrada'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Olimpiada no encontrada'
+            ], 404);
         }
 
-        return response()->json($olimpiada);
+        return response()->json([
+            'success' => true,
+            'data' => $olimpiada
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'status' => 'error',
+            'message' => 'Error al obtener la olimpiada: ' . $e->getMessage(),
+        ], 500);
     }
-
+    }
 }

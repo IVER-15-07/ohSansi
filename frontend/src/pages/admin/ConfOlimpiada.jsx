@@ -48,18 +48,24 @@ const ConfOlimpiada = () => {
     // Validar fecha de inscripcion antes de mostrar la vista
     const validarFechas = async () => {
       try {
-        const olimpiada = await getOlimpiada(id);
-        if (!olimpiada || !olimpiada.inicio_inscripcion) {
-          setModalError("La información de la olimpiada o la fecha de inicio de inscripción no está disponible.");
+        const response =  await getOlimpiada(id);
+        const olimpiada = response.data;
+        if (!olimpiada) {
+          setModalError("La información de la olimpiada no está disponible.");
           return;
         }
-        const hoy = new Date();
-        const inicioInscripcion = new Date(olimpiada.inicio_inscripcion);
-        if (hoy >= inicioInscripcion) {
-          setModalError("Las inscripciones están en curso, no se puede modificar la configuración de la Olimpiada");
+        if(olimpiada.inicio_inscripcion){
+          const hoy = new Date();
+          const inicioInscripcion = new Date(olimpiada.inicio_inscripcion);
+          if (hoy >= inicioInscripcion) {
+            setModalError("Las inscripciones están en curso, no se puede modificar la configuración de la Olimpiada");
+          }
         }
+        // Si inicio_inscripcion es null, permitir configuración sin validación de fechas
+        console.log("Olimpiada sin fechas de inscripción configuradas - permitiendo configuración");
+      
       } catch (e) {
-        setModalError("Error al validar la fecha de inscripción de la olimpiada.");
+        setModalError("Error al validar la informacion de la olimpiada.");
       }
     };
     validarFechas();
