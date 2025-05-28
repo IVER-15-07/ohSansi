@@ -15,7 +15,6 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
     };
 
     const handleQuitar = (nivel) => {
-        // Eliminar el nivel sin importar si tiene postulantes
         setNivelesPorArea({
             ...nivelesPorArea,
             [areaActiva]: nivelesPorArea[areaActiva]?.filter(n => n.id !== nivel.id),
@@ -23,12 +22,11 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
     };
 
     const obtenerGradosAsociados = (grados) => {
-        return grados.map((grado) => grado.nombre); // Ajusta según la estructura de datos
+        return grados.map((grado) => grado.nombre);
     };
 
     const area = areas.find((a) => a.id === areaActiva);
     
-    // Obtener áreas que tienen niveles seleccionados
     const areasConNiveles = areas.filter(area => 
         nivelesPorArea[area.id] && nivelesPorArea[area.id].length > 0
     );
@@ -36,30 +34,11 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
     return (
         <div className="space-y-6">
             {/* Header de Resumen de Configuración */}
-            <div className="bg-gray-50 border rounded-2xl p-4 shadow-sm">
                 <h2 className="font-bold text-gray-800 text-xl mb-3">Resumen de Configuración</h2>
-                <div className="flex flex-wrap items-center gap-2">
-                    {areasConNiveles.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                            {areasConNiveles.map((area) => (
-                                <span 
-                                    key={area.id}
-                                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                                >
-                                    {area.nombre} ({nivelesPorArea[area.id]?.length || 0})
-                                </span>
-                            ))}
-                        </div>
-                    ) : (
-                        <span className="text-gray-500 text-sm italic">Ninguna área configurada</span>
-                    )}
-                </div>
-            </div>
 
             {/* Selector de Áreas */}
             <div className="overflow-x-auto">
                 <div className="flex gap-2 pb-2">
-                    <span className="font-medium text-gray-700 text-xl">Áreas:</span>
                     {areas.map((a) => (
                         <button
                             key={a.id}
@@ -70,7 +49,7 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
                             }`}
                             onClick={() => setAreaActiva(a.id)}
                         >
-                            {a.nombre}
+                            {a.nombre} ({nivelesPorArea[a.id]?.length || 0})
                         </button>
                     ))}
                 </div>
@@ -81,29 +60,37 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
                 {area && (
                     <>
                         {/* Niveles disponibles */}
-                        <div className="border rounded-2xl p-4 shadow-sm bg-white">
+                        <div className="border rounded-2xl p-4 shadow-sm bg-white overflow-hidden">
                             <h3 className="font-semibold text-gray-700 text-lg mb-4">
-                                Nivel/Categoría Disponibles
+                                Niveles/Categorías Disponibles
                             </h3>
-                            <div className="overflow-y-auto max-h-[400px] pr-2">
-                                <div className="space-y-3">
+                            {/* Contenedor con overflow específico */}
+                            <div className="overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                                <div className="space-y-3 pr-2">
                                     {nivelesCatalogo.map((nivel) => (
                                         <div
                                             key={nivel.id}
-                                            className="p-4 border border-gray-300 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01] hover:border-blue-300 hover:shadow-md"
+                                            className="p-4 border border-gray-300 rounded-xl shadow-sm bg-white
+                                                     transition-all duration-200 ease-in-out 
+                                                     hover:border-blue-300 hover:shadow-lg hover:bg-blue-50
+                                                     transform hover:-translate-y-1
+                                                     cursor-pointer"
                                         >
                                             <div className="flex justify-between items-start gap-3">
                                                 <div className="flex-1 min-w-0">
-                                                    <h4 className="text-gray-800 font-medium text-base mb-1">
+                                                    <h4 className="text-gray-800 font-medium text-base mb-1 truncate">
                                                         {nivel.nombre}
                                                     </h4>
-                                                    <p className="text-sm text-gray-600 break-words">
+                                                    <p className="text-sm text-gray-600 line-clamp-2">
                                                         <span className="font-medium">Grados:</span> {obtenerGradosAsociados(nivel.grados).join(', ')}
                                                     </p>
                                                 </div>
                                                 <button
                                                     onClick={() => handleAñadir(nivel)}
-                                                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium whitespace-nowrap"
+                                                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 
+                                                             text-sm font-medium whitespace-nowrap
+                                                             transition-all duration-150 hover:scale-105
+                                                             px-2 py-1 rounded-lg hover:bg-blue-100"
                                                 >
                                                     <CheckCheck size={18} />
                                                     Añadir
@@ -116,30 +103,38 @@ const ElegirNiveles = ({ areas, nivelesCatalogo, nivelesPorArea, setNivelesPorAr
                         </div>
 
                         {/* Niveles seleccionados */}
-                        <div className="border rounded-2xl p-4 shadow-sm bg-white">
+                        <div className="border rounded-2xl p-4 shadow-sm bg-white overflow-hidden">
                             <h3 className="font-semibold text-gray-700 text-lg mb-4">
-                                Nivel/Categoría de {area.nombre}
+                                Niveles/Categorías de {area.nombre}
                             </h3>
-                            <div className="overflow-y-auto max-h-[400px] pr-2">
+                            {/* Contenedor con overflow específico */}
+                            <div className="overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                                 {(nivelesPorArea[areaActiva] || []).length > 0 ? (
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 pr-2">
                                         {(nivelesPorArea[areaActiva] || []).map((nivel) => (
                                             <div
                                                 key={nivel.id}
-                                                className="p-4 border border-blue-300 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01] hover:border-red-400 hover:shadow-md"
+                                                className="p-4 border border-blue-300 rounded-xl shadow-sm bg-blue-50
+                                                         transition-all duration-200 ease-in-out 
+                                                         hover:border-red-400 hover:shadow-lg hover:bg-red-50
+                                                         transform hover:-translate-y-1
+                                                         cursor-pointer"
                                             >
                                                 <div className="flex justify-between items-start gap-3">
                                                     <div className="flex-1 min-w-0">
-                                                        <h4 className="text-blue-900 font-medium text-base mb-1">
+                                                        <h4 className="text-blue-900 font-medium text-base mb-1 truncate">
                                                             {nivel.nombre}
                                                         </h4>
-                                                        <p className="text-sm text-gray-600 break-words">
+                                                        <p className="text-sm text-gray-600 line-clamp-2">
                                                             <span className="font-medium">Grados:</span> {obtenerGradosAsociados(nivel.grados).join(', ')}
                                                         </p>
                                                     </div>
                                                     <button
                                                         onClick={() => handleQuitar(nivel)}
-                                                        className="flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-800 whitespace-nowrap"
+                                                        className="flex items-center gap-1 text-sm font-medium 
+                                                                 text-red-600 hover:text-red-800 whitespace-nowrap
+                                                                 transition-all duration-150 hover:scale-105
+                                                                 px-2 py-1 rounded-lg hover:bg-red-100"
                                                     >
                                                         <X size={18} />
                                                         Quitar
