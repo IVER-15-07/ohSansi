@@ -94,94 +94,100 @@ class PagoController extends Controller
     public function generarDatosDeOrden(Request $request)
     {
         try {
-        // Validar los datos enviados
-        $validated = $request->validate([
-            'id_encargado' => 'required|integer|exists:encargado,id',
-            'id_olimpiada' => 'required|integer|exists:olimpiada,id',
-            'registros' => 'required|array|min:1',
-            'registros.*' => 'integer|exists:inscripcion,id',
-        ]);
+            // Validar los datos enviados
+            $validated = $request->validate([
+                'id_encargado' => 'required|integer|exists:encargado,id',
+                'id_olimpiada' => 'required|integer|exists:olimpiada,id',
+                'registros' => 'required|array|min:1',
+                'registros.*' => 'integer|exists:inscripcion,id',
+            ]);
 
-        $idEncargado = $validated['id_encargado'];
-        $idOlimpiada = $validated['id_olimpiada'];
-        $registros = $validated['registros'];
+            $idEncargado = $validated['id_encargado'];
+            $idOlimpiada = $validated['id_olimpiada'];
+            $registros = $validated['registros'];
 
-        // Obtener el ID del encargado y su información
-        $encargado = DB::table('encargado')->where('id', $idEncargado)->first();
-        if (!$encargado) {
-            return response()->json(['success' => false, 'message' => 'Encargado no encontrado.'], 404);
-        }
+            // Obtener el encargado y su persona asociada
+            $encargado = DB::table('encargado')->where('id', $idEncargado)->first();
+            if (!$encargado) {
+                return response()->json(['success' => false, 'message' => 'Encargado no encontrado.'], 404);
+            }
 
-        // Obtener el nombre de la olimpiada
-        $olimpiada = DB::table('olimpiada')->where('id', $idOlimpiada)->first();
-        if (!$olimpiada) {
-            return response()->json(['success' => false, 'message' => 'Olimpiada no encontrada.'], 404);
-        }
+            $persona = DB::table('persona')->where('id', $encargado->id_persona)->first();
+            if (!$persona) {
+                return response()->json(['success' => false, 'message' => 'Datos de persona del encargado no encontrados.'], 404);
+            }
 
-        // Generar el ID de la orden de pago
-        $ultimoPago = DB::table('pago')->orderBy('id', 'desc')->first();
-        $idPago = $ultimoPago ? $ultimoPago->id + 1 : 1;
+            // Obtener el nombre de la olimpiada
+            $olimpiada = DB::table('olimpiada')->where('id', $idOlimpiada)->first();
+            if (!$olimpiada) {
+                return response()->json(['success' => false, 'message' => 'Olimpiada no encontrada.'], 404);
+            }
 
-        // Obtener las inscripciones seleccionadas y sus detalles
-        $detalles = DB::table('inscripcion')
-            ->join('opcion_inscripcion', 'inscripcion.id_opcion_inscripcion', '=', 'opcion_inscripcion.id')
-            ->join('registro', 'inscripcion.id_registro', '=', 'registro.id')
-            ->join('postulante', 'registro.id_postulante', '=', 'postulante.id')
-            ->join('area', 'opcion_inscripcion.id_area', '=', 'area.id')
-            ->join('nivel_categoria', 'opcion_inscripcion.id_nivel_categoria', '=', 'nivel_categoria.id')
-            ->join('grado', 'registro.id_grado', '=', 'grado.id')
-            ->whereIn('inscripcion.id', $registros)
-            ->select(
-                'postulante.nombres as nombres',
-                'postulante.apellidos as apellidos',
-                'area.nombre as nombre_area',
-                'nivel_categoria.nombre as nombre_nivel_categoria',
-                'grado.nombre as grado'
-            )
-            ->get();
+            // Generar el ID de la orden de pago
+            $ultimoPago = DB::table('pago')->orderBy('id', 'desc')->first();
+            $idPago = $ultimoPago ? $ultimoPago->id + 1 : 1;
 
-        // Generar el detalle concatenado
-        $detalle = $detalles->map(function ($item) {
-            return "inscripción: {$item->nombres} {$item->apellidos} - {$item->nombre_area} ({$item->nombre_nivel_categoria}) - {$item->grado}";
-        })->join(', ');
+            // Obtener las inscripciones seleccionadas y sus detalles
+            $detalles = DB::table('inscripcion')
+                ->join('opcion_inscripcion', 'inscripcion.id_opcion_inscripcion', '=', 'opcion_inscripcion.id')
+                ->join('registro', 'inscripcion.id_registro', '=', 'registro.id')
+                ->join('postulante', 'registro.id_postulante', '=', 'postulante.id')
+                ->join('persona', 'postulante.id_persona', '=', 'persona.id')
+                ->join('area', 'opcion_inscripcion.id_area', '=', 'area.id')
+                ->join('nivel_categoria', 'opcion_inscripcion.id_nivel_categoria', '=', 'nivel_categoria.id')
+                ->join('grado', 'registro.id_grado', '=', 'grado.id')
+                ->whereIn('inscripcion.id', $registros)
+                ->select(
+                    'persona.nombres as nombres',
+                    'persona.apellidos as apellidos',
+                    'area.nombre as nombre_area',
+                    'nivel_categoria.nombre as nombre_nivel_categoria',
+                    'grado.nombre as grado'
+                )
+                ->get();
 
-        // Calcular la cantidad, precio por unidad e importe total
-        $cantidad = count($registros);
-        $costoPorUnidad = $olimpiada->costo;
-        $importeTotal = $cantidad * $costoPorUnidad;
+            // Generar el detalle concatenado
+            $detalle = $detalles->map(function ($item) {
+                return "inscripción: {$item->nombres} {$item->apellidos} - {$item->nombre_area} ({$item->nombre_nivel_categoria}) - {$item->grado}";
+            })->join(', ');
 
-        // Convertir el importe total a literal
-        $importeEnLiteral = $this->convertirNumeroALiteral($importeTotal);
+            // Calcular la cantidad, precio por unidad e importe total
+            $cantidad = count($registros);
+            $costoPorUnidad = $olimpiada->costo;
+            $importeTotal = $cantidad * $costoPorUnidad;
 
-        // Obtener la fecha actual en formato aaaa-mm-dd
-        $fechaPago = now()->format('Y-m-d');
+            // Convertir el importe total a literal
+            $importeEnLiteral = $this->convertirNumeroALiteral($importeTotal);
 
-        // Construir los datos de la orden de pago
-        $datosOrden = [
-            'id_pago' => $idPago,
-            'nombre_completo_encargado' => $encargado->nombre . ' ' . $encargado->apellido,
-            'ci_encargado' => $encargado->ci,
-            'nombre_olimpiada' => $olimpiada->nombre,
-            'cantidad' => $cantidad,
-            'concepto' => "Decanato - Olimpiada de Ciencias ({$olimpiada->nombre})",
-            'detalle' => $detalle,
-            'precio_por_unidad' => $costoPorUnidad,
-            'importe_total' => $importeTotal,
-            'importe_en_literal' => $importeEnLiteral,
-            'fecha_pago' => $fechaPago,
-        ];
+            // Obtener la fecha actual en formato aaaa-mm-dd
+            $fechaPago = now()->format('Y-m-d');
 
-        // Retornar los datos generados
-        return response()->json([
-            'success' => true,
-            'data' => $datosOrden,
-        ], 200);
+            // Construir los datos de la orden de pago
+            $datosOrden = [
+                'id_pago' => $idPago,
+                'nombre_completo_encargado' => $persona->nombres . ' ' . $persona->apellidos,
+                'ci_encargado' => $persona->ci,
+                'nombre_olimpiada' => $olimpiada->nombre,
+                'cantidad' => $cantidad,
+                'concepto' => "Decanato - Olimpiada de Ciencias ({$olimpiada->nombre})",
+                'detalle' => $detalle,
+                'precio_por_unidad' => $costoPorUnidad,
+                'importe_total' => $importeTotal,
+                'importe_en_literal' => $importeEnLiteral,
+                'fecha_pago' => $fechaPago,
+            ];
+
+            // Retornar los datos generados
+            return response()->json([
+                'success' => true,
+                'data' => $datosOrden,
+            ], 200);
         } catch (\Exception $e) {
-        // Manejar errores y retornar una respuesta
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al generar los datos de la orden de pago: ' . $e->getMessage(),
-        ], 500);
+            // Manejar errores y retornar una respuesta
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar los datos de la orden de pago: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -281,13 +287,13 @@ class PagoController extends Controller
             $nombre = $nombreSeparado['nombre'];
             $apellido = $nombreSeparado['apellido'];
 
-            // Buscar el ID del encargado
-            $encargado = DB::table('encargado')
-                ->where('nombre', $nombre)
-                ->where('apellido', $apellido)
+            // Buscar el ID de la persona
+            $persona = DB::table('persona')
+                ->where('nombres', $nombre)
+                ->where('apellidos', $apellido)
                 ->first();
 
-            if (!$encargado) {
+            if (!$persona) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No se encontró una orden de pago asociada al encargado.',

@@ -26,12 +26,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use App\Models\OlimpiadaCampoTutor;
+use App\Models\Persona;
+use App\Models\OpcionIncripcion;
+use App\Models\ListaInscripcion;
 
 
 class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInserts
 {
     protected $idOlimpiada;
     protected $idEncargado;
+    protected $idListaInscripcion;
+
 
     // Precargar datos
     protected $areas;
@@ -42,102 +47,54 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
     protected $camposTutor;
     protected $olimpiadaCamposTutor;
     protected $olimpiadaCamposPostulante;
+    protected $opcionesInscripcion;
 
-    public function __construct($idOlimpiada, $idEncargado)
+    public function __construct($idOlimpiada, $idEncargado, $idListaInscripcion = null)
     {
         $this->idOlimpiada = $idOlimpiada;
         $this->idEncargado = $idEncargado;
+        $this->idListaInscripcion = $idListaInscripcion;
 
-        // Precargar y normalizar áreas
-        $this->areas = Area::all()->mapWithKeys(function ($area) {
-            return [$this->limpiarTexto($area->nombre) => $area->id];
-        });
-
-        // Precargar y normalizar categorías
-        $this->categorias = NivelCategoria::all()->mapWithKeys(function ($cat) {
-            return [$this->limpiarTexto($cat->nombre) => $cat->id];
-        });
-
-        // Precargar y normalizar grados
-        $this->grados = Grado::all()->mapWithKeys(function ($grado) {
-            return [$this->limpiarTexto($grado->nombre) => $grado->id];
-        });
-
-        // Precargar y normalizar roles
-        $this->roles = RolTutor::all()->mapWithKeys(function ($rol) {
-            return [$this->limpiarTexto($rol->nombre) => $rol->id];
-        });
-
-        // Precargar y normalizar campos de postulante
-        $this->camposPostulante = CampoPostulante::all()->mapWithKeys(function ($campo) {
-            return [$this->limpiarTexto($campo->nombre) => $campo->id];
-        });
-
-        // Precargar y normalizar campos de tutor
-        $this->camposTutor = CampoTutor::all()->mapWithKeys(function ($campo) {
-            return [$this->limpiarTexto($campo->nombre) => $campo->id];
-        });
-
-        // Precargar y normalizar campos de tutor
-        $this->camposTutor = CampoTutor::all()->mapWithKeys(function ($campo) {
-            return [$this->limpiarTexto($campo->nombre) => $campo->id];
-        });
-
-        // Precargar todos los OlimpiadaCampoTutor en memoria
-        $this->olimpiadaCamposTutor = \App\Models\OlimpiadaCampoTutor::where('id_olimpiada', $this->idOlimpiada)
-            ->get()
-            ->keyBy('id_campo_tutor');
-
-
-        // Precargar todos los OlimpiadaCampoPostulante en memoria
-        $this->olimpiadaCamposPostulante = \App\Models\OlimpiadaCampoPostulante::where('id_olimpiada', $this->idOlimpiada)
-            ->get()
-            ->keyBy('id_campo_postulante');
-
-
-        Log::info("Catálogos precargados y normalizados.");
+        // Precarga y normalización de catálogos
+        $this->areas = Area::all()->keyBy(fn($a) => $this->limpiarTexto($a->nombre));
+        $this->categorias = NivelCategoria::all()->keyBy(fn($c) => $this->limpiarTexto($c->nombre));
+        $this->grados = Grado::all()->keyBy(fn($g) => $this->limpiarTexto($g->nombre));
+        $this->roles = RolTutor::all()->keyBy(fn($r) => $this->limpiarTexto($r->nombre));
+        $this->camposPostulante = CampoPostulante::all()->keyBy(fn($c) => $this->limpiarTexto($c->nombre));
+        $this->camposTutor = CampoTutor::all()->keyBy(fn($c) => $this->limpiarTexto($c->nombre));
+        $this->olimpiadaCamposTutor = OlimpiadaCampoTutor::where('id_olimpiada', $idOlimpiada)->get()->keyBy('id_campo_tutor');
+        $this->olimpiadaCamposPostulante = OlimpiadaCampoPostulante::where('id_olimpiada', $idOlimpiada)->get()->keyBy('id_campo_postulante');
+        $this->opcionesInscripcion = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)->get();
     }
 
 
     public function collection(Collection $rows)
     {
-        set_time_limit(300); // 5 minutos
+        set_time_limit(300);
         $errores = [];
 
         DB::transaction(function () use ($rows, &$errores) {
-            // Convertir los datos a UTF-8
-            $rows = $rows->map(function ($fila) {
-                return $fila->map(function ($valor) {
-                    return is_string($valor) ? mb_convert_encoding($valor, 'UTF-8', 'auto') : $valor;
-                });
-            });
-
             foreach ($rows as $index => $row) {
-                try {
-                    // ... tu lógica de procesamiento ...
-                    $fila = array_map(function ($valor) {
-                        return is_numeric($valor) ? (string) $valor : $valor;
-                    }, $row->toArray());
+                $fila = $this->normalizarFila($row->toArray());
+                if ($this->filaVacia($fila)) continue;
 
-                    Log::info("Procesando fila #$index:", $fila);
+                $erroresFila = $this->validarFilaCompleta($fila);
 
-                    if (empty(array_filter($fila))) {
-                        Log::info("Fila #$index vacía, se omite.");
-                        continue;
+                if (empty($erroresFila)) {
+                    try {
+                        $idRegistro = $this->procesarFila($fila);
+                        $this->procesarTutores($fila, $idRegistro);
+                    } catch (\Exception $e) {
+                        $erroresFila[] = $e->getMessage();
                     }
+                }
 
-                    $idRegistro = $this->procesarFila($fila);
-                    $this->procesarTutores($fila, $idRegistro);
-                    Log::info("Fila #$index procesada correctamente.");
-                } catch (\Exception $e) {
-                    Log::error("Error en la fila #$index: " . $e->getMessage());
-                    // Guarda el error pero NO detiene el proceso
-                    $errores["Fila " . ($index + 2)] = $e->getMessage(); // +2 para reflejar la fila real en Excel
+                if (!empty($erroresFila)) {
+                    $errores["Fila " . ($index + 2)] = implode(' | ', $erroresFila);
                 }
             }
         });
 
-        // Si hubo errores, lánzalos todos juntos
         if (!empty($errores)) {
             throw new \Exception(json_encode([
                 'message' => 'Errores encontrados en el archivo.',
@@ -146,6 +103,79 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         }
     }
 
+
+    
+
+
+
+
+
+
+    private function validarFilaCompleta($fila)
+    {
+
+        $errores = [];
+
+        // Validar postulante
+        foreach (['ci', 'nombres', 'apellidos', 'fecha_nacimiento'] as $campo) {
+            if (empty($fila[$campo])) {
+                $errores[] = "El campo '$campo' está vacío o el encabezado del documento no es correcto.";
+            }
+            // Validar caracteres especiales en CI del postulante
+            if ($campo === 'ci' && !empty($fila[$campo]) && !preg_match('/^[a-zA-Z0-9\-]+$/', $fila[$campo])) {
+                // Buscar el primer carácter no permitido
+                preg_match('/[^a-zA-Z0-9\-]/', $fila[$campo], $noPermitido);
+                $caracter = $noPermitido[0] ?? '?';
+                $errores[] = "El campo 'ci' contiene el carácter no permitido: '$caracter'.";
+            }
+        }
+        // Validar campos obligatorios de postulante
+        foreach ($this->olimpiadaCamposPostulante as $campo) {
+            if ($campo->esObligatorio) {
+                $nombre = $this->limpiarTexto($campo->campo_postulante->nombre);
+                if (empty($fila[$nombre])) {
+                    $errores[] = "El campo obligatorio '{$campo->campo_postulante->nombre}' está vacío.";
+                }
+            }
+        }
+
+
+
+
+        // Validar tutores (solo existencia de datos básicos)
+        foreach ($this->roles as $rol => $idRol) {
+            if (!empty($fila["ci$rol"]) || !empty($fila["nombres$rol"]) || !empty($fila["apellidos$rol"])) {
+                foreach (['ci', 'nombres', 'apellidos'] as $campo) {
+                    if (empty($fila["{$campo}$rol"])) {
+                        $errores[] = "El campo '{$campo}$rol' del tutor '$rol' está vacío.";
+                    }
+                    // Validar caracteres especiales en CI de tutor
+                    if ($campo === 'ci' && !empty($fila["{$campo}$rol"]) && !preg_match('/^[a-zA-Z0-9\-]+$/', $fila["{$campo}$rol"])) {
+                        preg_match('/[^a-zA-Z0-9\-]/', $fila["{$campo}$rol"], $noPermitido);
+                        $caracter = $noPermitido[0] ?? '?';
+                        $errores[] = "El campo 'ci$rol' del tutor '$rol' contiene el carácter no permitido: '$caracter'.";
+                    }
+                }
+            }
+        }
+        return $errores;
+    }
+
+
+
+    private function normalizarFila($fila)
+    {
+        $normalizada = [];
+        foreach ($fila as $campo => $valor) {
+            $normalizada[$this->normalizarCampoExcel($campo)] = $valor;
+        }
+        return $normalizada;
+    }
+
+    private function filaVacia($fila)
+    {
+        return empty(array_filter($fila, fn($v) => !is_null($v) && $v !== ''));
+    }
 
 
 
@@ -186,12 +216,19 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             throw new \Exception(implode(' | ', $erroresFila));
         }
 
-        // Procesar postulante
+        // --- CREAR O BUSCAR PERSONA ---
         try {
-            $postulante = Postulante::firstOrCreate(
+            $persona = Persona::firstOrCreate(
                 ['ci' => $ci],
                 ['nombres' => $nombres, 'apellidos' => $apellidos, 'fecha_nacimiento' => $fechaNacimiento]
             );
+        } catch (\Exception $e) {
+            $erroresFila[] = "Error al crear persona: " . $e->getMessage();
+        }
+
+        // --- CREAR O BUSCAR POSTULANTE ---
+        try {
+            $postulante = Postulante::firstOrCreate(['id_persona' => $persona->id]);
         } catch (\Exception $e) {
             $erroresFila[] = "Error al crear postulante: " . $e->getMessage();
         }
@@ -221,16 +258,12 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
 
 
-
     private function insertarDatosPostulante($fila, $idPostulante)
     {
         $errores = [];
 
-        $camposObligatorios = OlimpiadaCampoPostulante::where('id_olimpiada', $this->idOlimpiada)
-            ->where('esObligatorio', true)
-            ->with('campoPostulante')
-            ->get()
-            ->pluck('campoPostulante.nombre')
+        $camposObligatorios = $this->olimpiadaCamposPostulante->filter(fn($c) => $c->esObligatorio)
+            ->map(fn($c) => $c->campo_postulante->nombre)
             ->toArray();
 
         foreach ($camposObligatorios as $campoObligatorio) {
@@ -249,7 +282,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             }
 
             $campoNormalizado = $this->limpiarTexto($campo);
-            $campoPostulanteId = $this->camposPostulante[$campoNormalizado] ?? null;
+            $campoPostulanteId = $this->camposPostulante[$campoNormalizado]->id ?? null;
             if (!$campoPostulanteId) {
                 continue;
             }
@@ -331,17 +364,13 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
         Log::info("Roles detectados en Excel: " . json_encode($rolesNormalizados));
 
-
-
-
-
-
         $erroresTutores = [];
 
         foreach ($rolesNormalizados as $rol => $idRolTutor) {
             $ciTutor = $fila["ci$rol"] ?? null;
             $nombresTutor = $fila["nombres$rol"] ?? null;
             $apellidosTutor = $fila["apellidos$rol"] ?? null;
+            $fechaNacimientoTutor = $fila["fecha_nacimiento$rol"] ?? null;
 
             Log::info("Intentando extraer tutor: rol=$rol, ci=$ciTutor, nombres=$nombresTutor, apellidos=$apellidosTutor");
 
@@ -357,6 +386,18 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                 $erroresRol[] = "El campo 'apellidos$rol' del tutor '$rol' está vacío.";
             }
 
+            if ($fechaNacimientoTutor) {
+                try {
+                    if (is_numeric($fechaNacimientoTutor)) {
+                        $fechaNacimientoTutor = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($fechaNacimientoTutor)->format('Y-m-d');
+                    } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaNacimientoTutor)) {
+                        $erroresRol[] = "La fecha de nacimiento del tutor '$rol' no tiene el formato aaaa-mm-dd.";
+                    }
+                } catch (\Exception $e) {
+                    $erroresRol[] = "Error al procesar la fecha de nacimiento del tutor '$rol': " . $e->getMessage();
+                }
+            }
+
             // Si hay errores en los datos básicos, los acumulamos y pasamos al siguiente rol
             if (!empty($erroresRol)) {
                 $erroresTutores[] = implode(' ', $erroresRol);
@@ -364,9 +405,19 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             }
 
             try {
-                $tutor = Tutor::firstOrCreate(
+                // Buscar o crear persona para el tutor
+                $personaTutor = Persona::firstOrCreate(
                     ['ci' => $ciTutor],
-                    ['nombres' => $nombresTutor, 'apellidos' => $apellidosTutor]
+                    [
+                        'nombres' => $nombresTutor,
+                        'apellidos' => $apellidosTutor,
+                        'fecha_nacimiento' => $fechaNacimientoTutor // opcional
+                    ]
+                );
+
+                // Crear o buscar tutor
+                $tutor = Tutor::firstOrCreate(
+                    ['id_persona' => $personaTutor->id]
                 );
                 Log::info("Tutor creado o encontrado: " . json_encode($tutor->toArray()));
             } catch (\Exception $e) {
@@ -411,24 +462,26 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
 
 
-    private function insertarDatosTutor($fila, $idTutor, $rol)
+    private function insertarDatosTutor($filaNormalizada, $idTutor, $rol)
     {
         $errores = [];
 
-        $camposObligatorios = \App\Models\OlimpiadaCampoTutor::where('id_olimpiada', $this->idOlimpiada)
-            ->where('esObligatorio', true)
-            ->with('campo_tutor')
-            ->get()
-            ->pluck('campo_tutor.nombre')
+        $camposObligatorios = $this->olimpiadaCamposTutor->filter(fn($c) => $c->esObligatorio)
+            ->map(fn($c) => $c->campoTutor->nombre)
             ->toArray();
 
         foreach ($camposObligatorios as $campoObligatorio) {
             $campoNormalizado = $this->limpiarTexto($campoObligatorio);
             $campoExcel1 = "{$campoNormalizado}_{$rol}";
             $campoExcel2 = "{$campoNormalizado}{$rol}";
+            $campoExcel3 = str_replace('_', '', $campoExcel1);
+            $campoExcel4 = str_replace('_', '', $campoExcel2);
+
             if (
-                (!array_key_exists($campoExcel1, $fila) || empty($fila[$campoExcel1])) &&
-                (!array_key_exists($campoExcel2, $fila) || empty($fila[$campoExcel2]))
+                (!array_key_exists($campoExcel1, $filaNormalizada) || empty($filaNormalizada[$campoExcel1])) &&
+                (!array_key_exists($campoExcel2, $filaNormalizada) || empty($filaNormalizada[$campoExcel2])) &&
+                (!array_key_exists($campoExcel3, $filaNormalizada) || empty($filaNormalizada[$campoExcel3])) &&
+                (!array_key_exists($campoExcel4, $filaNormalizada) || empty($filaNormalizada[$campoExcel4]))
             ) {
                 $errores[] = "El campo obligatorio '$campoObligatorio' es requerido para el tutor '$rol' en esta olimpiada y no está presente o está vacío en el Excel.";
             }
@@ -437,7 +490,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         $datosParaInsertar = [];
         $clavesParaBuscar = [];
 
-        foreach ($fila as $campo => $valor) {
+        foreach ($filaNormalizada as $campo => $valor) {
             if (
                 preg_match('/^(.*)_' . $rol . '$/i', $campo, $matches) ||
                 preg_match('/^(.*)' . $rol . '$/i', $campo, $matches)
@@ -449,7 +502,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                     continue;
                 }
 
-                $campoTutorId = $this->camposTutor[$campoNombreNormalizado] ?? null;
+                $campoTutorId = $this->camposTutor[$campoNombreNormalizado]->id ?? null;
                 if (!$campoTutorId) {
                     continue;
                 }
@@ -515,23 +568,22 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         }
 
         $nombreGrado = $this->limpiarTexto($fila['grado'] ?? '');
-        $idGrado = $this->grados[$nombreGrado] ?? null;
+        $idGrado = $this->grados[$nombreGrado]->id ?? null;
         if (!$idGrado) {
             $errores[] = "El grado '{$fila['grado']}' no existe o no está habilitado para esta olimpiada.";
         }
 
         $nombreArea = $this->limpiarTexto($fila['area'] ?? '');
-        $idArea = $this->areas[$nombreArea] ?? null;
+        $idArea = $this->areas[$nombreArea]->id ?? null;
         if (!$idArea) {
             $errores[] = "El área '{$fila['area']}' no existe o no está habilitada para esta olimpiada.";
         }
 
         $nombreCategoria = $this->limpiarTexto($fila['nivel_categoria'] ?? '');
-        $idCategoria = $this->categorias[$nombreCategoria] ?? null;
+        $idCategoria = $this->categorias[$nombreCategoria]->id ?? null;
         if (!$idCategoria) {
             $errores[] = "La categoría '{$fila['nivel_categoria']}' no existe o no está habilitada para esta olimpiada.";
         }
-
 
         // Validar máximo de áreas por olimpiada
         $olimpiada = \App\Models\Olimpiada::find($this->idOlimpiada);
@@ -545,8 +597,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                 $errores[] = "El postulante ya está inscrito en el máximo de áreas permitidas ({$olimpiada->max_areas}) para esta olimpiada.";
             }
         }
-
-
 
         // Si hubo errores de validación, lánzalos todos juntos
         if (!empty($errores)) {
@@ -582,10 +632,9 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             'id_grado' => $idGrado,
         ]);
 
-        $opcion = OpcionInscripcion::where('id_olimpiada', $this->idOlimpiada)
-            ->where('id_area', $idArea)
-            ->where('id_nivel_categoria', $idCategoria)
-            ->first();
+        $opcion = $this->opcionesInscripcion->first(function ($o) use ($idArea, $idCategoria) {
+            return $o->id_area == $idArea && $o->id_nivel_categoria == $idCategoria;
+        });
 
         if (!$opcion) {
             throw new \Exception("No existe una opción de inscripción para el grado '{$fila['grado']}', área '{$fila['area']}' y categoría '{$fila['nivel_categoria']}' en esta olimpiada.");
@@ -594,6 +643,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         Inscripcion::firstOrCreate([
             'id_registro' => $registro->id,
             'id_opcion_inscripcion' => $opcion->id,
+            'id_lista_inscripcion' => $this->idListaInscripcion,
         ]);
 
         return $registro->id;
@@ -609,6 +659,34 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         $texto = str_replace(["'", "`", "´"], '', $texto);
         return $texto;
     }
+
+    private function normalizarCampoExcel($campo)
+    {
+        // Quitar tildes y convertir a minúsculas
+        $campo = mb_strtolower($campo);
+        $campo = strtr($campo, [
+            'á' => 'a',
+            'é' => 'e',
+            'í' => 'i',
+            'ó' => 'o',
+            'ú' => 'u',
+            'ñ' => 'n'
+        ]);
+        // Reemplazar espacios y guiones por guion bajo
+        $campo = preg_replace('/[\s\-]+/', '_', $campo);
+        // Quitar paréntesis y su contenido, luego agregar _rol si existe
+        if (preg_match('/(.+)\((.+)\)/', $campo, $matches)) {
+            $base = trim($matches[1], "_ ");
+            $rol = trim($matches[2], "_ ");
+            $campo = $base . '_' . $rol;
+        }
+        // Quitar cualquier otro carácter especial
+        $campo = preg_replace('/[^a-z0-9_]/', '', $campo);
+        return $campo;
+    }
+
+
+
 
 
     public function batchSize(): int

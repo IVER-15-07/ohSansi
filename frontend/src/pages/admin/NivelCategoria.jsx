@@ -3,6 +3,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getGrados } from '../../../service/grados.api'
 import { getNivelesCategorias, createNivelCategoria } from '../../../service/niveles_categorias.api'
 import Cargando from '../Cargando';
+import Input from '../../components/Input';
+import Select from '../../components/Select';
+import Button from '../../components/Button';
+import TogleSwitch from '../../components/TogleSwitch';
+import Card from '../../components/Card';
 
 
 const NivelCategoria = () => {
@@ -121,11 +126,12 @@ const NivelCategoria = () => {
             <h2 className="text-lg font-semibold text-[#20335C] mb-2">Nivel</h2>
             <ul className="space-y-2 overflow-y-auto max-h-[220px] pr-1">
               {niveles.map((nivel) => (
-                <li key={nivel.id} className="p-3 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
-                  <div className="text-[#20335C] font-medium">{nivel.nombre}</div>
-                  <div className="text-sm text-gray-600">
-                    Grados: {obtenerGradosAsociados(nivel.grados)}
-                  </div>
+                <li key={nivel.id}>
+                  <Card
+                    title={nivel.nombre}
+                    subtitle={`Grados: ${obtenerGradosAsociados(nivel.grados)}`}
+                    color="from-blue-50 to-blue-100 border-blue-200"
+                  />
                 </li>
               ))}
             </ul>
@@ -136,11 +142,12 @@ const NivelCategoria = () => {
             <h2 className="text-lg font-semibold text-[#20335C] mb-2">Categoría</h2>
             <ul className="space-y-2 overflow-y-auto max-h-[220px] pr-1">
               {categorias.map((categoria) => (
-                <li key={categoria.id} className="p-3 bg-red-50 border border-red-200 rounded-lg shadow-sm">
-                  <div className="text-[#20335C] font-medium">{categoria.nombre}</div>
-                  <div className="text-sm text-gray-600">
-                    Grados: {obtenerGradosAsociados(categoria.grados)}
-                  </div>
+                <li key={categoria.id}>
+                  <Card
+                    title={categoria.nombre}
+                    subtitle={`Grados: ${obtenerGradosAsociados(categoria.grados)}`}
+                    color="from-red-50 to-red-100 border-red-200"
+                  />
                 </li>
               ))}
             </ul>
@@ -151,25 +158,14 @@ const NivelCategoria = () => {
       {/* FORMULARIO */}
       <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 pt-3 min-h-[250px]">
         {/* Tabs */}
-        <div className="flex justify-center gap-4 mb-2">
-          <button
-            className={`px-6 py-2 rounded-xl text-sm font-medium transition-all shadow-sm ${isNivel
-              ? "bg-[#20335C] text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            onClick={() => setIsNivel(true)}
-          >
-            Nivel
-          </button>
-          <button
-            className={`px-6 py-2 rounded-xl text-sm font-medium transition-all shadow-sm ${!isNivel
-              ? "bg-[#20335C] text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            onClick={() => setIsNivel(false)}
-          >
-            Categoría
-          </button>
+        <div className="flex justify-center gap-4 mb-2 items-center">
+          <span className={`font-semibold ${isNivel ? "text-[#2640BE]" : "text-gray-400"}`}>Nivel</span>
+          <TogleSwitch
+            checked={!isNivel ? false : true}
+            onChange={() => setIsNivel(!isNivel)}
+            color={isNivel ? "blue" : "red"}
+          />
+          <span className={`font-semibold ${!isNivel ? "text-[#E63946]" : "text-gray-400"}`}>Categoría</span>
         </div>
 
         {/* Campos */}
@@ -177,72 +173,64 @@ const NivelCategoria = () => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del nivel</label>
-              <input
+              <Input
                 type="text"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Ingrese el nombre del nivel"
-                className="w-full p-2 border rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Grado</label>
-              <select
+              <Select
                 value={gradoSeleccionado}
-                onChange={(e) => setGradoSeleccionado(parseInt(e.target.value))}
-                className="w-full p-2 border rounded-md bg-gray-100 text-gray-800"
-              >
-                <option value="">Seleccione un grado</option>
-                {grados.data.map((grado) => (
-                  <option key={grado.id} value={grado.id}>
-                    {grado.nombre}
-                  </option>
-                ))}
-              </select>
+                onChange={e => setGradoSeleccionado(parseInt(e.target.value))}
+                options={grados.data.map(grado => ({
+                  value: grado.id,
+                  label: grado.nombre
+                }))}
+                placeholder="Seleccione un grado"
+              />
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la categoría</label>
-              <input
+              <Input
                 type="text"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Ingrese el nombre de la categoría"
-                className="w-full p-2 border rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+
               />
             </div>
             <div className="flex gap-4">
               <div className="w-1/2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Grado inicial</label>
-                <select
+                <Select
                   value={gradoInicio}
-                  onChange={(e) => setGradoInicio(parseInt(e.target.value))}
-                  className="w-full p-2 border rounded-md bg-gray-100 text-gray-800"
-                >
-                  <option value="">Seleccione el grado inicial</option>
-                  {grados.data.map((grado) => (
-                    <option key={grado.id} value={grado.id}>
-                      {grado.nombre}
-                    </option>
-                  ))}
-                </select>
+                  onChange={e => setGradoInicio(parseInt(e.target.value))}
+                  options={grados.data.map(grado => ({
+                    value: grado.id,
+                    label: grado.nombre
+                  }))}
+                  placeholder="Seleccione el grado inicial"
+                />
               </div>
               <div className="w-1/2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Grado final</label>
-                <select
+                <Select
                   value={gradoFin}
                   onChange={(e) => setGradoFin(parseInt(e.target.value))}
-                  className="w-full p-2 border rounded-md bg-gray-100 text-gray-800"
-                >
-                  <option value="">Seleccione el grado final</option>
-                  {grados.data.map((grado) => (
-                    <option key={grado.id} value={grado.id}>
-                      {grado.nombre}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Seleccione el grado final"
+                  options={grados.data.map(grado => ({
+                    value: grado.id,
+                    label: grado.nombre
+
+                  }))}
+                />
               </div>
             </div>
           </div>

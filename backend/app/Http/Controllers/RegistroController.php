@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Registro;
+use App\Models\Persona;
+use App\Models\Postulante;
 
 use App\Models\RegistroTutor;
 use Illuminate\Support\Facades\Cache;
@@ -64,28 +66,42 @@ class RegistroController extends Controller
     public function obtenerRegitroAOlimpiadaPorCI($idOlimpiada, $ci)
     {
         try {
-
             if (strlen($ci) > 20) {
                 return response()->json([
                     'success' => false,
                     'message' => 'El CI no puede exceder los 20 caracteres.',
                 ], 422);
             }
-            
+
+            $persona = Persona::where('ci', $ci)->first();
+            if (!$persona) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Persona no encontrada',
+                    'data' => null,
+                ], 200);
+            }
+
+            $postulante = Postulante::where('id_persona', $persona->id)->first();
+            if (!$postulante) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Postulante no encontrado',
+                    'data' => null,
+                ], 200);
+            }
+
             $registro = Registro::where('id_olimpiada', $idOlimpiada)
-                ->whereHas('postulante', function ($query) use ($ci) {
-                    $query->where('ci', $ci);
-                })
-                ->with(['postulante', 'grado'])
+                ->where('id_postulante', $postulante->id)
+                ->with(['postulante.persona', 'grado' ])
                 ->first();
-            // Retornar una respuesta exitosa con los grados asociados
+
             return response()->json([
                 'success' => true,
-                'message' => 'Registro encontrado exitosamente',
+                'message' => $registro ? 'Registro encontrado exitosamente' : 'Registro no encontrado',
                 'data' => $registro,
-            ], 201);
+            ], 200);
         } catch (\Exception $e) {
-            // Manejar errores y retornar una respuesta
             return response()->json([
                 'success' => false,
                 'status' => 'error',
