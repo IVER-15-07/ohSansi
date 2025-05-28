@@ -175,8 +175,13 @@ const ConfOlimpiada = () => {
   return (
     <div className="p-6 flex flex-col gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
     <div className="flex flex-col gap-4 h-full">
+      <h2 className="text-xl font-bold text-gray-800">
+          Configuración de la Olimpiada {nombreOlimpiada}
+        </h2>
       
-      {/* Botón para volver a la vista de Olimpiada */}
+      {/* Contenido principal de la configuración */}
+      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 min-h-[460px] max-h-[540px] overflow-y-auto">
+        {/* Botón para volver a la vista de Olimpiada */}
       <div className="flex items-center mb-2">
         <button 
           onClick={() => navigate('/AdminLayout/Olympiad')}
@@ -185,12 +190,7 @@ const ConfOlimpiada = () => {
           <ArrowLeft size={16} className="mr-1" /> Volver a Olimpiadas
         </button>
       </div>
-      
-      {/* Contenido principal de la configuración */}
-      <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 min-h-[460px] max-h-[540px] overflow-y-auto">
-        <h2 className="text-xl font-bold text-gray-800">
-          Configuración de la Olimpiada {nombreOlimpiada}
-        </h2>
+            
   
         {step === 1 && (
           <ElegirAreas
