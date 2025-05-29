@@ -84,6 +84,9 @@ class OlimpiadaCampoPostulanteController extends Controller
                 [
                     'id_olimpiada' => $request->id_olimpiada,
                     'id_campo_postulante' => $request->id_campo_postulante,
+                ],
+                [
+                    'esObligatorio' => $request-> esObligatorio
                 ]
             );
 

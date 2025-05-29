@@ -31,3 +31,16 @@ export const deleteOlimpiadaCampoPostulante = async (idOlimpiadaCampoPostulante)
     throw error;
   }
 }
+
+export const postOlimpiadaCampoPostulante = async (olimpiadaCampoPostulante) => {
+  try {
+    const response = await axiosInstance.post(
+      `/olimpiadas/campos_postulante/`,
+      olimpiadaCampoPostulante,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error posting Olimpiada Campo Postulante:", error);
+    throw error;
+  }
+}

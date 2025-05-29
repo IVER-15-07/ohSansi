@@ -1,6 +1,7 @@
 import { CheckCheck, X } from 'lucide-react';
 import Modal from '../../components/Modal';
 import React, { useState } from 'react';
+import { deleteOlimpiadaCampoPostulante } from '../../../service/olimpiada_campos_postulante.api';
 const ElegirCamposPostulante = ({disponibles, seleccionadas, setSeleccionadas, idOlimpiada}) => {
     const [modal, setModal] = useState({open: false, nombre: ''});
     const handleAdd = (campoPostulante) => {
@@ -39,6 +40,20 @@ const ElegirCamposPostulante = ({disponibles, seleccionadas, setSeleccionadas, i
                 return;
             }
         }
+        
+        if(olimpiadaCampoPostulante.id !== null){
+            try {
+                await deleteOlimpiadaCampoPostulante(olimpiadaCampoPostulante.id);
+            } catch (error) {
+                console.error('Error al eliminar el campo del postulante:', error);
+                setModal({
+                    open: true,
+                    nombre: 'Error al eliminar el campo del postulante. Por favor, inténtelo de nuevo más tarde.',
+                });
+                return;
+            }
+        }
+        // Eliminar el campo del postulante de la lista de seleccionados
         setSeleccionadas(seleccionadas.filter((a) => a.id_campo_postulante !== olimpiadaCampoPostulante.id_campo_postulante));
     };
     
@@ -50,7 +65,7 @@ const ElegirCamposPostulante = ({disponibles, seleccionadas, setSeleccionadas, i
                 <Modal
                     message={modal.nombre}
                     onClose={() => setModal({open: false, nombre: ''})}
-                />)};
+                />)}
 
                 <h3 className="font-semibold text-gray-700 text-lg mb-2">Campos para el Postulante Disponibles</h3>
                 <div className="overflow-y-auto max-h-[360px] px-1 sm:px-2 md:px-1">
@@ -85,8 +100,6 @@ const ElegirCamposPostulante = ({disponibles, seleccionadas, setSeleccionadas, i
                                     const olimpiadaCampoDependencia = seleccionadas.find(
                                         c => c.campo_postulante.id === olimpiadaCampoPostulante.campo_postulante.id_dependencia
                                     );
-                                    console.log(olimpiadaCampoDependencia);
-                                    console.log(e.target.checked);
                                     if(olimpiadaCampoDependencia && !olimpiadaCampoDependencia.esObligatorio && !olimpiadaCampoPostulante.esObligatorio){
                                         setModal({
                                             open: true,
@@ -100,8 +113,7 @@ const ElegirCamposPostulante = ({disponibles, seleccionadas, setSeleccionadas, i
                                     const olimpiadaCampoDependiente = seleccionadas.find(
                                         c => c.campo_postulante.id_dependencia === olimpiadaCampoPostulante.campo_postulante.id
                                     );
-                                    console.log(olimpiadaCampoDependiente);
-                                    console.log(e.target.checked);
+
                                     if(olimpiadaCampoDependiente && olimpiadaCampoDependiente.esObligatorio && olimpiadaCampoPostulante.esObligatorio){
                                         setModal({
                                             open: true,

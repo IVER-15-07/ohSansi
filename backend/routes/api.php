@@ -106,6 +106,7 @@ Route::get('/campos_tutor', [CampoTutorController::class, 'obtenerCatalogoCampos
 Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/{idPostulante}', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
 Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
 Route::delete('/olimpiadas/campos_postulante/{idOlimpiadaCampoPostulante}', [OlimpiadaCampoPostulanteController::class, 'eliminarCampoPostulante']);
+Route::post('/olimpiadas/campos_postulante', [OlimpiadaCampoPostulanteController::class, 'almacenarCampoPostulante']);
 
 //RUTAS PARA LOS DATOS DEL POSTULANTE
 Route::post('/datos_postulante', [DatoPostulanteController::class, 'almacenarDatosPostulante']);
@@ -114,6 +115,8 @@ Route::post('/datos_postulante', [DatoPostulanteController::class, 'almacenarDat
 //RUTAS PARA LOS CAMPOS DE TUTOR DADA UNA OLIMPIADA
 Route::get('/olimpiadas/{idOlimpiada}/campos_tutor/{idTutor}', [OlimpiadaCampoTutorController::class, 'obtenerCamposTutor']);
 Route::get('/olimpiadas/{idOlimpiada}/campos_tutor/', [OlimpiadaCampoTutorController::class, 'obtenerCamposTutor']);
+Route::delete('/olimpiadas/campos_tutor/{idOlimpiadaCampoTutor}', [OlimpiadaCampoTutorController::class, 'eliminarCampoTutor']);
+Route::post('/olimpiadas/campos_tutor', [OlimpiadaCampoTutorController::class, 'almacenarCampoTutor']);
 
 //RUTAS PARA LOS DATOS DEL TUTOR
 Route::post('/datos_tutor', [DatoTutorController::class, 'almacenarDatosTutor']);
