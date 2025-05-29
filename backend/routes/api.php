@@ -13,6 +13,10 @@ use App\Http\Controllers\OpcionInscripcionController;
 
 use App\Http\Controllers\OlimpiadaController;
 
+use App\Http\Controllers\CampoPostulanteController;
+
+use App\Http\Controllers\CampoTutorController;
+
 use App\Http\Controllers\OlimpiadaCampoPostulanteController;
 
 use App\Http\Controllers\DatoPostulanteController;
@@ -90,9 +94,16 @@ Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiada
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
 Route::get('/olimpiadas/{id}', [OlimpiadaController::class, 'obtenerOlimpiada']);
 
+// RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS DE POSTULANTE
+Route::get('/campos_postulante', [CampoPostulanteController::class, 'obtenerCatalogoCamposPostulante']);
+
+// RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS DE TUTOR
+Route::get('/campos_tutor', [CampoTutorController::class, 'obtenerCatalogoCamposTutor']);
+
 //RUTAS PARA LOS CAMPOS DE POSTULANTE DADA UNA OLIMPIADA
 Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/{idPostulante}', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
 Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
+Route::delete('/olimpiadas/campos_postulante/{idOlimpiadaCampoPostulante}', [OlimpiadaCampoPostulanteController::class, 'eliminarCampoPostulante']);
 
 //RUTAS PARA LOS DATOS DEL POSTULANTE
 Route::post('/datos_postulante', [DatoPostulanteController::class, 'almacenarDatosPostulante']);
