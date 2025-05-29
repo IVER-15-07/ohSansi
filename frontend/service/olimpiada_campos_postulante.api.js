@@ -19,3 +19,28 @@ export const getOlimpiadaCamposPostulante = async (idOlimpiada, idPostulante = n
     throw error;
   }
 }
+
+export const deleteOlimpiadaCampoPostulante = async (idOlimpiadaCampoPostulante) => {
+  try {
+    const response = await axiosInstance.delete(
+      `/olimpiadas/campos_postulante/${idOlimpiadaCampoPostulante}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting Olimpiada Campo Postulante:", error);
+    throw error;
+  }
+}
+
+export const postOlimpiadaCampoPostulante = async (olimpiadaCampoPostulante) => {
+  try {
+    const response = await axiosInstance.post(
+      `/olimpiadas/campos_postulante/`,
+      olimpiadaCampoPostulante,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error posting Olimpiada Campo Postulante:", error);
+    throw error;
+  }
+}

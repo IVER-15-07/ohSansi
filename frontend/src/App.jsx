@@ -12,7 +12,7 @@ import IdentificarEncargado from "./pages/user/IdentificarEncargado"
 import Areas from "./pages/admin/Areas"
 import NivelCategoria from "./pages/admin/NivelCategoria"
 import ConfOlimpiada from "./pages/admin/ConfOlimpiada"
-import ConfParamOlimpiada from "./pages/admin/ConfParamOlimpiada"
+import ConfigurarCamposOlimpiada from "./pages/admin/ConfigurarCamposOlimpiada"
 import CrearOlimpiada from "./pages/admin/CrearOlimpiada"
 import Versiones from "./pages/Versiones"
 import LayoutRegistro from "./pages/user/LayoutRegistro"
@@ -39,7 +39,7 @@ function App() {
           <Route path="Olympiad" element={<Olympiad />} />
           <Route path="Olympiad/CrearOlimpiada" element={<CrearOlimpiada />} />
           <Route path="Olympiad/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
-          <Route path="Olympiad/:id/configurarParametros/:nombreOlimpiada" element={<ConfParamOlimpiada />} />
+          <Route path="Olympiad/:id/configurar-campos" element={<ConfigurarCamposOlimpiada/>} />
           <Route path="Areas" element={<Areas />} />
           <Route path="NivelCategoria" element={<NivelCategoria />} />
         </Route>

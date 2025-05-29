@@ -41,7 +41,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call(CampoPostulanteSeeder::class);
 
-        $this->call(OlimpiadaCampoPostulanteSeeder::class);
+        $this->call(OpcionCampoPostulanteSeeder::class);
+        //$this->call(OlimpiadaCampoPostulanteSeeder::class);
 
         $this->call(OlimpiadaCampoTutorSeeder::class);
 
