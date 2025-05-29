@@ -90,6 +90,7 @@ Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiadasActivas']);
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
 Route::get('/olimpiadas/{id}', [OlimpiadaController::class, 'obtenerOlimpiada']);
+Route::put('/olimpiadas/{id}/modificar', [OlimpiadaController::class, 'modificarOlimpiada']);
 
 //RUTAS PARA LOS CAMPOS DE POSTULANTE DADA UNA OLIMPIADA
 Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/{idPostulante}', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
