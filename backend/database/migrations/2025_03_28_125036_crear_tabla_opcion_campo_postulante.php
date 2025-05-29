@@ -16,9 +16,9 @@ class CrearTablaOpcionCampoPostulante extends Migration
         Schema::create('opcion_campo_postulante', function (Blueprint $table) {
             $table->id();
             $table->string('valor')->collation('texto_insensible');
-            $table->string('valor_dependencia')->nullable()->collation('texto_insensible');
+            $table->foreignId('id_dependencia')->nullable()->constrained('opcion_campo_postulante')->onDelete('set null');
             $table->foreignId('id_campo_postulante')->constrained('campo_postulante')->onDelete('cascade');
-            $table->unique(['id_campo_postulante', 'valor', 'valor_dependencia'], 'unique_opcion_id_campo_postulante');
+            $table->unique(['id_campo_postulante', 'valor', 'id_dependencia'], 'unique_opcion_id_campo_postulante');
         });
     }
 
