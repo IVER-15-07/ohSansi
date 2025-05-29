@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use App\Models\Olimpiada; 
+use App\Models\Olimpiada;
 
 class OlimpiadaController extends Controller
 {
@@ -118,7 +118,7 @@ class OlimpiadaController extends Controller
             // Crear la olimpiada de forma controlada
             $olimpiada = Olimpiada::create([
                 'nombre' => $validated['nombre'],
-                'convocatoria' => isset($validated['convocatoria']) && $request->hasFile('convocatoria') ? $request->file('convocatoria')->store('convocatorias') : null, // Guardar el archivo de convocatoria si existe
+                'convocatoria' => isset($validated['convocatoria']) && $request->hasFile('convocatoria') ? $request->file('convocatoria')->store('convocatorias', 'public') : null, // Guardar el archivo de convocatoria si existe
                 'descripcion' => $validated['descripcion'] ?? null,
                 'costo' => $validated['costo'] ?? null,
                 'max_areas' => $validated['max_areas'] ?? null,
@@ -177,4 +177,106 @@ class OlimpiadaController extends Controller
         return response()->json($olimpiada);
     }
 
+    public function modificarOlimpiada(Request $request, $id)
+    {
+        $olimpiada = \App\Models\Olimpiada::find($id);
+
+        if (!$olimpiada) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Olimpiada no encontrada',
+            ], 404);
+        }
+
+        // Convierte fechas del request ANTES de validar
+        $fechas = ['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'];
+        foreach ($fechas as $campo) {
+            if ($request->has($campo)) {
+                $request->merge([
+                    $campo => $this->convertirFecha($request->input($campo))
+                ]);
+            }
+        }
+
+        // Validaciones
+        $rules = [
+            'nombre' => 'sometimes|string|max:255',
+            'descripcion' => 'sometimes|nullable|string|max:255',
+            'costo' => 'sometimes|numeric|min:0',
+            'max_areas' => 'sometimes|integer|min:1',
+            'fecha_inicio' => 'sometimes|date_format:Y-m-d|after_or_equal:today',
+            'fecha_fin' => 'sometimes|date_format:Y-m-d',
+            'inicio_inscripcion' => 'sometimes|nullable|date_format:Y-m-d',
+            'fin_inscripcion' => 'sometimes|nullable|date_format:Y-m-d',
+            'convocatoria' => 'sometimes|file|mimes:pdf|max:2048',
+        ];
+
+        // Validaciones cruzadas de fechas
+         $fecha_inicio = $request->input('fecha_inicio', $olimpiada->fecha_inicio);
+        $fecha_fin = $request->input('fecha_fin', $olimpiada->fecha_fin);
+        $inicio_inscripcion = $request->input('inicio_inscripcion', $olimpiada->inicio_inscripcion);
+        $fin_inscripcion = $request->input('fin_inscripcion', $olimpiada->fin_inscripcion);
+
+        if ($request->has('fecha_fin') || $request->has('fecha_inicio')) {
+            $rules['fecha_fin'] .= '|after_or_equal:' . ($request->has('fecha_inicio') ? 'fecha_inicio' : $olimpiada->fecha_inicio);
+        }
+        if ($request->has('inicio_inscripcion')) {
+            $rules['inicio_inscripcion'] .= '|after_or_equal:' . $fecha_inicio . '|before_or_equal:' . $fecha_fin;
+        }
+        if ($request->has('fin_inscripcion')) {
+            $rules['fin_inscripcion'] .= '|after_or_equal:' . $inicio_inscripcion . '|before_or_equal:' . $fecha_fin;
+        }
+
+        $validated = $request->validate($rules);
+
+        $campos = [
+            'nombre', 'descripcion', 'costo', 'max_areas',
+            'fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'
+        ];
+
+        $datosActualizar = [];
+        foreach ($campos as $campo) {
+            if ($request->has($campo)) {
+                $nuevoValor = $request->input($campo);
+
+                // Convertir fechas si es necesario
+                if (in_array($campo, ['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'])) {
+                    $nuevoValor = $this->convertirFecha($nuevoValor);
+                }
+                $datosActualizar[$campo] = $nuevoValor;
+            }
+        }
+
+        // Manejo de archivo convocatoria
+        if ($request->hasFile('convocatoria')) {
+            $archivo = $request->file('convocatoria');
+            $ruta = $archivo->store('convocatorias', 'public');
+            $datosActualizar['convocatoria'] = $ruta;
+        }
+
+        // Actualiza siempre si hay datos a actualizar
+        if (!empty($datosActualizar)) {
+            $olimpiada->update($datosActualizar);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Olimpiada actualizada correctamente',
+            'data' => $olimpiada->fresh(),
+        ], 200);
+    }
+
+    private function convertirFecha($fecha)
+    {
+        // Si ya está en formato aaaa-mm-dd, retorna igual
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            return $fecha;
+        }
+        // Si está en formato dd/mm/aaaa, conviértelo
+        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $fecha)) {
+            [$d, $m, $y] = explode('/', $fecha);
+            return "$y-$m-$d";
+        }
+        return $fecha; // Si no, retorna igual
+    }
 }
