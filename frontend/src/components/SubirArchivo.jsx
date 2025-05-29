@@ -12,6 +12,9 @@ const SubirArchivo = ({ nombreArchivo, tipoArchivo, handleArchivo, inputRef }) =
 
         <button
           onClick={() => inputRef.current.click()}
+          type="button"
+          aria-label={`Subir archivo de tipo ${tipoArchivo}`}
+          title={`Subir archivo de tipo ${tipoArchivo}`}
           className="font-medium flex items-center justify-center gap-x-2 px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 m-5 transition"
         >
           <FileUp className="w-5 h-5" />
