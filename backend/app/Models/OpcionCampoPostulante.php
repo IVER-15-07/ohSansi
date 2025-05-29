@@ -49,4 +49,12 @@ class OpcionCampoPostulante extends Model
     {
         return $this->hasMany(OpcionCampoPostulante::class, 'id_dependencia');
     }
+
+    public static function obtenerOpcionesAgrupadasPorPadre($idCampoPostulante)
+    {
+        return self::where('id_campo_postulante', $idCampoPostulante)
+            ->orderBy('valor')
+            ->get()
+            ->groupBy(['id_dependencia']);
+    }
 }

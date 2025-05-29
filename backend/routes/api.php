@@ -45,6 +45,8 @@ use App\Http\Controllers\PostulanteController;
 
 use App\Http\Controllers\RegistroTutorController;
 
+use App\Http\Controllers\OpcionCampoPostulanteController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -162,3 +164,6 @@ Route::post('/registro_lista/importar', [Registrolistcontroller::class, 'importa
 Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
 Route::post('/pagos/guardarOrdenPago', [PagoController::class, 'guardarOrdenPago']);
 Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoController::class, 'obtenerOrdenesDePago']);
+
+// RUTAS PARA LAS OPCIONES DE CAMPO DE POSTULANTE
+Route::get('/opciones_campo_postulante/agrupadas/{idCampoPostulante}', [OpcionCampoPostulanteController::class, 'opcionesAgrupadas']);

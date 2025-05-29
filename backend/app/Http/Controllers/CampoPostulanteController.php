@@ -14,7 +14,6 @@ class CampoPostulanteController extends Controller
             $campos_postulante =CampoPostulante::with(['tipo_campo'])
                 ->orderBy('nombre', 'asc')
                 ->get();
-
             // Retornar una respuesta exitosa
             return response()->json([
                 'success' => true,

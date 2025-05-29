@@ -12,7 +12,9 @@ import { getOlimpiadaCamposTutor } from '../../../service/olimpiada_campos_tutor
 
 const ConfigurarCamposOlimpiada = () => {
   const { id } = useParams();
+  const [step, setStep] = useState(1);
 
+  const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -69,6 +71,10 @@ const ConfigurarCamposOlimpiada = () => {
   const catalogoCamposTutorFiltrado = catalogoCamposTutor.filter(campo =>
     !olimpiadaCamposTutor.some(oct => oct.campo_tutor.id === campo.id)
   );
+
+  const handleSaveClick = () => {
+    setShowConfirmModal(true);
+  };
   
   if (isLoading) return <Cargando />;
   return (
@@ -88,28 +94,57 @@ const ConfigurarCamposOlimpiada = () => {
               Configuración de Campos del Formulario de la Olimpiada
             </h2>
             {/* Ejemplo de uso de los arrays filtrados: */}
-            <div>
-              <h3 className="font-semibold">Campos disponibles para Postulante:</h3>
-              <ElegirCamposPostulante 
-                disponibles={catalogoCamposPostulanteFiltrado}
-                seleccionadas={olimpiadaCamposPostulante}
-                setSeleccionadas={setOlimpiadaCamposPostulante}
-                idOlimpiada={id}
-              />
-              <ul>
-                {catalogoCamposPostulanteFiltrado.map(campo => (
-                  <li key={campo.id}>{campo.nombre}</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold">Campos disponibles para Tutor:</h3>
-              <ul>
-                {catalogoCamposTutorFiltrado.map(campo => (
-                  <li key={campo.id}>{campo.nombre}</li>
-                ))}
-              </ul>
-            </div>
+            {step == 1 &&(
+              <div>
+                <h3 className="font-semibold">Campos disponibles para Postulante:</h3>
+                <ElegirCamposPostulante 
+                  disponibles={catalogoCamposPostulanteFiltrado}
+                  seleccionadas={olimpiadaCamposPostulante}
+                  setSeleccionadas={setOlimpiadaCamposPostulante}
+                  idOlimpiada={id}
+                />
+              </div>
+            )}
+
+            {step == 2 &&(
+              <div>
+                <h3 className='font-semibold'>Campos disponibles para Tutor</h3>
+              </div>
+            )}
+          </div>
+          {/* Botones de navegación */}
+          <div className="flex justify-between items-center p-4 bg-white rounded-2xl shadow-md border border-gray-200">
+            {step > 1 && (
+              <button
+                onClick={() => setStep(step - 1)}
+                className="px-5 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
+              >
+                Atrás
+              </button>
+            )}
+      
+            {step === 1 && (
+              <button
+                onClick={() => setStep(2)}
+                className="px-5 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Siguiente
+              </button>
+            )}
+      
+            {step === 2 && (
+              <button
+                onClick={handleSaveClick}
+                disabled={isAdding}
+                className={`px-5 py-2 rounded-md text-white ${
+                  isAdding
+                    ? "bg-gray-400"
+                    : "bg-blue-900 hover:bg-blue-800"
+                }`}
+              >
+                {isAdding ? "Guardando..." : "Guardar Configuración"}
+              </button>
+            )}
           </div>
         </div>
       </div>

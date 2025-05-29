@@ -21,11 +21,24 @@ const ElegirCamposPostulante = ({disponibles, seleccionadas, setSeleccionadas, i
             id_olimpiada: idOlimpiada,
             id_campo_postulante: campoPostulante.id,
             campo_postulante: campoPostulante,
+            esObligatorio: false
         };
         setSeleccionadas([...seleccionadas, olimpiadaCampoPostulante]);
     };
 
     const handleRemove = async (olimpiadaCampoPostulante) => {
+        if(olimpiadaCampoPostulante.campo_postulante.id !== null){
+            const olimpiadaCampoDependiente = seleccionadas.find(
+                c => c.campo_postulante.id_dependencia === olimpiadaCampoPostulante.campo_postulante.id
+            );
+            if(olimpiadaCampoDependiente){
+                setModal({
+                    open: true,
+                    nombre: `${olimpiadaCampoDependiente.campo_postulante.nombre} depende de ${olimpiadaCampoPostulante.campo_postulante.nombre}`,
+                });
+                return;
+            }
+        }
         setSeleccionadas(seleccionadas.filter((a) => a.id_campo_postulante !== olimpiadaCampoPostulante.id_campo_postulante));
     };
     
@@ -68,13 +81,42 @@ const ElegirCamposPostulante = ({disponibles, seleccionadas, setSeleccionadas, i
                     <ul className="flex flex-col gap-3">
                         {seleccionadas.map((olimpiadaCampoPostulante, idx) => {
                             const handleObligatorioChange = (e) => {
-                            const nuevas = [...seleccionadas];
-                            nuevas[idx] = {
-                                ...nuevas[idx],
-                                esObligatorio: e.target.checked
+                                if(olimpiadaCampoPostulante.campo_postulante.id_dependencia !== null){
+                                    const olimpiadaCampoDependencia = seleccionadas.find(
+                                        c => c.campo_postulante.id === olimpiadaCampoPostulante.campo_postulante.id_dependencia
+                                    );
+                                    console.log(olimpiadaCampoDependencia);
+                                    console.log(e.target.checked);
+                                    if(olimpiadaCampoDependencia && !olimpiadaCampoDependencia.esObligatorio && !olimpiadaCampoPostulante.esObligatorio){
+                                        setModal({
+                                            open: true,
+                                            nombre: `${olimpiadaCampoDependencia.campo_postulante.nombre} debe de ser obligatorio primero`,
+                                        });
+                                        return;
+                                    }
+                                }
+
+                                if(olimpiadaCampoPostulante.campo_postulante.id !== null){
+                                    const olimpiadaCampoDependiente = seleccionadas.find(
+                                        c => c.campo_postulante.id_dependencia === olimpiadaCampoPostulante.campo_postulante.id
+                                    );
+                                    console.log(olimpiadaCampoDependiente);
+                                    console.log(e.target.checked);
+                                    if(olimpiadaCampoDependiente && olimpiadaCampoDependiente.esObligatorio && olimpiadaCampoPostulante.esObligatorio){
+                                        setModal({
+                                            open: true,
+                                            nombre: `${olimpiadaCampoDependiente.campo_postulante.nombre} debe dejar de ser obligatorio primero`,
+                                        });
+                                        return;
+                                    }
+                                }
+                                const nuevas = [...seleccionadas];
+                                nuevas[idx] = {
+                                    ...nuevas[idx],
+                                    esObligatorio: e.target.checked
+                                };
+                                setSeleccionadas(nuevas);
                             };
-                            setSeleccionadas(nuevas);
-                        };
                             return (
                                 <li
                                     key={olimpiadaCampoPostulante.id}
