@@ -17,6 +17,7 @@ import CrearOlimpiada from "./pages/admin/CrearOlimpiada"
 import Versiones from "./pages/Versiones"
 import LayoutRegistro from "./pages/user/LayoutRegistro"
 import MenuOlimpiada from "./pages/user/MenuOlimpiada"
+import Reportes from "./pages/admin/Reportes"
 
 function App() {
   return (
@@ -37,6 +38,10 @@ function App() {
         {/* Layout para el admin */}
         <Route path="/AdminLayout" element={<AdminLayout />}>
           <Route path="Olympiad" element={<Olympiad />} />
+
+          <Route path="Reportes" element={<Reportes />} />
+
+
           <Route path="Olympiad/CrearOlimpiada" element={<CrearOlimpiada />} />
           <Route path="Olympiad/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
           <Route path="Olympiad/:id/configurar-campos" element={<ConfigurarCamposOlimpiada/>} />
