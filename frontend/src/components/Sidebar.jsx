@@ -11,7 +11,9 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
   const menuItems = [
-    { label: 'Panel', icon: <PanelIcon />, path: '/AdminLayout' },
+    { label: 'Panel', icon: <PanelIcon />, path: '/AdminLayout/Reportes' },
+    
+
     { label: 'Olimpiada', icon: <OlympiadIcon />, path: '/AdminLayout/Olympiad' },
     { label: 'Areas', icon: <AreasIcon />, path: '/AdminLayout/Areas' },
     { label: 'Nivel/Categoria', icon: <CategoriaIcon />, path: '/AdminLayout/NivelCategoria' },

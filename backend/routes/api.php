@@ -41,6 +41,7 @@ use App\Http\Controllers\PostulanteController;
 
 use App\Http\Controllers\RegistroTutorController;
 
+use App\Http\Controllers\ReporteController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -151,3 +152,7 @@ Route::post('/registro_lista/importar', [Registrolistcontroller::class, 'importa
 Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
 Route::post('/pagos/guardarOrdenPago', [PagoController::class, 'guardarOrdenPago']);
 Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoController::class, 'obtenerOrdenesDePago']);
+
+
+// RUTAS DE REPOSRTE  DE INSCRITOS POR OLIMPIADA
+Route::get('/reporte_inscritos/{idOlimpiada}', [ReporteController::class, 'inscritosPorOlimpiada']);
