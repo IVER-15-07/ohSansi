@@ -47,8 +47,6 @@ use App\Http\Controllers\RegistroTutorController;
 
 use App\Http\Controllers\OpcionCampoPostulanteController;
 
-use App\Http\Controllers\OpcionCampoPostulanteController;
-
 use App\Http\Controllers\ReporteController;
 
 /*
