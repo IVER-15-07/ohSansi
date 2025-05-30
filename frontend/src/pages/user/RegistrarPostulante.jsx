@@ -98,9 +98,9 @@ const RegistrarPostulante = () => {
       }
       const registroEncontrado = registroBuscado.data;
       console.log("Registro encontrado:", registroEncontrado);
-      const camposPostulanteRes = await getOlimpiadaCamposPostulante(idOlimpiada, registroEncontrado.id_postulante);
+      const camposPostulanteRes = (await getOlimpiadaCamposPostulante(idOlimpiada, registroEncontrado.id_postulante)).data;
       const datosIniciales = [];
-      camposPostulanteRes.data.forEach((campo) => {
+      camposPostulanteRes.forEach((campo) => {
         const campoNuevo = {};
         campoNuevo["idOlimpiadaCampoPostulante"] = campo.id;
         campoNuevo["tipo_campo"] = campo.campo_postulante.tipo_campo.nombre;
@@ -141,13 +141,18 @@ const RegistrarPostulante = () => {
       const tutoresGuardados = await Promise.all(
         registrosTutores.map(async (registro) => {
           const camposTutor = (await getOlimpiadaCamposTutor(idOlimpiada, registro.id_tutor)).data;
-          const datosIniciales = camposTutor.map((campo) => ({
-            idOlimpiadaCampoTutor: campo.id,
-            tipo_campo: campo.campo_tutor.tipo_campo.nombre,
-            esObligatorio: campo.esObligatorio,
-            nombre_campo: campo.campo_tutor.nombre,
-            valor: campo.datos_tutor?.length > 0 ? campo.datos_tutor[0].valor : "",
-          }));
+          const datosIniciales = [];
+          camposTutor.forEach((campo) => {
+            const campoNuevo = {};
+            campoNuevo["idOlimpiadaCampoTutor"] = campo.id;
+            campoNuevo["tipo_campo"] = campo.campo_tutor.tipo_campo.nombre;
+            campoNuevo["esObligatorio"] = campo.esObligatorio;
+            campoNuevo["nombre_campo"] = campo.campo_tutor.nombre;
+            campoNuevo["valor"] = campo.datos_tutor?.length > 0
+            ? campo.datos_tutor[0].valor
+            : "";
+            datosIniciales.push(campoNuevo);
+          });
           return {
             idRegistroTutor: registro.id,
             idPersona: registro.tutor.persona.id, 
@@ -231,6 +236,7 @@ const RegistrarPostulante = () => {
         camposPostulanteRes.data.forEach((campo) => {
           const campoNuevo = {};
           campoNuevo["idOlimpiadaCampoPostulante"] = campo.id;
+          campoNuevo["idCampoPostulante"] = campo.campo_postulante.id;
           campoNuevo["tipo_campo"] = campo.campo_postulante.tipo_campo.nombre;
           campoNuevo["esObligatorio"] = campo.esObligatorio;
           campoNuevo["nombre_campo"] = campo.campo_postulante.nombre;
@@ -443,9 +449,11 @@ const RegistrarPostulante = () => {
       const camposTutor = (await getOlimpiadaCamposTutor(idOlimpiada)).data;
       console.log("camposTutor", camposTutor);
       const datosIniciales = [];
-      camposTutor.forEach((campo) => {
+      camposTutor.forEach((campo, index) => {
         const campoNuevo = {};
         campoNuevo["idOlimpiadaCampoTutor"] = campo.id;
+        campoNuevo["idCampoTutor"] = campo.campo_tutor.id;
+        campoNuevo["idDependencia"] = campo.campo_tutor.id_dependencia; 
         campoNuevo["tipo_campo"] = campo.campo_tutor.tipo_campo.nombre;
         campoNuevo["esObligatorio"] = campo.esObligatorio;
         campoNuevo["nombre_campo"] = campo.campo_tutor.nombre;
