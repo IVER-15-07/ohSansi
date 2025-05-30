@@ -24,6 +24,7 @@ class CrearTablaOlimpiada extends Migration
             $table->date('fecha_fin');
             $table->date('inicio_inscripcion')->nullable();
             $table->date('fin_inscripcion')->nullable();
+            $table->boolean('activo')->default(false);
         });
     }
 
