@@ -22,8 +22,8 @@ class CrearTablaOlimpiada extends Migration
             $table->integer('max_areas')->nullable();
             $table->date('fecha_inicio');
             $table->date('fecha_fin');
-            $table->date('inicio_inscripcion');
-            $table->date('fin_inscripcion');
+            $table->date('inicio_inscripcion')->nullable();
+            $table->date('fin_inscripcion')->nullable();
         });
     }
 
