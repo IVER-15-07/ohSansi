@@ -25,7 +25,6 @@ class CampoPostulanteSeeder extends Seeder
             [
                 'nombre' => "Departamento",
                 'id_tipo_campo' => 7,
-                'esLista'=> true,
             ],
             [
                 'nombre' => "Provincia",

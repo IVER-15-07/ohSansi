@@ -1,5 +1,5 @@
 import { CheckCheck, X } from 'lucide-react';
-import Modal from '../../components/Modal';
+import Modal from '../../components/ui/Modal';
 import React, { useState } from 'react';
 import { deleteOlimpiadaCampoTutor } from '../../../service/olimpiada_campos_tutor.api';
 const ElegirCamposTutor = ({disponibles, seleccionadas, setSeleccionadas, idOlimpiada}) => {

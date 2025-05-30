@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import Cargando from '../Cargando';
 import ElegirCamposPostulante from './ElegirCamposPostulante';
 import ElegirCamposTutor from './ElegirCamposTutor';
-import ConfirmationModal from '../../components/ConfirmationModal';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
 
 import { getCatalogoCamposPostulante } from '../../../service/campos_postulante.api';
 import { getCatalogoCamposTutor } from '../../../service/campos_tutor.api';
@@ -14,6 +14,7 @@ import { getOlimpiadaCamposTutor, postOlimpiadaCampoTutor } from '../../../servi
 
 const ConfigurarCamposOlimpiada = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
 
   const [isAdding, setIsAdding] = useState(false);
@@ -115,7 +116,7 @@ const ConfigurarCamposOlimpiada = () => {
         {/* Botón para volver a la vista de Olimpiada */}
         <div className="flex flex-col items-center mb-2">
           <button 
-            onClick={() => navigate('/AdminLayout/Olympiad')}
+            onClick={() => navigate('/AdminLayout/VistaOlimpiadas')}
             className="flex items-center text-blue-600 hover:underline"
           >
             <ArrowLeft size={16} className="mr-1" /> Volver a Olimpiadas

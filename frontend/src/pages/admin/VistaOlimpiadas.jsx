@@ -8,7 +8,7 @@ import { Plus, Settings, Play, Archive, Trash2 } from 'lucide-react'
 import Cargando from '../Cargando';
 import Error from '../Error';
 
-const Olympiad = () => {
+const VistaOlimpiadas = () => {
   const { data: olimpiadas, isLoading, error: errorOlimpiadas } = useQuery({
     queryKey: ['olimpiadas'],
     queryFn: getOlimpiadas,
@@ -36,7 +36,7 @@ const Olympiad = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-semibold text-gray-800">Olimpiadas Creadas</h2>
               <button
-                onClick={() => navigate("/AdminLayout/Olympiad/CrearOlimpiada")}
+                onClick={() => navigate("/AdminLayout/VistaOlimpiadas/CrearOlimpiada")}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
               >
                 <Plus size={18} /> Agregar Olimpiada
@@ -55,15 +55,15 @@ const Olympiad = () => {
                       {olimp.descripcion || "Sin descripción disponible"}
                     </p>
                     <div className="flex justify-between items-center mt-4 gap-3 text-sm font-medium">
-                      <button onClick={() => navigate(`/AdminLayout/Olympiad/${olimp.id}/configurar/${olimp.nombre}`)} 
+                      <button onClick={() => navigate(`/AdminLayout/VistaOlimpiadas/${olimp.id}/configurar/${olimp.nombre}`)} 
                         className="flex items-center text-blue-600 hover:underline">
                         <Settings size={16} className="mr-1" /> Configurar Areas y Niveles
                       </button>  
-                      <button onClick={() => navigate(`/AdminLayout/Olympiad/${olimp.id}/configurarParametros/${olimp.nombre}`)} 
+                      <button onClick={() => navigate(`/AdminLayout/VistaOlimpiadas/${olimp.id}/configurarParametros/${olimp.nombre}`)} 
                         className="flex items-center text-blue-600 hover:underline">
                         <Settings size={16} className="mr-1" /> Configurar Parametros
                       </button>
-                      <button onClick={() => navigate(`/AdminLayout/Olympiad/${olimp.id}/configurar-campos`)} 
+                      <button onClick={() => navigate(`/AdminLayout/VistaOlimpiadas/${olimp.id}/configurar-campos`)} 
                         className="flex items-center text-blue-600 hover:underline">
                         <Settings size={16} className="mr-1" /> Configurar Campos del Formulario
                       </button>
@@ -109,4 +109,4 @@ const Olympiad = () => {
   )
 }
 
-export default Olympiad
+export default VistaOlimpiadas

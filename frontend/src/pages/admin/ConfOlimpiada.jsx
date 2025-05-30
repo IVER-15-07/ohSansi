@@ -11,8 +11,8 @@ import Cargando from '../Cargando';
 import Error from '../Error';
 import ElegirAreas from './ElegirAreas';
 import ElegirNiveles from './ElegirNiveles';
-import ConfirmationModal from '../../components/ConfirmationModal';
-import Modal from '../../components/Modal';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
+import Modal from '../../components/ui/Modal';
 
 const ConfOlimpiada = () => {
   const { id, nombreOlimpiada } = useParams();
@@ -155,7 +155,7 @@ const ConfOlimpiada = () => {
     
     setSuccessMessage('Configuración guardada exitosamente.');
     setTimeout(() => {
-        navigate('/AdminLayout/Olympiad');
+        navigate('/AdminLayout/VistaOlimpiadas');
     }, 2000);
   } catch (error) {
     console.error(error);
@@ -169,7 +169,7 @@ const ConfOlimpiada = () => {
   // Mostrar modal de error si corresponde
   if (modalError) {
     return (
-      <Modal message={modalError} onClose={() => navigate('/AdminLayout/Olympiad')} />
+      <Modal message={modalError} onClose={() => navigate('/AdminLayout/VistaOlimpiadas')} />
     );
   }
   if (modalErrorNiveles) {
@@ -194,7 +194,7 @@ const ConfOlimpiada = () => {
         {/* Botón para volver a la vista de Olimpiada */}
       <div className="flex items-center mb-2">
         <button 
-          onClick={() => navigate('/AdminLayout/Olympiad')}
+          onClick={() => navigate('/AdminLayout/VistaOlimpiadas')}
           className="flex items-center text-blue-600 hover:underline"
         >
           <ArrowLeft size={16} className="mr-1" /> Volver a Olimpiadas
@@ -279,7 +279,7 @@ const ConfOlimpiada = () => {
           onClose={() => 
           {
             setSuccessMessage('');
-            navigate('/AdminLayout/Olympiad');
+            navigate('/AdminLayout/VistaOlimpiadas');
           }
           } 
         />

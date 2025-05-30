@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { createOlimpiada, getOlimpiadas } from '../../../service/olimpiadas.api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import SubirArchivo from '../../components/SubirArchivo';
-import ConfirmationModal from '../../components/ConfirmationModal';
-import Modal from '../../components/Modal';
+import SubirArchivo from '../../components/ui/SubirArchivo';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
+import Modal from '../../components/ui/Modal';
 
 
 const CrearOlimpiada = () => {
@@ -264,7 +264,7 @@ const CrearOlimpiada = () => {
         <div className="sticky bottom-0 flex justify-end mt-4 p-3 gap-2 bg-transparent rounded-b-xl border-t border-gray-200">
           <button
             type="button"
-            onClick={() => redirigir('/AdminLayout/Olympiad')}
+            onClick={() => redirigir('/AdminLayout/VistaOlimpiadas')}
             className="bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition"
           >
             Cancelar
@@ -301,7 +301,7 @@ const CrearOlimpiada = () => {
           message="La olimpiada se ha registrado exitosamente."
           onClose={() => {
             setSuccessModalOpen(false);
-            redirigir('/AdminLayout/Olympiad');
+            redirigir('/AdminLayout/VistaOlimpiadas');
           }}
         />
       )}

@@ -3,10 +3,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAreas, createArea } from '../../../service/areas.api';
 import Cargando from '../Cargando';
 import Error from '../Error';
-import Modal from '../../components/Modal';
-import ConfirmationModal from '../../components/ConfirmationModal';
-import Button from '../../components/Button';
-import Input from '../../components/Input';
+import Modal from '../../components/ui/Modal';
+import ConfirmationModal from '../../components/ui/ConfirmationModal';
+import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 
 const Areas = () => {
   const queryClient = useQueryClient();

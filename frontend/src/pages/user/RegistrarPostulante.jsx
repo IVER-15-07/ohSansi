@@ -996,7 +996,7 @@ const RegistrarPostulante = () => {
           <div>
             <button type="button" className="flex gap-3 p-2 bg-green-500 text-white rounded-md" onClick={enviarDatos}>
               <Plus size={16} />
-              <lable>GUARDAR</lable>
+              <label>GUARDAR</label>
             </button>
           </div> 
         </div>
