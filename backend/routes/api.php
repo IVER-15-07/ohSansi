@@ -47,8 +47,8 @@ use App\Http\Controllers\RegistroTutorController;
 
 use App\Http\Controllers\OpcionCampoPostulanteController;
 
-use App\Http\Controllers\ReporteController;
 
+use App\Http\Controllers\ReporteController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -97,13 +97,13 @@ Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiadasActivas']);
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
 Route::get('/olimpiadas/{id}', [OlimpiadaController::class, 'obtenerOlimpiada']);
-Route::put('/olimpiadas/{id}/modificar', [OlimpiadaController::class, 'modificarOlimpiada']);
 
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS DE POSTULANTE
 Route::get('/campos_postulante', [CampoPostulanteController::class, 'obtenerCatalogoCamposPostulante']);
 
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS DE TUTOR
 Route::get('/campos_tutor', [CampoTutorController::class, 'obtenerCatalogoCamposTutor']);
+Route::put('/olimpiadas/{id}/modificar', [OlimpiadaController::class, 'modificarOlimpiada']);
 
 //RUTAS PARA LOS CAMPOS DE POSTULANTE DADA UNA OLIMPIADA
 Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/{idPostulante}', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
@@ -170,7 +170,6 @@ Route::post('/registro_lista/importar', [Registrolistcontroller::class, 'importa
 Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
 Route::post('/pagos/guardarOrdenPago', [PagoController::class, 'guardarOrdenPago']);
 Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoController::class, 'obtenerOrdenesDePago']);
-
 
 // RUTAS PARA LAS OPCIONES DE CAMPO DE POSTULANTE
 Route::get('/opciones_campo_postulante/agrupadas/{idCampoPostulante}', [OpcionCampoPostulanteController::class, 'opcionesAgrupadas']);

@@ -45,8 +45,8 @@ function App() {
 
           <Route path="Olympiad/CrearOlimpiada" element={<CrearOlimpiada />} />
           <Route path="Olympiad/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
-          <Route path="Olympiad/:id/configurarParametros/:nombreOlimpiada" element={<ConfParamOlimpiada />} />
           <Route path="Olympiad/:id/configurar-campos" element={<ConfigurarCamposOlimpiada/>} />
+          <Route path="Olympiad/:id/configurarParametros/:nombreOlimpiada" element={<ConfParamOlimpiada />} />
           <Route path="Areas" element={<Areas />} />
           <Route path="NivelCategoria" element={<NivelCategoria />} />
         </Route>
