@@ -42,3 +42,17 @@ export const getOlimpiada = async (id) => {
         throw error;
     }
 }
+
+export const updateOlimpiada = async (id, data) => {
+    try {
+        const response = await axiosInstance.post(`/olimpiadas/${id}/modificar`, data, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error updating olimpiada:", error);
+        throw error;
+    }
+};
