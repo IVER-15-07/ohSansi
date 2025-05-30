@@ -15,7 +15,7 @@ class OlimpiadaCampoTutor extends Model
     protected $fillable = [
         'id_olimpiada',
         'id_campo_tutor',
-        'obligatorio'
+        'esObligatorio'
     ];
 
     public function campo_tutor()
