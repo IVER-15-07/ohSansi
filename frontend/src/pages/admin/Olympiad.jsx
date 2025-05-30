@@ -56,8 +56,12 @@ const Olympiad = () => {
                     </p>
                     <div className="flex justify-between items-center mt-4 gap-3 text-sm font-medium">
                       <button onClick={() => navigate(`/AdminLayout/Olympiad/${olimp.id}/configurar/${olimp.nombre}`)} 
-                className="flex items-center text-blue-600 hover:underline">
+                        className="flex items-center text-blue-600 hover:underline">
                         <Settings size={16} className="mr-1" /> Configurar
+                      </button>
+                      <button onClick={() => navigate(`/AdminLayout/Olympiad/${olimp.id}/configurarParametros/${olimp.nombre}`)} 
+                        className="flex items-center text-blue-600 hover:underline">
+                        <Settings size={16} className="mr-1" /> Configurar Parametros
                       </button>
                       <button className="flex items-center text-gray-300 hover:underline">
                         <Play size={16} className="mr-1" /> Iniciar

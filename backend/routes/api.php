@@ -95,6 +95,7 @@ Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiadasActivas']);
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
 Route::get('/olimpiadas/{id}', [OlimpiadaController::class, 'obtenerOlimpiada']);
+Route::put('/olimpiadas/{id}/modificar', [OlimpiadaController::class, 'modificarOlimpiada']);
 
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS DE POSTULANTE
 Route::get('/campos_postulante', [CampoPostulanteController::class, 'obtenerCatalogoCamposPostulante']);
