@@ -49,7 +49,7 @@ const Olympiad = () => {
   };
 
   const handleReportes = (idOlimpiada) => {
-    navigate(`/AdminLayout/Olympiad/${idOlimpiada}`);
+    navigate(`/AdminLayout/Reportes/${idOlimpiada}`);
   };
 
 

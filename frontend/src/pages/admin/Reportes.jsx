@@ -3,7 +3,7 @@ import { getOlimpiadasActivas, getOlimpiadas } from "../../../service/olimpiadas
 
 import { getReportes } from "../../../service/Reporte.api"; // Asegúrate de tener esta función en tu servicio
 
-
+import { useParams } from "react-router-dom";
 
 
 
@@ -12,6 +12,9 @@ const Reportes = () => {
   const [olimpiadasActivas, setOlimpiadasActivas] = useState([]);
   const [olimpiadas, setOlimpiadas] = useState([]);
   const [error, setError] = useState(null);
+
+
+  const { idOlimpiada } = useParams();
   
  
   const [olimpiadaSeleccionada, setOlimpiadaSeleccionada] = useState(null);
@@ -29,6 +32,16 @@ const Reportes = () => {
       .catch(() => setError("Error al cargar todas las olimpiadas"));
   }, []);
 
+
+  
+  useEffect(() => {
+  if (idOlimpiada && olimpiadas.length > 0) {
+    const olimpiada = olimpiadas.find(o => o.id === Number(idOlimpiada));
+    if (olimpiada) {
+      cargarReportes(olimpiada);
+    }
+  }
+}, [idOlimpiada, olimpiadas]);
 
 
 const cargarReportes = (olimpiada) => {

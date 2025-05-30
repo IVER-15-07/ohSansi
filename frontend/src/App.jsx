@@ -27,7 +27,7 @@ function App() {
 
         {/* Layout para público */}
         <Route path="/" element={<UserLayout />}>
-          <Route index element={<Home />} /> 
+          <Route index element={<Home />} />
           <Route path="versiones" element={<Versiones />} />
           <Route path="/olimpiadas/:idOlimpiada" element={<MenuOlimpiada />} />
           <Route path="IdentificarEncargado" element={<IdentificarEncargado />} />
@@ -40,14 +40,15 @@ function App() {
         <Route path="/AdminLayout" element={<AdminLayout />}>
           <Route path="Olympiad" element={<Olympiad />} />
 
-          <Route path="/AdminLayout/Olympiad/:id/reportes" element={<Reportes />} />
+          <Route path="/AdminLayout/Reportes/:idOlimpiada" element={<Reportes />} />
+         <Route path="Reportes" element={<Reportes />} />
 
 
           <Route path="Olympiad/CrearOlimpiada" element={<CrearOlimpiada />} />
           <Route path="Olympiad/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
 
           <Route path="Olympiad/:id/configurarParametros/:nombreOlimpiada" element={<ConfParamOlimpiada />} />
-          <Route path="Olympiad/:id/configurar-campos" element={<ConfigurarCamposOlimpiada/>} />
+          <Route path="Olympiad/:id/configurar-campos" element={<ConfigurarCamposOlimpiada />} />
           <Route path="Areas" element={<Areas />} />
           <Route path="NivelCategoria" element={<NivelCategoria />} />
         </Route>
