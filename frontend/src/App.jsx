@@ -40,7 +40,7 @@ function App() {
         <Route path="/AdminLayout" element={<AdminLayout />}>
           <Route path="Olympiad" element={<Olympiad />} />
 
-          <Route path="Reportes" element={<Reportes />} />
+          <Route path="/AdminLayout/Olympiad/:id/reportes" element={<Reportes />} />
 
 
           <Route path="Olympiad/CrearOlimpiada" element={<CrearOlimpiada />} />

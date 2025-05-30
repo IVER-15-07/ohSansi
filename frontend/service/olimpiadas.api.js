@@ -19,6 +19,22 @@ export const getOlimpiadasActivas = async () => {
         throw error;
     }
 }
+
+export const iniciarOlimpiada = async (id) => {
+    try {
+        const response = await axiosInstance.post(`/activarolimpiada/${id}`);
+        return response.data;
+    } catch (error) {
+        if (error.response && error.response.data) {
+            throw error.response.data; 
+        }
+        throw error;
+    }
+}
+
+
+
+
 export const createOlimpiada = async (data) => {
     try {
         const response = await axiosInstance.post("/olimpiadas", data, {
