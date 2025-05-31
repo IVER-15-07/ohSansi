@@ -91,8 +91,6 @@ const Reportes = () => {
     );
   });
 
-
-
   const camposAdicionales = Array.from(
     new Set(
       reportes.flatMap(

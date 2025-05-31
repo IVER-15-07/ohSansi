@@ -45,31 +45,31 @@ class OlimpiadaController extends Controller
      */
     public function obtenerOlimpiadasActivas(Request $request)
     {
-        try {
+         try {
+        // Primero, actualiza el estado de las olimpiadas vencidas
+        Olimpiada::where('activo', true)
+            ->whereDate('fecha_fin', '<', now())
+            ->update(['activo' => false]);
 
-            Olimpiada::where('activo', true)
-                ->whereDate('fecha_fin', '<', now())
-                ->update(['activo' => false]);
+        // Limpia la caché antes de guardar el nuevo resultado
+        Cache::forget('olimpiadasActivas');
 
+        // Guarda en caché las olimpiadas activas actualizadas
+        $olimpiadasActivas = Cache::remember('olimpiadasActivas', 3600, function () {
+            return Olimpiada::where('activo', true)->get();
+        });
 
-            // Intenta obtener las olimpiadas desde la caché
-            $olimpiadasActivas = Cache::remember('olimpiadasActivas', 3600, function () {
-                return Olimpiada::where('activo', true)->get();
-            });
-
-            // Retornar una respuesta exitosa
-            return response()->json([
-                'success' => true,
-                'data' => $olimpiadasActivas,
-            ], 200);
-        } catch (\Exception $e) {
-            // Manejar errores y retornar una respuesta
-            return response()->json([
-                'success' => false,
-                'status' => 'error',
-                'message' => 'Error al obtener las olimpiadas activas: ' . $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $olimpiadasActivas,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'status' => 'error',
+            'message' => 'Error al obtener las olimpiadas activas: ' . $e->getMessage(),
+        ], 500);
+    }
     }
 
 
