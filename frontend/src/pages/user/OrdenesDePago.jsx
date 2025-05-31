@@ -66,15 +66,35 @@ const OrdenesDePago = () => {
     );
   };
 
-  // Seleccionar todos
-  const handleSeleccionarTodos = () => {
-    const todosIds = registros.map((r) => r.id_inscripcion);
-    if (registrosSeleccionados.length === todosIds.length) {
-      setRegistrosSeleccionados([]);
-    } else {
-      setRegistrosSeleccionados(todosIds);
-    }
-  };
+  // Seleccionar/deseleccionar todos los individuales
+const handleSeleccionarTodosIndividuales = () => {
+  const idsIndividuales = registrosIndividuales.map((r) => r.id_inscripcion);
+  const todosSeleccionados = idsIndividuales.every((id) => registrosSeleccionados.includes(id));
+  if (todosSeleccionados) {
+    setRegistrosSeleccionados((prev) => prev.filter((id) => !idsIndividuales.includes(id)));
+  } else {
+    setRegistrosSeleccionados((prev) => [
+      ...prev,
+      ...idsIndividuales.filter((id) => !prev.includes(id)),
+    ]);
+  }
+};
+
+// Seleccionar/deseleccionar todos los de lista
+const handleSeleccionarTodosListas = () => {
+  const idsListas = registrosPorLista.flatMap(([_, listaRegistros]) =>
+    listaRegistros.map((r) => r.id_inscripcion)
+  );
+  const todosSeleccionados = idsListas.every((id) => registrosSeleccionados.includes(id));
+  if (todosSeleccionados) {
+    setRegistrosSeleccionados((prev) => prev.filter((id) => !idsListas.includes(id)));
+  } else {
+    setRegistrosSeleccionados((prev) => [
+      ...prev,
+      ...idsListas.filter((id) => !prev.includes(id)),
+    ]);
+  }
+};
 
   // Seleccionar todos los registros de una lista
   const handleSeleccionarLista = (listaRegistros) => {
@@ -254,26 +274,40 @@ const OrdenesDePago = () => {
           )}
 
           <div className="text-center mt-2 mb-8 flex flex-wrap gap-4 justify-center">
-          <button
-            onClick={handleSeleccionarTodos}
-            className="px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition"
-          >
-            {registrosSeleccionados.length === registros.length
-              ? "Deseleccionar todo"
-              : "Seleccionar todo"}
-          </button>
-          <button
-            onClick={generarOrdenDePago}
-            className={`px-6 py-3 rounded-lg font-medium transition ${
-              registrosSeleccionados.length > 0
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "bg-gray-400 text-gray-700 cursor-not-allowed"
-            }`}
-            disabled={registrosSeleccionados.length === 0}
-          >
-            Generar Orden de Pago
-          </button>
-        </div>
+            <button
+              onClick={handleSeleccionarTodosIndividuales}
+              className="px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition"
+              type="button"
+            >
+              {registrosIndividuales.every((r) => registrosSeleccionados.includes(r.id_inscripcion)) && registrosIndividuales.length > 0
+                ? "Deseleccionar todos los registros individuales"
+                : "Seleccionar todos los registros individuales"}
+            </button>
+            <button
+              onClick={handleSeleccionarTodosListas}
+              className="px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition"
+              type="button"
+            >
+              {registrosPorLista.length > 0 &&
+              registrosPorLista
+                .flatMap(([_, listaRegistros]) => listaRegistros.map((r) => r.id_inscripcion))
+                .every((id) => registrosSeleccionados.includes(id))
+                ? "Deseleccionar todos los registros por listas"
+                : "Seleccionar todos los registros por listas"}
+            </button>
+            <button
+              onClick={generarOrdenDePago}
+              className={`px-6 py-3 rounded-lg font-medium transition ${
+                registrosSeleccionados.length > 0
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-400 text-gray-700 cursor-not-allowed"
+              }`}
+              disabled={registrosSeleccionados.length === 0}
+              type="button"
+            >
+              Generar Orden de Pago
+            </button>
+          </div>
 
           {/* Órdenes de Pago */}
           <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
