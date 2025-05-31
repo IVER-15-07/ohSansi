@@ -4,7 +4,8 @@ import { getOlimpiadasActivas, getOlimpiadas } from "../../../service/olimpiadas
 import { getReportes } from "../../../service/Reporte.api"; // Asegúrate de tener esta función en tu servicio
 
 import { useParams } from "react-router-dom";
-import { User, FileText , Users} from "lucide-react";
+import { User, FileText, Users } from "lucide-react";
+import Estadisticas from "./Estadisticas";
 
 
 
@@ -22,6 +23,7 @@ const Reportes = () => {
   const [categorias, setCategorias] = useState([]);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
   const [busqueda, setBusqueda] = useState("");
+  const [tab, setTab] = useState("reporte");
 
   useEffect(() => {
     getOlimpiadasActivas()
@@ -112,11 +114,11 @@ const Reportes = () => {
 
 
   return (
-    <div className="flex flex-col items-center py-2">
-      <h1 className="text-2xl font-bold mb-4">Reportes de Inscritos</h1>
+    <div className="flex flex-col   px-2">
+      <h1 className=" text-2xl text-center font-bold mb-4">Reportes de Inscritos</h1>
       {error && <p className="text-red-500">{error}</p>}
 
-      <div className="w-full max-w-2xl">
+      <div className="w-full px-10">
         <h2 className="text-xl font-semibold mt-6 mb-2 text-green-700">Olimpiadas Activas</h2>
         <ul className="mb-6">
           {olimpiadasActivas.length === 0 && <li className="text-gray-500">No hay olimpiadas activas.</li>}
@@ -151,157 +153,183 @@ const Reportes = () => {
       </div>
 
       {olimpiadaSeleccionada && (
-        <div className="w-full max-w-2xl mt-8">
+        <div className="w-full px-10 mt-8">
           <h3 className="text-lg font-bold mb-2">
             Reportes de la olimpiada seleccionada (ID: {olimpiadaSeleccionada.nombre})
           </h3>
 
-
-          {/* Buscador */}
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Buscar por nombre, apellido o CI"
-              value={busqueda}
-              onChange={e => setBusqueda(e.target.value)}
-              className="border px-2 py-1 rounded w-full"
-            />
+          {/* Tabs */}
+          <div className="flex mb-4 border-b">
+            <button
+              className={`px-4 py-2 font-semibold ${tab === "reporte"
+                ? "border-b-2 border-blue-600 text-black"
+                : "text-gray-500"
+                }`}
+              onClick={() => setTab("reporte")}
+            >
+              Reporte
+            </button>
+            <button
+              className={`px-4 py-2 font-semibold ${tab === "estadisticas"
+                ? "border-b-2 border-blue-600 text-black"
+                : "text-gray-500"
+                }`}
+              onClick={() => setTab("estadisticas")}
+            >
+              Estadísticas
+            </button>
           </div>
 
+          {/* Contenido de las pestañas */}
+          {tab === "reporte" && (
+            <>
+              {/* Buscador */}
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, apellido o CI"
+                  value={busqueda}
+                  onChange={e => setBusqueda(e.target.value)}
+                  className="border px-2 py-1 rounded w-full"
+                />
+              </div>
 
-          {/* Formulario para filtrar por área */}
-          {areas.length > 0 && (
-            <form className="mb-4">
-              <label className="mr-2 font-semibold">Filtrar por área:</label>
-              <select
-                value={areaSeleccionada}
-                onChange={handleAreaChange}
-                className="border px-2 py-1 rounded"
-              >
-                <option value="">Todas las áreas</option>
-                {areas.map(area => (
-                  <option key={area} value={area}>{area}</option>
-                ))}
-              </select>
-            </form>
+
+              {/* Formulario para filtrar por área */}
+              {areas.length > 0 && (
+                <form className="mb-4">
+                  <label className="mr-2 font-semibold">Filtrar por área:</label>
+                  <select
+                    value={areaSeleccionada}
+                    onChange={handleAreaChange}
+                    className="border px-2 py-1 rounded"
+                  >
+                    <option value="">Todas las áreas</option>
+                    {areas.map(area => (
+                      <option key={area} value={area}>{area}</option>
+                    ))}
+                  </select>
+                </form>
+              )}
+
+              {categorias.length > 0 && (
+                <form className="mb-4">
+                  <label className="mr-2 font-semibold">Filtrar por categoría:</label>
+                  <select
+                    value={categoriaSeleccionada}
+                    onChange={handleCategoriaChange}
+                    className="border px-2 py-1 rounded"
+                  >
+                    <option value="">Todas las categorías</option>
+                    {categorias.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </form>
+              )}
+
+
+              {loadingReportes ? (
+                <p>Cargando reportes...</p>
+              ) : reportes.length === 0 ? (
+                <p className="text-gray-500">No hay reportes para esta olimpiada.</p>
+              ) : (
+                <table className="min-w-full border">
+                  <thead>
+                    <tr>
+                      <th className="border px-2 py-1">Nombres</th>
+                      <th className="border px-2 py-1">Apellidos</th>
+                      <th className="border px-2 py-1">CI</th>
+                      <th className="border px-2 py-1">Área</th>
+                      <th className="border px-2 py-1">Categoría</th>
+                      {/* Campos adicionales del postulante */}
+                      {camposAdicionales.map((campo) => (
+                        <th key={campo} className="border px-2 py-1">{campo}</th>
+                      ))}
+
+                      <th className="border px-2 py-1">Tutor Nombres</th>
+                      <th className="border px-2 py-1">Tutor Apellidos</th>
+                      <th className="border px-2 py-1">Tutor CI</th>
+
+
+                      {/* Si quieres mostrar datos del tutor, agrega aquí */}
+                      {camposTutor.map((campo) => (
+                        <th key={campo} className="border px-2 py-1">Tutor: {campo}</th>
+                      ))}
+
+                      <th className="border px-2 py-1">Estado de Pago</th>
+                      <th className="border px-2 py-1">Validado</th>
+                      <th className="border px-2 py-1">Tipo de Inscripcion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportesFiltrados.map((r, idx) => (
+                      <tr key={idx}>
+                        <td className="border px-2 py-1">{r.postulante.nombres}</td>
+                        <td className="border px-2 py-1">{r.postulante.apellidos}</td>
+                        <td className="border px-2 py-1">{r.postulante.ci}</td>
+                        <td className="border px-2 py-1">{r.postulante.area_categoria.area}</td>
+                        <td className="border px-2 py-1">{r.postulante.area_categoria.categoria}</td>
+                        {/* Valores dinámicos de campos adicionales del postulante */}
+                        {camposAdicionales.map((campo) => {
+                          const dato = (r.postulante.datos_adicionales?.[0] || []).find(d => d.campo === campo);
+                          return (
+                            <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
+                          );
+                        })}
+
+                        {/* Datos principales del tutor */}
+                        <td className="border px-2 py-1">{r.tutor?.nombres || ""}</td>
+                        <td className="border px-2 py-1">{r.tutor?.apellidos || ""}</td>
+                        <td className="border px-2 py-1">{r.tutor?.ci || ""}</td>
+                        {/* ...campos adicionales del tutor... */}
+
+
+
+                        {/* Si quieres mostrar datos del tutor, agrega aquí */}
+                        {camposTutor.map((campo) => {
+                          const dato = (r.tutor?.datos_adicionales?.[0] || []).find(d => d.campo === campo);
+                          return (
+                            <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
+                          );
+                        })}
+
+
+                        <td className="border px-2 py-1">{r.estado_pago}</td>
+                        <td className="border px-2 py-1">{r.validado}</td>
+                        <td className="border px-2 py-1">
+                          {r.tipo_inscripcion === "Individual" ? (
+                            <>
+                              <User size={18} /> {r.tipo_inscripcion}
+                            </>
+                          ) : (
+                            <>
+                              <Users size={18} /> {r.tipo_inscripcion} <FileText size={18} />
+                            </>
+                          )}
+                        </td>
+
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+            </>
           )}
 
-          {categorias.length > 0 && (
-            <form className="mb-4">
-              <label className="mr-2 font-semibold">Filtrar por categoría:</label>
-              <select
-                value={categoriaSeleccionada}
-                onChange={handleCategoriaChange}
-                className="border px-2 py-1 rounded"
-              >
-                <option value="">Todas las categorías</option>
-                {categorias.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </form>
-          )}
-
-
-
-
-
-
-
-
-          {loadingReportes ? (
-            <p>Cargando reportes...</p>
-          ) : reportes.length === 0 ? (
-            <p className="text-gray-500">No hay reportes para esta olimpiada.</p>
-          ) : (
-            <table className="min-w-full border">
-              <thead>
-                <tr>
-                  <th className="border px-2 py-1">Nombres</th>
-                  <th className="border px-2 py-1">Apellidos</th>
-                  <th className="border px-2 py-1">CI</th>
-                  <th className="border px-2 py-1">Área</th>
-                  <th className="border px-2 py-1">Categoría</th>
-                  {/* Campos adicionales del postulante */}
-                  {camposAdicionales.map((campo) => (
-                    <th key={campo} className="border px-2 py-1">{campo}</th>
-                  ))}
-
-                  <th className="border px-2 py-1">Tutor Nombres</th>
-                  <th className="border px-2 py-1">Tutor Apellidos</th>
-                  <th className="border px-2 py-1">Tutor CI</th>
-
-
-                  {/* Si quieres mostrar datos del tutor, agrega aquí */}
-                  {camposTutor.map((campo) => (
-                    <th key={campo} className="border px-2 py-1">Tutor: {campo}</th>
-                  ))}
-
-                  <th className="border px-2 py-1">Estado de Pago</th>
-                  <th className="border px-2 py-1">Validado</th>
-                  <th className="border px-2 py-1">Tipo de Inscripcion</th>
-
-
-
-                </tr>
-              </thead>
-              <tbody>
-                {reportesFiltrados.map((r, idx) => (
-                  <tr key={idx}>
-                    <td className="border px-2 py-1">{r.postulante.nombres}</td>
-                    <td className="border px-2 py-1">{r.postulante.apellidos}</td>
-                    <td className="border px-2 py-1">{r.postulante.ci}</td>
-                    <td className="border px-2 py-1">{r.postulante.area_categoria.area}</td>
-                    <td className="border px-2 py-1">{r.postulante.area_categoria.categoria}</td>
-                    {/* Valores dinámicos de campos adicionales del postulante */}
-                    {camposAdicionales.map((campo) => {
-                      const dato = (r.postulante.datos_adicionales?.[0] || []).find(d => d.campo === campo);
-                      return (
-                        <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
-                      );
-                    })}
-
-                    {/* Datos principales del tutor */}
-                    <td className="border px-2 py-1">{r.tutor?.nombres || ""}</td>
-                    <td className="border px-2 py-1">{r.tutor?.apellidos || ""}</td>
-                    <td className="border px-2 py-1">{r.tutor?.ci || ""}</td>
-                    {/* ...campos adicionales del tutor... */}
-
-
-
-                    {/* Si quieres mostrar datos del tutor, agrega aquí */}
-                    {camposTutor.map((campo) => {
-                      const dato = (r.tutor?.datos_adicionales?.[0] || []).find(d => d.campo === campo);
-                      return (
-                        <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
-                      );
-                    })}
-
-
-                    <td className="border px-2 py-1">{r.estado_pago}</td>
-                    <td className="border px-2 py-1">{r.validado}</td>
-                    <td className="border px-2 py-1">
-                      {r.tipo_inscripcion === "Individual" ? (
-                        <>
-                          <User size={18} /> {r.tipo_inscripcion}
-                        </>
-                      ) : (
-                        <>
-                          <Users size={18} /> {r.tipo_inscripcion} <FileText size={18} />
-                        </>
-                      )}
-                    </td>
-
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {tab === "estadisticas" && (
+            <div>
+              {reportes.length > 0 ? (
+                <Estadisticas reportes={reportes} />
+              ) : (
+                <p className="text-gray-500">No hay datos para mostrar estadísticas.</p>
+              )}
+            </div>
           )}
         </div>
       )}
     </div>
-
-
   )
 }
 
