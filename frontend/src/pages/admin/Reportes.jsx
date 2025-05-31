@@ -4,6 +4,7 @@ import { getOlimpiadasActivas, getOlimpiadas } from "../../../service/olimpiadas
 import { getReportes } from "../../../service/Reporte.api"; // Asegúrate de tener esta función en tu servicio
 
 import { useParams } from "react-router-dom";
+import { User, FileText , Users} from "lucide-react";
 
 
 
@@ -226,11 +227,22 @@ const Reportes = () => {
                     <th key={campo} className="border px-2 py-1">{campo}</th>
                   ))}
 
+                  <th className="border px-2 py-1">Tutor Nombres</th>
+                  <th className="border px-2 py-1">Tutor Apellidos</th>
+                  <th className="border px-2 py-1">Tutor CI</th>
+
 
                   {/* Si quieres mostrar datos del tutor, agrega aquí */}
                   {camposTutor.map((campo) => (
                     <th key={campo} className="border px-2 py-1">Tutor: {campo}</th>
                   ))}
+
+                  <th className="border px-2 py-1">Estado de Pago</th>
+                  <th className="border px-2 py-1">Validado</th>
+                  <th className="border px-2 py-1">Tipo de Inscripcion</th>
+
+
+
                 </tr>
               </thead>
               <tbody>
@@ -248,6 +260,15 @@ const Reportes = () => {
                         <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
                       );
                     })}
+
+                    {/* Datos principales del tutor */}
+                    <td className="border px-2 py-1">{r.tutor?.nombres || ""}</td>
+                    <td className="border px-2 py-1">{r.tutor?.apellidos || ""}</td>
+                    <td className="border px-2 py-1">{r.tutor?.ci || ""}</td>
+                    {/* ...campos adicionales del tutor... */}
+
+
+
                     {/* Si quieres mostrar datos del tutor, agrega aquí */}
                     {camposTutor.map((campo) => {
                       const dato = (r.tutor?.datos_adicionales?.[0] || []).find(d => d.campo === campo);
@@ -255,6 +276,22 @@ const Reportes = () => {
                         <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
                       );
                     })}
+
+
+                    <td className="border px-2 py-1">{r.estado_pago}</td>
+                    <td className="border px-2 py-1">{r.validado}</td>
+                    <td className="border px-2 py-1">
+                      {r.tipo_inscripcion === "Individual" ? (
+                        <>
+                          <User size={18} /> {r.tipo_inscripcion}
+                        </>
+                      ) : (
+                        <>
+                          <Users size={18} /> {r.tipo_inscripcion} <FileText size={18} />
+                        </>
+                      )}
+                    </td>
+
                   </tr>
                 ))}
               </tbody>

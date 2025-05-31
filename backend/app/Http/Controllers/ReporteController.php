@@ -27,6 +27,11 @@ class ReporteController extends Controller
 
 
 
+                'registro.inscripciones.pago',
+                'registro.inscripciones.lista',
+
+
+
 
             ])
                 ->whereHas('registro', function ($q) use ($idOlimpiada) {
@@ -44,6 +49,10 @@ class ReporteController extends Controller
 
 
                 $encargado = $registro->encargado ?? null;
+
+                $pago = $inscripcion->pago ?? null;
+
+
 
 
 
@@ -98,6 +107,10 @@ class ReporteController extends Controller
                         'ci' => $encargado->persona->ci ?? null,
                         'correo' => $encargado->correo ?? null,
                     ] : null,
+
+                    'estado_pago' => $pago ? ($pago->fecha_pago ? 'Pagado' : 'Pendiente') : 'Sin pago',
+                    'validado' => $pago && $pago->fecha_pago ? 'Validado' : 'Pendiente',
+                    'tipo_inscripcion' => $inscripcion->lista ? 'Por lista' : 'Individual', // Cambia esto si tu campo es diferente
 
 
 
