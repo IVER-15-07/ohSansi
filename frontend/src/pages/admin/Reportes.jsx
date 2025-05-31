@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getOlimpiadasActivas, getOlimpiadas } from "../../../service/olimpiadas.api";
 
 import { getReportes } from "../../../service/Reporte.api"; // Asegúrate de tener esta función en tu servicio
@@ -12,69 +12,106 @@ const Reportes = () => {
   const [olimpiadasActivas, setOlimpiadasActivas] = useState([]);
   const [olimpiadas, setOlimpiadas] = useState([]);
   const [error, setError] = useState(null);
-
-
   const { idOlimpiada } = useParams();
-  
- 
   const [olimpiadaSeleccionada, setOlimpiadaSeleccionada] = useState(null);
   const [reportes, setReportes] = useState([]);
   const [loadingReportes, setLoadingReportes] = useState(false);
+  const [areas, setAreas] = useState([]);
+  const [areaSeleccionada, setAreaSeleccionada] = useState("");
+  const [categorias, setCategorias] = useState([]);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
+  const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
-    // Cargar olimpiadas activas
     getOlimpiadasActivas()
       .then(res => setOlimpiadasActivas(res.data))
       .catch(() => setError("Error al cargar olimpiadas activas"));
-    // Cargar todas las olimpiadas
     getOlimpiadas()
       .then(res => setOlimpiadas(res.data))
       .catch(() => setError("Error al cargar todas las olimpiadas"));
   }, []);
 
-
-  
   useEffect(() => {
-  if (idOlimpiada && olimpiadas.length > 0) {
-    const olimpiada = olimpiadas.find(o => o.id === Number(idOlimpiada));
-    if (olimpiada) {
-      cargarReportes(olimpiada);
+    if (idOlimpiada && olimpiadas.length > 0) {
+      const olimpiada = olimpiadas.find(o => o.id === Number(idOlimpiada));
+      if (olimpiada) {
+        cargarReportes(olimpiada, "");
+      }
     }
-  }
-}, [idOlimpiada, olimpiadas]);
+  }, [idOlimpiada, olimpiadas]);
 
 
-const cargarReportes = (olimpiada) => {
-  setLoadingReportes(true);
-  setOlimpiadaSeleccionada(olimpiada); // Guarda el objeto completo
-  getReportes(olimpiada.id)
-    .then(res => setReportes(res.data))
-    .catch(() => setReportes([]))
-    .finally(() => setLoadingReportes(false));
-};
+  const cargarReportes = (olimpiada, area = "", categoria = "") => {
+    setLoadingReportes(true);
+    setOlimpiadaSeleccionada(olimpiada);
+    getReportes(olimpiada.id, area, categoria)
+      .then(res => {
+        setReportes(res.data);
+        // Extraer áreas y categorías únicas
+        const areasUnicas = Array.from(
+          new Set(res.data.map(r => r.postulante.area_categoria.area).filter(Boolean))
+        );
+        setAreas(areasUnicas);
+        const categoriasUnicas = Array.from(
+          new Set(res.data.map(r => r.postulante.area_categoria.categoria).filter(Boolean))
+        );
+        setCategorias(categoriasUnicas);
+      })
+      .catch(() => setReportes([]))
+      .finally(() => setLoadingReportes(false));
+  };
+
+  const handleCategoriaChange = (e) => {
+    const categoria = e.target.value;
+    setCategoriaSeleccionada(categoria);
+    if (olimpiadaSeleccionada) {
+      cargarReportes(olimpiadaSeleccionada, areaSeleccionada, categoria);
+    }
+  };
+
+
+  const handleAreaChange = (e) => {
+    const area = e.target.value;
+    setAreaSeleccionada(area);
+    if (olimpiadaSeleccionada) {
+      cargarReportes(olimpiadaSeleccionada, area);
+    }
+  };
+
+  // Buscador: filtra reportes por nombre, apellido o CI
+  const reportesFiltrados = reportes.filter(r => {
+    const texto = busqueda.toLowerCase();
+    return (
+      (r.postulante.nombres && r.postulante.nombres.toLowerCase().includes(texto)) ||
+      (r.postulante.apellidos && r.postulante.apellidos.toLowerCase().includes(texto)) ||
+      (r.postulante.ci && r.postulante.ci.toLowerCase().includes(texto))
+    );
+  });
+
+
 
   const camposAdicionales = Array.from(
-  new Set(
-    reportes.flatMap(
-      (item) =>
-        (item.postulante.datos_adicionales?.[0] || []).map((d) => d.campo) || []
+    new Set(
+      reportes.flatMap(
+        (item) =>
+          (item.postulante.datos_adicionales?.[0] || []).map((d) => d.campo) || []
+      )
     )
-  )
-);
+  );
 
-// Obtén todos los nombres de campos adicionales únicos de los tutores (si los usas)
-const camposTutor = Array.from(
-  new Set(
-    reportes.flatMap(
-      (item) =>
-        (item.tutor?.datos_adicionales?.[0] || []).map((d) => d.campo) || []
+  // Obtén todos los nombres de campos adicionales únicos de los tutores (si los usas)
+  const camposTutor = Array.from(
+    new Set(
+      reportes.flatMap(
+        (item) =>
+          (item.tutor?.datos_adicionales?.[0] || []).map((d) => d.campo) || []
+      )
     )
-  )
-);
+  );
 
 
   return (
-    <div className="flex flex-col items-center py-8">
+    <div className="flex flex-col items-center py-2">
       <h1 className="text-2xl font-bold mb-4">Reportes de Inscritos</h1>
       {error && <p className="text-red-500">{error}</p>}
 
@@ -112,63 +149,119 @@ const camposTutor = Array.from(
         </ul>
       </div>
 
-       {olimpiadaSeleccionada && (
-      <div className="w-full max-w-2xl mt-8">
-        <h3 className="text-lg font-bold mb-2">
-          Reportes de la olimpiada seleccionada (ID: {olimpiadaSeleccionada.nombre})
-        </h3>
-        {loadingReportes ? (
-          <p>Cargando reportes...</p>
-        ) : reportes.length === 0 ? (
-          <p className="text-gray-500">No hay reportes para esta olimpiada.</p>
-        ) : (
-          <table className="min-w-full border">
-            <thead>
-              <tr>
-                <th className="border px-2 py-1">Nombres</th>
-                <th className="border px-2 py-1">Apellidos</th>
-                <th className="border px-2 py-1">CI</th>
-                <th className="border px-2 py-1">Área</th>
-                <th className="border px-2 py-1">Categoría</th>
-                {/* Campos adicionales del postulante */}
-                {camposAdicionales.map((campo) => (
-                  <th key={campo} className="border px-2 py-1">{campo}</th>
+      {olimpiadaSeleccionada && (
+        <div className="w-full max-w-2xl mt-8">
+          <h3 className="text-lg font-bold mb-2">
+            Reportes de la olimpiada seleccionada (ID: {olimpiadaSeleccionada.nombre})
+          </h3>
+
+
+          {/* Buscador */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Buscar por nombre, apellido o CI"
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              className="border px-2 py-1 rounded w-full"
+            />
+          </div>
+
+
+          {/* Formulario para filtrar por área */}
+          {areas.length > 0 && (
+            <form className="mb-4">
+              <label className="mr-2 font-semibold">Filtrar por área:</label>
+              <select
+                value={areaSeleccionada}
+                onChange={handleAreaChange}
+                className="border px-2 py-1 rounded"
+              >
+                <option value="">Todas las áreas</option>
+                {areas.map(area => (
+                  <option key={area} value={area}>{area}</option>
                 ))}
-                {/* Si quieres mostrar datos del tutor, agrega aquí */}
-                {/* {camposTutor.map((campo) => (
-                  <th key={campo} className="border px-2 py-1">Tutor: {campo}</th>
-                ))} */}
-              </tr>
-            </thead>
-            <tbody>
-              {reportes.map((r, idx) => (
-                <tr key={idx}>
-                  <td className="border px-2 py-1">{r.postulante.nombres}</td>
-                  <td className="border px-2 py-1">{r.postulante.apellidos}</td>
-                  <td className="border px-2 py-1">{r.postulante.ci}</td>
-                  <td className="border px-2 py-1">{r.postulante.area_categoria.area}</td>
-                  <td className="border px-2 py-1">{r.postulante.area_categoria.categoria}</td>
-                  {/* Valores dinámicos de campos adicionales del postulante */}
-                  {camposAdicionales.map((campo) => {
-                    const dato = (r.postulante.datos_adicionales?.[0] || []).find(d => d.campo === campo);
-                    return (
-                      <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
-                    );
-                  })}
+              </select>
+            </form>
+          )}
+
+          {categorias.length > 0 && (
+            <form className="mb-4">
+              <label className="mr-2 font-semibold">Filtrar por categoría:</label>
+              <select
+                value={categoriaSeleccionada}
+                onChange={handleCategoriaChange}
+                className="border px-2 py-1 rounded"
+              >
+                <option value="">Todas las categorías</option>
+                {categorias.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </form>
+          )}
+
+
+
+
+
+
+
+
+          {loadingReportes ? (
+            <p>Cargando reportes...</p>
+          ) : reportes.length === 0 ? (
+            <p className="text-gray-500">No hay reportes para esta olimpiada.</p>
+          ) : (
+            <table className="min-w-full border">
+              <thead>
+                <tr>
+                  <th className="border px-2 py-1">Nombres</th>
+                  <th className="border px-2 py-1">Apellidos</th>
+                  <th className="border px-2 py-1">CI</th>
+                  <th className="border px-2 py-1">Área</th>
+                  <th className="border px-2 py-1">Categoría</th>
+                  {/* Campos adicionales del postulante */}
+                  {camposAdicionales.map((campo) => (
+                    <th key={campo} className="border px-2 py-1">{campo}</th>
+                  ))}
+
+
                   {/* Si quieres mostrar datos del tutor, agrega aquí */}
-                  {/* {camposTutor.map((campo) => {
-                    const dato = (r.tutor?.datos_adicionales?.[0] || []).find(d => d.campo === campo);
-                    return (
-                      <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
-                    );
-                  })} */}
+                  {camposTutor.map((campo) => (
+                    <th key={campo} className="border px-2 py-1">Tutor: {campo}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    )}
+              </thead>
+              <tbody>
+                {reportesFiltrados.map((r, idx) => (
+                  <tr key={idx}>
+                    <td className="border px-2 py-1">{r.postulante.nombres}</td>
+                    <td className="border px-2 py-1">{r.postulante.apellidos}</td>
+                    <td className="border px-2 py-1">{r.postulante.ci}</td>
+                    <td className="border px-2 py-1">{r.postulante.area_categoria.area}</td>
+                    <td className="border px-2 py-1">{r.postulante.area_categoria.categoria}</td>
+                    {/* Valores dinámicos de campos adicionales del postulante */}
+                    {camposAdicionales.map((campo) => {
+                      const dato = (r.postulante.datos_adicionales?.[0] || []).find(d => d.campo === campo);
+                      return (
+                        <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
+                      );
+                    })}
+                    {/* Si quieres mostrar datos del tutor, agrega aquí */}
+                    {camposTutor.map((campo) => {
+                      const dato = (r.tutor?.datos_adicionales?.[0] || []).find(d => d.campo === campo);
+                      return (
+                        <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </div>
 
 

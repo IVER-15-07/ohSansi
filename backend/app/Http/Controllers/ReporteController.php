@@ -14,13 +14,11 @@ class ReporteController extends Controller
         try {
             $inscritos = Inscripcion::with([
                 'registro.postulante.persona',
-                'registro.postulante.datos.olimpiadaCampoPostulante.campo_postulante',
+                'registro.postulante.dato_postulante.olimpiada_campo_postulante.campo_postulante',
                 'registro.encargado.persona',
                 'registro.inscripciones.opcionInscripcion.area',
                 'registro.inscripciones.opcionInscripcion.nivel_categoria',
-                //'registro.registro.tutor.tutor.persona',
-
-
+                'registro.registro_tutor.tutor.persona',
 
             ])
                 ->whereHas('registro', function ($q) use ($idOlimpiada) {
@@ -33,19 +31,11 @@ class ReporteController extends Controller
                 $registro = $inscripcion->registro;
                 $postulante = $registro->postulante ?? null;
                 $tutor = $registro->encargado ?? null;
-                $opcion = $inscripcion->opcionInscripcion ?? null;
+                $opcion = $inscripcion->opcion_inscripcion ?? null;
 
                 if (!$postulante) return null;
 
-
-
-
-
-
-
                 // Datos personalizados del postulante
-
-
                 $datos_personalizados = $postulante->datos->map(function ($dato) {
                     return [
                         'campo' => $dato->campo_postulante->nombre ?? null,
@@ -80,12 +70,122 @@ class ReporteController extends Controller
                         'nombres' => $tutor->persona->nombres ?? null,
                         'apellidos' => $tutor->persona->apellidos ?? null,
                         'ci' => $tutor->persona->ci ?? null,
-                        'datos_adicionales' => [$datos_tutor,
-                        
-                        
+                        'datos_adicionales' => [
+                            $datos_tutor,
+
+
                         ]
                     ] : null,
 
+                ];
+            })->filter()->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => $postulantes,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al obtener los inscritos: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    public function reportePorArea(Request $request, $idOlimpiada)
+    {
+        try {
+            $area = $request->query('area'); // Obtiene el área desde la query string
+            $categoria = $request->query('categoria'); // Nuevo parámetro
+            $inscritos = Inscripcion::with([
+                'registro.postulante.persona',
+                'registro.postulante.datos.olimpiadaCampoPostulante.campo_postulante',
+                'registro.encargado.persona',
+                'registro.inscripciones.opcionInscripcion.area',
+                'registro.inscripciones.opcionInscripcion.nivel_categoria',
+            ])
+                ->whereHas('registro', function ($q) use ($idOlimpiada) {
+                    $q->where('id_olimpiada', $idOlimpiada);
+                })
+                // Filtrar por área si se proporciona
+                ->when($area, function ($query) use ($area) {
+                    $query->whereHas('opcionInscripcion.area', function ($q) use ($area) {
+                        $q->where('nombre', $area);
+                    });
+                })
+
+                // Filtrar por categoría si se proporciona
+                ->when($categoria, function ($query) use ($categoria) {
+                    $query->whereHas('opcionInscripcion.nivel_categoria', function ($q) use ($categoria) {
+                        $q->where('nombre', $categoria);
+                    });
+                })
+
+
+
+                ->get();
+
+            $postulantes = $inscritos->map(function ($inscripcion) {
+                $registro = $inscripcion->registro;
+                $postulante = $registro->postulante ?? null;
+                $tutor = $registro->encargado ?? null;
+                $opcion = $inscripcion->opcionInscripcion ?? null;
+
+                if (!$postulante) return null;
+
+                // Datos personalizados del postulante
+                $datos_personalizados = $postulante->datos->map(function ($dato) {
+                    return [
+                        'campo' => $dato->campo_postulante->nombre ?? null,
+                        'valor' => $dato->valor,
+                    ];
+                });
+
+                // Datos personalizados del tutor
+                $datos_tutor = $tutor && $tutor->datos
+                    ? $tutor->datos->map(function ($dato) {
+                        return [
+                            'campo' => $dato->campo_tutor->nombre ?? null,
+                            'valor' => $dato->valor_dato ?? null,
+                        ];
+                    })
+                    : [];
+
+                return [
+                    'postulante' => [
+                        'nombres' => $postulante->persona->nombres ?? null,
+                        'apellidos' => $postulante->persona->apellidos ?? null,
+                        'ci' => $postulante->persona->ci ?? null,
+                        'area_categoria' => [
+                            'area' => $opcion && $opcion->area ? $opcion->area->nombre : null,
+                            'categoria' => $opcion && $opcion->nivel_categoria ? $opcion->nivel_categoria->nombre : null,
+                        ],
+                        'datos_adicionales' => [$datos_personalizados,]
+                    ],
+                    'tutor' => $tutor ? [
+                        'nombres' => $tutor->persona->nombres ?? null,
+                        'apellidos' => $tutor->persona->apellidos ?? null,
+                        'ci' => $tutor->persona->ci ?? null,
+                        'datos_adicionales' => [$datos_tutor]
+                    ] : null,
                 ];
             })->filter()->values();
 

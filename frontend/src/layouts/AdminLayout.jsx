@@ -3,11 +3,14 @@ import { useState } from 'react'
 import  Sidebar from '../components/Sidebar'
 import {MenuIcon} from '../assets/Icons'
 import { Outlet } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 const AdminLayout = () => {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false); // Para dispositivos móviles
+  const location = useLocation();
+  const esReporte = location.pathname.startsWith('/AdminLayout/Reportes');
 
   const handleMenuClick = () => {
     // Verifica si el dispositivo es móvil
@@ -33,7 +36,13 @@ const AdminLayout = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 h-auto overflow-auto md:h-screen md:overflow-hidden">
+       <div
+        className={
+          esReporte
+            ? "flex-1 h-auto overflow-auto" // Scroll libre solo en reportes
+            : "flex-1 h-auto overflow-auto md:h-screen md:overflow-hidden"
+        }
+      >
         <div className="pt-3 pl-4 pb-0">
           <MenuIcon
             onClick={handleMenuClick}
