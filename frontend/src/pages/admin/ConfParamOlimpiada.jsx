@@ -154,7 +154,7 @@ function formatoDDMMAAAA(fecha) {
             className="bg-red-900 text-white px-4 py-2 rounded mr-2"
             onClick={() => redirigir('/AdminLayout/Olympiad')}
           >
-            Cancelar
+            volver
           </button>
           <button
             type="submit"
