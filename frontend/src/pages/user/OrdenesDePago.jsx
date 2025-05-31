@@ -208,27 +208,6 @@ const OrdenesDePago = () => {
                 </table>
               </div>
             )}
-            <div className="text-center mt-6 flex flex-wrap gap-4 justify-center">
-              <button
-                onClick={handleSeleccionarTodos}
-                className="px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition"
-              >
-                {registrosSeleccionados.length === registros.length
-                  ? "Deseleccionar todo"
-                  : "Seleccionar todo"}
-              </button>
-              <button
-                onClick={generarOrdenDePago}
-                className={`px-6 py-3 rounded-lg font-medium transition ${
-                  registrosSeleccionados.length > 0
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-400 text-gray-700 cursor-not-allowed"
-                }`}
-                disabled={registrosSeleccionados.length === 0}
-              >
-                Generar Orden de Pago
-              </button>
-            </div>
           </div>
 
           {/* Registros por lista */}
@@ -273,6 +252,28 @@ const OrdenesDePago = () => {
               </div>
             </div>
           )}
+
+          <div className="text-center mt-2 mb-8 flex flex-wrap gap-4 justify-center">
+          <button
+            onClick={handleSeleccionarTodos}
+            className="px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition"
+          >
+            {registrosSeleccionados.length === registros.length
+              ? "Deseleccionar todo"
+              : "Seleccionar todo"}
+          </button>
+          <button
+            onClick={generarOrdenDePago}
+            className={`px-6 py-3 rounded-lg font-medium transition ${
+              registrosSeleccionados.length > 0
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-gray-400 text-gray-700 cursor-not-allowed"
+            }`}
+            disabled={registrosSeleccionados.length === 0}
+          >
+            Generar Orden de Pago
+          </button>
+        </div>
 
           {/* Órdenes de Pago */}
           <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
