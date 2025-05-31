@@ -14,19 +14,18 @@ class ReporteController extends Controller
         try {
             $inscritos = Inscripcion::with([
                 'registro.postulante.persona',
-                'registro.postulante.datos.olimpiadaCampoPostulante.campo_postulante',
-               // 'registro.postulante.datos',
-                'registro.encargado.persona',
                 'registro.inscripciones.opcionInscripcion.area',
                 'registro.inscripciones.opcionInscripcion.nivel_categoria',
+                'registro.postulante.datos.olimpiadaCampoPostulante.campo_postulante',
 
 
 
-              
-                'registro.tutores.datos',
+                'registro.tutores.persona',
+
+                'registro.tutores.tutor.datos.olimpiadaCampoTutor.campo_tutor',
+                'registro.encargado.persona',
 
 
-               
 
 
             ])
@@ -40,13 +39,14 @@ class ReporteController extends Controller
                 $registro = $inscripcion->registro;
                 $postulante = $registro->postulante ?? null;
                 $opcion = $inscripcion->opcionInscripcion ?? null;
-                 $tutor = $registro->tutores ?? null;
 
-
-                
                 $tutor = $registro->encargado ?? null;
 
-              
+
+                $encargado = $registro->encargado ?? null;
+
+
+
 
                 if (!$postulante) return null;
 
@@ -59,6 +59,7 @@ class ReporteController extends Controller
                 });
 
                 // Datos personalizados del tutor
+
                 $datos_tutor = $tutor && $tutor->datos
                     ? $tutor->datos->map(function ($dato) {
                         return [
@@ -88,8 +89,18 @@ class ReporteController extends Controller
                         'nombres' => $tutor->persona->nombres ?? null,
                         'apellidos' => $tutor->persona->apellidos ?? null,
                         'ci' => $tutor->persona->ci ?? null,
-                        'datos_adicionales' => [$datos_tutor, ]
+                        'datos_adicionales' => [$datos_tutor,]
                     ] : null,
+
+                    'encargado' => $encargado ? [
+                        'nombres' => $encargado->persona->nombres ?? null,
+                        'apellidos' => $encargado->persona->apellidos ?? null,
+                        'ci' => $encargado->persona->ci ?? null,
+                        'correo' => $encargado->correo ?? null,
+                    ] : null,
+
+
+
 
                 ];
             })->filter()->values();
