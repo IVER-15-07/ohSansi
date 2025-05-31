@@ -14,11 +14,20 @@ class ReporteController extends Controller
         try {
             $inscritos = Inscripcion::with([
                 'registro.postulante.persona',
-                'registro.postulante.dato_postulante.olimpiada_campo_postulante.campo_postulante',
+                'registro.postulante.datos.olimpiadaCampoPostulante.campo_postulante',
+               // 'registro.postulante.datos',
                 'registro.encargado.persona',
                 'registro.inscripciones.opcionInscripcion.area',
                 'registro.inscripciones.opcionInscripcion.nivel_categoria',
-                'registro.registro_tutor.tutor.persona',
+
+
+
+              
+                'registro.tutores.datos',
+
+
+               
+
 
             ])
                 ->whereHas('registro', function ($q) use ($idOlimpiada) {
@@ -30,15 +39,21 @@ class ReporteController extends Controller
             $postulantes = $inscritos->map(function ($inscripcion) {
                 $registro = $inscripcion->registro;
                 $postulante = $registro->postulante ?? null;
+                $opcion = $inscripcion->opcionInscripcion ?? null;
+                 $tutor = $registro->tutores ?? null;
+
+
+                
                 $tutor = $registro->encargado ?? null;
-                $opcion = $inscripcion->opcion_inscripcion ?? null;
+
+              
 
                 if (!$postulante) return null;
 
                 // Datos personalizados del postulante
                 $datos_personalizados = $postulante->datos->map(function ($dato) {
                     return [
-                        'campo' => $dato->campo_postulante->nombre ?? null,
+                        'campo' => $dato->olimpiadaCampoPostulante->campo_postulante->nombre ?? null,
                         'valor' => $dato->valor,
                     ];
                 });
@@ -47,11 +62,14 @@ class ReporteController extends Controller
                 $datos_tutor = $tutor && $tutor->datos
                     ? $tutor->datos->map(function ($dato) {
                         return [
-                            'campo' => $dato->campo_tutor->nombre ?? null,
-                            'valor' => $dato->valor_dato ?? null,
+                            'campo' => $dato->olimpiadaCampoTutor->campo_tutor->nombre ?? null,
+                            'valor' => $dato->valor ?? null,
                         ];
                     })
                     : [];
+
+
+
 
                 return [
                     'postulante' => [
@@ -70,11 +88,7 @@ class ReporteController extends Controller
                         'nombres' => $tutor->persona->nombres ?? null,
                         'apellidos' => $tutor->persona->apellidos ?? null,
                         'ci' => $tutor->persona->ci ?? null,
-                        'datos_adicionales' => [
-                            $datos_tutor,
-
-
-                        ]
+                        'datos_adicionales' => [$datos_tutor, ]
                     ] : null,
 
                 ];
