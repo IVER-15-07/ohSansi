@@ -77,4 +77,5 @@ CardDescription.displayName = "CardDescription"
 CardContent.displayName = "CardContent"
 CardFooter.displayName = "CardFooter"
 
+export default Card
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }

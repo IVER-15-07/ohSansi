@@ -1,10 +1,9 @@
 import {useState, useEffect}from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import Cargando from '../Cargando';
 import ElegirCamposPostulante from './ElegirCamposPostulante';
 import ElegirCamposTutor from './ElegirCamposTutor';
-import ConfirmationModal from '../../components/ui/ConfirmationModal';
+import { ConfirmationModal, LoadingSpinner } from '../../components/ui';
 
 import { getCatalogoCamposPostulante } from '../../../service/campos_postulante.api';
 import { getCatalogoCamposTutor } from '../../../service/campos_tutor.api';
@@ -109,7 +108,11 @@ const ConfigurarCamposOlimpiada = () => {
   };
   console.log(olimpiadaCamposPostulante);
   console.log(olimpiadaCamposTutor);
-  if (isLoading) return <Cargando />;
+  if (isLoading) return (
+    <div className="flex justify-center items-center h-screen bg-gray-50">
+      <LoadingSpinner size="xl" text="Cargando campos..." />
+    </div>
+  );
   return (
     <div className="flex flex-col p-6 gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
       <div className="flex flex-col gap-4 h-full">   

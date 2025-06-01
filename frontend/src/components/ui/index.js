@@ -4,7 +4,7 @@ export { default as Input } from './Input'
 export { default as Select } from './Select'
 
 // Layout Components
-export { default as Card } from './Card'
+export { default as Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card'
 export { default as Badge } from './Badge'
 export { default as Skeleton } from './Skeleton'
 
@@ -26,8 +26,8 @@ export {
 
 // Feedback Components
 export { default as ConfirmationModal } from './ConfirmationModal'
-
+export { default as Modal } from './Modal'
+export { default as Alert } from './Alert'
+export {default as LoadingSpinner} from './LoadingSpinner'
 // Future components (when ready)
-// export { default as Modal } from './Modal'
-// export { default as Alert } from './Alert'
 // export { default as LoadingSpinner } from './LoadingSpinner'

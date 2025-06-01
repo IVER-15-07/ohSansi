@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAreas, createArea } from '../../../service/areas.api';
-import Cargando from '../Cargando';
 import Error from '../Error';
-import Modal from '../../components/ui/Modal';
-import ConfirmationModal from '../../components/ui/ConfirmationModal';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
+import { Modal, ConfirmationModal, Button, Input, LoadingSpinner } from '../../components/ui';
 
 const Areas = () => {
   const queryClient = useQueryClient();
@@ -23,7 +19,11 @@ const Areas = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  if (isLoading) return <Cargando />;
+  if (isLoading) return (
+    <div className="flex justify-center items-center h-screen bg-gray-50">
+      <LoadingSpinner size="xl" text="Cargando áreas..." />
+    </div>
+  );
   if (errorAreas) return <Error error={errorAreas} />;
 
   // Normalizar string para comparaciones: quitar acentos y convertir a mayúsculas

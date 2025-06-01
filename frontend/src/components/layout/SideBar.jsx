@@ -1,10 +1,15 @@
 "use client"
-import { Link, useLocation } from "react-router-dom"
-import { Home, Trophy, Users, Settings, BarChart3, BookOpen, X } from "lucide-react"
+import { Link, useLocation, useNavigate } from "react-router-dom"
+import { Home, Trophy, Users, Settings, BarChart3, BookOpen, X, LogOut, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "../../utils/cn"
+import { ConfirmationModal } from "../ui"
+import { useState } from "react"
+import logo from "../../assets/logo.png"
 
-const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, className }) => {
+const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleCollapse, className }) => {
   const location = useLocation()
+  const navigate = useNavigate()
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const navigation = [
     { name: "Dashboard", href: "/AdminLayout", icon: Home },
@@ -16,6 +21,20 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, className }) 
   ]
 
   const isActive = (href) => location.pathname === href
+
+  const handleLogout = () => {
+    setShowLogoutModal(true)
+  }
+
+  const confirmLogout = () => {
+    // Limpiar cualquier estado de autenticación si es necesario
+    // localStorage.removeItem('authToken') // Si hay tokens de autenticación
+    // sessionStorage.clear() // Si hay datos de sesión
+    
+    // Navegar al home/login
+    navigate('/')
+    setShowLogoutModal(false)
+  }
 
   return (
     <>
@@ -37,12 +56,29 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, className }) 
           <div className="flex items-center justify-between">
             {!isCollapsed && (
               <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-rose-600 rounded-lg flex items-center justify-center">
-                  <Trophy className="h-5 w-5 text-white" />
+                <div className="h-20 w-20 rounded-lg flex items-center justify-center">
+                  <img
+                    src={logo}
+                    alt="Logo"
+                  >
+                  </img>
                 </div>
                 <span className="text-lg font-bold text-slate-900">Admin</span>
               </div>
             )}
+
+            {/* Desktop collapse button */}
+            <div className="hidden md:flex items-center gap-2">
+              {onToggleCollapse && (
+                <button
+                  onClick={onToggleCollapse}
+                  className="p-1 text-slate-400 hover:text-slate-600 transition-colors duration-200"
+                  aria-label={isCollapsed ? "Expandir sidebar" : "Contraer sidebar"}
+                >
+                  {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                </button>
+              )}
+            </div>
 
             {/* Mobile close button */}
             <button
@@ -81,7 +117,8 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, className }) 
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-200">
-          <div className={cn("flex items-center space-x-3 text-sm text-slate-600", isCollapsed && "justify-center")}>
+          {/* User info */}
+          <div className={cn("flex items-center space-x-3 text-sm text-slate-600 mb-3", isCollapsed && "justify-center")}>
             <div className="h-8 w-8 bg-slate-200 rounded-full flex items-center justify-center">
               <Users className="h-4 w-4" />
             </div>
@@ -92,8 +129,35 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, className }) 
               </div>
             )}
           </div>
+
+          {/* Logout button */}
+          <button
+            onClick={handleLogout}
+            className={cn(
+              "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200",
+              "text-red-600 hover:text-red-700 hover:bg-red-50 w-full",
+              isCollapsed && "justify-center",
+            )}
+            title={isCollapsed ? "Cerrar Sesión" : undefined}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span>Cerrar Sesión</span>}
+          </button>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Cerrar Sesión"
+        message="¿Está seguro que desea cerrar sesión? Será redirigido a la página principal."
+        confirmText="Cerrar Sesión"
+        cancelText="Cancelar"
+        variant="warning"
+        icon={LogOut}
+      />
     </>
   )
 }

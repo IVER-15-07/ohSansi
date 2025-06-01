@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from "react";
 import { useParams } from "react-router-dom";
 import { Plus, Trash2, Search } from "lucide-react";
-import Cargando from "../Cargando";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 import { getOlimpiada } from "../../../service/olimpiadas.api";
 import { getOlimpiadaCamposPostulante } from "../../../service/olimpiada_campos_postulante.api";
@@ -690,7 +690,13 @@ const RegistrarPostulante = () => {
     }
   };
 
-  if(isLoading) { return <Cargando />; }
+  if(isLoading) { 
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <LoadingSpinner size="xl" text="Cargando formulario..." />
+      </div>
+    ); 
+  }
   
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md">

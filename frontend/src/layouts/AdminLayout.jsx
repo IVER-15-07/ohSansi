@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Menu } from "lucide-react"
+import { Menu, ChevronLeft, ChevronRight } from "lucide-react"
 import { Outlet } from "react-router-dom"
 import Sidebar from "../components/layout/SideBar"
 
@@ -18,6 +18,10 @@ const AdminLayout = () => {
     }
   }
 
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed)
+  }
+
   return (
     <div className="flex h-screen bg-slate-50">
       {/* Sidebar */}
@@ -25,6 +29,7 @@ const AdminLayout = () => {
         isCollapsed={isCollapsed}
         isMobileOpen={isMobileOpen}
         toggleMobileSidebar={() => setIsMobileOpen(!isMobileOpen)}
+        onToggleCollapse={toggleCollapse}
         className={`fixed z-50 top-0 left-0 h-full transition-transform duration-300 shadow-lg
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} 
           md:translate-x-0 md:relative md:shadow-none`}
@@ -32,6 +37,17 @@ const AdminLayout = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Desktop Header with Collapse Button */}
+        <div className="hidden md:flex bg-white border-b border-slate-200 p-4 items-center">
+          <button
+            onClick={toggleCollapse}
+            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors duration-200"
+            aria-label={isCollapsed ? "Expandir sidebar" : "Contraer sidebar"}
+          >
+            {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+          </button>
+        </div>
+
         {/* Mobile Header */}
         <div className="md:hidden bg-white border-b border-slate-200 p-4">
           <button

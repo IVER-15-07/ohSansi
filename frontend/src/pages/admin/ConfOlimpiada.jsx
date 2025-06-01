@@ -2,17 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getAreas } from '../../../service/areas.api';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
 import { getOlimpiada } from '../../../service/olimpiadas.api';
 
 import { getNivelesCategorias } from '../../../service/niveles_categorias.api';
 import { getAreasByOlimpiada, getMapOfOlimpiada, deleteOpcionesInscripcionByOlimpiada, createOpcionInscripcion, getOpcionesConPostulantes } from '../../../service/opciones_inscripcion.api';
-import Cargando from '../Cargando';
 import Error from '../Error';
 import ElegirAreas from './ElegirAreas';
 import ElegirNiveles from './ElegirNiveles';
-import ConfirmationModal from '../../components/ui/ConfirmationModal';
-import Modal from '../../components/ui/Modal';
+import { ConfirmationModal, Modal, Alert, LoadingSpinner } from '../../components/ui';
 
 const ConfOlimpiada = () => {
   const { id, nombreOlimpiada } = useParams();
@@ -48,27 +46,39 @@ const ConfOlimpiada = () => {
     // Validar fecha de inscripcion antes de mostrar la vista
     const validarFechas = async () => {
       try {
-        const response =  await getOlimpiada(id);
+        const response = await getOlimpiada(id);
         const olimpiada = response.data;
         if (!olimpiada) {
           setModalError("La información de la olimpiada no está disponible.");
           return;
         }
-        if(olimpiada.inicio_inscripcion){
+        
+        if (olimpiada.inicio_inscripcion) {
           const hoy = new Date();
           const inicioInscripcion = new Date(olimpiada.inicio_inscripcion);
+          
+          // Normalizar las fechas para comparar solo fecha (sin hora)
+          hoy.setHours(0, 0, 0, 0);
+          inicioInscripcion.setHours(0, 0, 0, 0);
+          
           if (hoy >= inicioInscripcion) {
-            setModalError("Las inscripciones están en curso, no se puede modificar la configuración de la Olimpiada");
+            setModalError("Las inscripciones están en curso o ya han comenzado. No se puede modificar la configuración de áreas y niveles de la olimpiada.");
+            return;
           }
         }
+        
         // Si inicio_inscripcion es null, permitir configuración sin validación de fechas
         console.log("Olimpiada sin fechas de inscripción configuradas - permitiendo configuración");
       
       } catch (e) {
-        setModalError("Error al validar la informacion de la olimpiada.");
+        console.error("Error al validar la información de la olimpiada:", e);
+        setModalError("Error al validar la información de la olimpiada. Por favor, intente nuevamente.");
       }
     };
-    validarFechas();
+    
+    if (id) {
+      validarFechas();
+    }
   }, [id]);
 
   useEffect(() => {
@@ -169,16 +179,55 @@ const ConfOlimpiada = () => {
   // Mostrar modal de error si corresponde
   if (modalError) {
     return (
-      <Modal message={modalError} onClose={() => navigate('/AdminLayout/VistaOlimpiadas')} />
+      <Modal 
+        isOpen={true}
+        onClose={() => navigate('/AdminLayout/VistaOlimpiadas')}
+        title="Error de Validación"
+      >
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <AlertCircle className="h-6 w-6 text-red-600" />
+          </div>
+          <p className="text-gray-600 mb-6">{modalError}</p>
+          <button
+            onClick={() => navigate('/AdminLayout/VistaOlimpiadas')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Entendido
+          </button>
+        </div>
+      </Modal>
     );
   }
+  
   if (modalErrorNiveles) {
     return (
-      <Modal message={modalErrorNiveles} onClose={() => setModalErrorNiveles("")} />
+      <Modal 
+        isOpen={true}
+        onClose={() => setModalErrorNiveles("")}
+        title="Error de Configuración"
+      >
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 mb-4">
+            <AlertCircle className="h-6 w-6 text-orange-600" />
+          </div>
+          <p className="text-gray-600 mb-6">{modalErrorNiveles}</p>
+          <button
+            onClick={() => setModalErrorNiveles("")}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Entendido
+          </button>
+        </div>
+      </Modal>
     );
   }
 
-  if (isLoadingAreas || isLoadingNiveles || isLoading) return <Cargando />;
+  if (isLoadingAreas || isLoadingNiveles || isLoading) return (
+    <div className="flex justify-center items-center h-screen bg-gray-50">
+      <LoadingSpinner size="xl" text="Cargando configuración..." />
+    </div>
+  );
   if (errorAreas) return <Error error={errorAreas} />;
   if (errorNiveles) return <Error error={errorNiveles} />;
 
@@ -225,38 +274,53 @@ const ConfOlimpiada = () => {
   
       {/* Botones de navegación */}
       <div className="flex justify-between items-center p-4 bg-white rounded-2xl shadow-md border border-gray-200">
-        {step > 1 && (
-          <button
-            onClick={() => setStep(step - 1)}
-            className="px-5 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
-          >
-            Atrás
-          </button>
-        )}
-  
-        {step === 1 && (
-          <button
-            onClick={() => setStep(2)}
-            disabled={areasSeleccionadas.length === 0}
-            className="px-5 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Siguiente
-          </button>
-        )}
-  
-        {step === 2 && (
-          <button
-            onClick={handleSaveClick}
-            disabled={isAdding}
-            className={`px-5 py-2 rounded-md text-white ${
-              isAdding
-                ? "bg-gray-400"
-                : "bg-blue-900 hover:bg-blue-800"
-            }`}
-          >
-            {isAdding ? "Guardando..." : "Guardar Configuración"}
-          </button>
-        )}
+        <div className="flex gap-3">
+          {step > 1 && (
+            <button
+              onClick={() => setStep(step - 1)}
+              className="px-5 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 transition-colors duration-200 font-medium"
+            >
+              Atrás
+            </button>
+          )}
+        </div>
+
+        <div className="flex gap-3">
+          {step === 1 && (
+            <button
+              onClick={() => setStep(2)}
+              disabled={areasSeleccionadas.length === 0}
+              className={`px-5 py-2 rounded-md font-medium transition-colors duration-200 ${
+                areasSeleccionadas.length === 0
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
+            >
+              Siguiente
+            </button>
+          )}
+
+          {step === 2 && (
+            <button
+              onClick={handleSaveClick}
+              disabled={isAdding}
+              className={`px-5 py-2 rounded-md text-white font-medium transition-colors duration-200 ${
+                isAdding
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-900 hover:bg-blue-800"
+              }`}
+            >
+              {isAdding ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Guardando...
+                </div>
+              ) : (
+                "Guardar Configuración"
+              )}
+            </button>
+          )}
+        </div>
       </div>
       
       {/* Modal de confirmación */}
@@ -269,23 +333,46 @@ const ConfOlimpiada = () => {
         confirmText="Confirmar"
         cancelText="Cancelar"
         isLoading={isAdding}
-        confirmButtonColor="blue"
+        variant="warning"
       />
       
       {/* Modal de éxito */}
       {successMessage && (
         <Modal
-          message={successMessage} 
-          onClose={() => 
-          {
+          isOpen={true}
+          onClose={() => {
             setSuccessMessage('');
             navigate('/AdminLayout/VistaOlimpiadas');
-          }
-          } 
-        />
+          }}
+          title="¡Éxito!"
+        >
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
+            <p className="text-gray-600 mb-6">{successMessage}</p>
+            <button
+              onClick={() => {
+                setSuccessMessage('');
+                navigate('/AdminLayout/VistaOlimpiadas');
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Continuar
+            </button>
+          </div>
+        </Modal>
       )}
   
-      {error && <p className="text-red-600 mt-2">{error}</p>}
+      {error && (
+        <Alert 
+          variant="error" 
+          title="Error de Configuración"
+          onClose={() => setError(null)}
+        >
+          {error}
+        </Alert>
+      )}
     </div>
   </div>
   

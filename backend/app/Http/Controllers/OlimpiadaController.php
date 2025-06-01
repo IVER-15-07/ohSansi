@@ -78,7 +78,12 @@ class OlimpiadaController extends Controller
         try{
             // Definir reglas base de validación
             $rules = [
-                'nombre' => 'required|string|max:255',
+                'nombre' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    'unique:olimpiada,nombre', // Agregar validación de unicidad
+                ],
                 'convocatoria' => 'nullable|file|mimes:pdf|max:2048', 
                 'descripcion' => 'nullable|string|max:255',
                 'costo' => 'nullable|numeric',
@@ -142,6 +147,27 @@ class OlimpiadaController extends Controller
             // Capturar errores de validación
             $errors = $e->errors();
     
+            if (isset($errors['nombre'])) {
+                // Comprobar si es un error de nombre duplicado
+                $nombreErrors = $errors['nombre'];
+                foreach ($nombreErrors as $error) {
+                    if (strpos($error, 'already been taken') !== false || strpos($error, 'unique') !== false) {
+                        return response()->json([
+                            'success' => false,
+                            'status' => 'validation_error',
+                            'message' => 'El nombre de la olimpiada ya existe. Por favor, elija otro nombre.',
+                            'field' => 'nombre'
+                        ], 422);
+                    }
+                }
+                return response()->json([
+                    'success' => false,
+                    'status' => 'validation_error',
+                    'message' => 'Error en el nombre: ' . implode(' ', $nombreErrors),
+                    'field' => 'nombre'
+                ], 422);
+            }
+
             if (isset($errors['convocatoria'])) {
                 return response()->json([
                     'success' => false,

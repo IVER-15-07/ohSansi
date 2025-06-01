@@ -32,7 +32,7 @@ const Navbar = () => {
                               className="w-48 h-48 object-contain"
                             />
             </div>
-            <span className="text-xl font-bold text-secondary-900">Oh! SANSI</span>
+            <span className="text-xl font-bold text-secondary-900">Olimpiadas de Ciencia y Tecnologia</span>
           </Link>
 
           {/* Desktop Navigation */}

@@ -5,7 +5,7 @@ import { getOlimpiadas } from "../../../service/olimpiadas.api";
 import { useNavigate, Outlet } from 'react-router-dom'
 import ConfOlimpiada from './ConfOlimpiada'
 import { Plus, Settings, Play, Archive, Trash2 } from 'lucide-react'
-import Cargando from '../Cargando';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import Error from '../Error';
 
 const VistaOlimpiadas = () => {
@@ -17,7 +17,11 @@ const VistaOlimpiadas = () => {
   const [AgregarOlimpiada, setAgregarOlimpiada] = useState(false)
   const [isConfOlimpiada, setIsConfOlimpiada] = useState(false)
 
-  if (isLoading) return <Cargando/>;
+  if (isLoading) return (
+    <div className="flex justify-center items-center h-screen bg-gray-50">
+      <LoadingSpinner size="xl" text="Cargando olimpiadas..." />
+    </div>
+  );
   if (errorOlimpiadas) return <Error error ={errorOlimpiadas} />;
 
   return (
@@ -57,21 +61,21 @@ const VistaOlimpiadas = () => {
                     <div className="flex justify-between items-center mt-4 gap-3 text-sm font-medium">
                       <button onClick={() => navigate(`/AdminLayout/VistaOlimpiadas/${olimp.id}/configurar/${olimp.nombre}`)} 
                         className="flex items-center text-blue-600 hover:underline">
-                        <Settings size={16} className="mr-1" /> Configurar Areas y Niveles
+                        <Settings size={30} className="mr-1" /> Configurar Areas y Niveles
                       </button>  
                       <button onClick={() => navigate(`/AdminLayout/VistaOlimpiadas/${olimp.id}/configurarParametros/${olimp.nombre}`)} 
                         className="flex items-center text-blue-600 hover:underline">
-                        <Settings size={16} className="mr-1" /> Configurar Parametros
+                        <Settings size={30} className="mr-1" /> Configurar Parametros
                       </button>
                       <button onClick={() => navigate(`/AdminLayout/VistaOlimpiadas/${olimp.id}/configurar-campos`)} 
                         className="flex items-center text-blue-600 hover:underline">
-                        <Settings size={16} className="mr-1" /> Configurar Campos del Formulario
+                        <Settings size={30} className="mr-1" /> Configurar Campos del Formulario
                       </button>
                       <button className="flex items-center text-gray-300 hover:underline">
-                        <Play size={16} className="mr-1" /> Iniciar
+                        <Play size={30} className="mr-1" /> Iniciar
                       </button>
                       <button className="flex items-center text-gray-300 hover:underline">
-                        <Archive size={16} className="mr-1" /> Archivar
+                        <Archive size={30} className="mr-1" /> Archivar
                       </button>
                     </div>
                   </div>
