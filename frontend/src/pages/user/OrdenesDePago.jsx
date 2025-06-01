@@ -19,6 +19,13 @@ const OrdenesDePago = () => {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
+        const ordenesResponse = await obtenerOrdenesDePago(idEncargado, idOlimpiada);
+        if (ordenesResponse.data.length === 0) {
+          setSinOrdenes(true);
+        } else {
+          setOrdenesDePago(ordenesResponse.data);
+        }
+
         // Obtener nombre de la olimpiada por id
         const olimpiadaResponse = await getOlimpiada(idOlimpiada);
         setNombreOlimpiada(olimpiadaResponse.nombre);
@@ -28,12 +35,6 @@ const OrdenesDePago = () => {
           setSinRegistros(true);
         } else {
           setRegistros(inscripcionesResponse.data);
-        }
-        const ordenesResponse = await obtenerOrdenesDePago(idEncargado, idOlimpiada);
-        if (ordenesResponse.data.length === 0) {
-          setSinOrdenes(true);
-        } else {
-          setOrdenesDePago(ordenesResponse.data);
         }
       } catch (error) {
         console.error("Error al cargar datos:", error);
