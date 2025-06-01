@@ -12,6 +12,7 @@ export { default as Skeleton } from './Skeleton'
 export { default as ToggleSwitch } from './ToggleSwitch'
 export { default as RegistrationForm } from './RegistrationForm'
 export { default as SubirArchivo } from './SubirArchivo'
+export { default as FormField } from './FormField'
 
 // Data Display
 export { 
@@ -25,7 +26,6 @@ export {
 } from './Table'
 
 // Feedback Components
-export { default as ConfirmationModal } from './ConfirmationModal'
 export { default as Modal } from './Modal'
 export { default as Alert } from './Alert'
 export {default as LoadingSpinner} from './LoadingSpinner'

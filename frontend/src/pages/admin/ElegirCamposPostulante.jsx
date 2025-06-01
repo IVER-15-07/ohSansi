@@ -63,6 +63,7 @@ const ElegirCamposPostulante = ({disponibles, seleccionadas, setSeleccionadas, i
             <div className="w-full md:w-1/2 border rounded-2xl p-4 shadow-sm bg-white">
             {modal.open && (
                 <Modal
+                    variant='info'
                     message={modal.nombre}
                     onClose={() => setModal({open: false, nombre: ''})}
                 />)}

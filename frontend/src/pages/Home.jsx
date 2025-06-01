@@ -211,7 +211,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Active VistaOlimpiadas */}
+      {/* Active Olimpiadas */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -223,7 +223,7 @@ const Home = () => {
 
           {olimpiadas.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Featured VistaOlimpiadas */}
+              {/* Featured Olimpiadas */}
               <div className="lg:col-span-2">
                 <Card className="border-2 border-rose-200 bg-gradient-to-br from-rose-50 to-blue-50 hover:shadow-lg transition-all duration-300">
                   <CardHeader>
@@ -265,7 +265,7 @@ const Home = () => {
                 </Card>
               </div>
 
-              {/* Other VistaOlimpiadas */}
+              {/* Other Olimpiadas */}
               <div className="space-y-4">
                 {olimpiadas.slice(1, 3).map((olimpiada) => (
                   <Card key={olimpiada.id} className="hover:shadow-md transition-shadow duration-200">

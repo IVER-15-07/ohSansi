@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import ElegirCamposPostulante from './ElegirCamposPostulante';
 import ElegirCamposTutor from './ElegirCamposTutor';
-import { ConfirmationModal, LoadingSpinner } from '../../components/ui';
+import { Modal, LoadingSpinner } from '../../components/ui';
 
 import { getCatalogoCamposPostulante } from '../../../service/campos_postulante.api';
 import { getCatalogoCamposTutor } from '../../../service/campos_tutor.api';
@@ -119,7 +119,7 @@ const ConfigurarCamposOlimpiada = () => {
         {/* Botón para volver a la vista de Olimpiada */}
         <div className="flex flex-col items-center mb-2">
           <button 
-            onClick={() => navigate('/AdminLayout/VistaOlimpiadas')}
+            onClick={() => navigate('/AdminLayout/Olimpiadas')}
             className="flex items-center text-blue-600 hover:underline"
           >
             <ArrowLeft size={16} className="mr-1" /> Volver a Olimpiadas
@@ -155,7 +155,8 @@ const ConfigurarCamposOlimpiada = () => {
             )}
           </div>
           {/* Modal de confirmación */}
-          <ConfirmationModal
+          <Modal
+            isConfirmationModal
             isOpen={showConfirmModal}
             onClose={() => setShowConfirmModal(false)}
             onConfirm={handleGuardarConfiguracionCampos}
@@ -164,7 +165,6 @@ const ConfigurarCamposOlimpiada = () => {
             confirmText="Confirmar"
             cancelText="Cancelar"
             isLoading={isAdding}
-            confirmButtonColor="blue"
           />
 
           {/* Botones de navegación */}

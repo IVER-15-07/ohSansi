@@ -10,7 +10,7 @@ import { getAreasByOlimpiada, getMapOfOlimpiada, deleteOpcionesInscripcionByOlim
 import Error from '../Error';
 import ElegirAreas from './ElegirAreas';
 import ElegirNiveles from './ElegirNiveles';
-import { ConfirmationModal, Modal, Alert, LoadingSpinner } from '../../components/ui';
+import { Modal, Alert, LoadingSpinner } from '../../components/ui';
 
 const ConfOlimpiada = () => {
   const { id, nombreOlimpiada } = useParams();
@@ -165,7 +165,7 @@ const ConfOlimpiada = () => {
     
     setSuccessMessage('Configuración guardada exitosamente.');
     setTimeout(() => {
-        navigate('/AdminLayout/VistaOlimpiadas');
+        navigate('/AdminLayout/Olimpiadas');
     }, 2000);
   } catch (error) {
     console.error(error);
@@ -179,30 +179,23 @@ const ConfOlimpiada = () => {
   // Mostrar modal de error si corresponde
   if (modalError) {
     return (
-      <Modal 
+      <Modal
+        variant="danger"
         isOpen={true}
-        onClose={() => navigate('/AdminLayout/VistaOlimpiadas')}
-        title="Error de Validación"
-      >
-        <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-            <AlertCircle className="h-6 w-6 text-red-600" />
-          </div>
-          <p className="text-gray-600 mb-6">{modalError}</p>
-          <button
-            onClick={() => navigate('/AdminLayout/VistaOlimpiadas')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Entendido
-          </button>
-        </div>
-      </Modal>
+        onClose={() => navigate('/AdminLayout/Olimpiadas')}
+        title="Inscripciones en curso"
+        message={modalError}
+        confirmText="Volver a Olimpiadas"
+        showCancelButton={false}
+        preventCloseOnBackdrop={true}
+      />
     );
   }
   
   if (modalErrorNiveles) {
     return (
       <Modal 
+        variant='danger'
         isOpen={true}
         onClose={() => setModalErrorNiveles("")}
         title="Error de Configuración"
@@ -243,7 +236,7 @@ const ConfOlimpiada = () => {
         {/* Botón para volver a la vista de Olimpiada */}
       <div className="flex items-center mb-2">
         <button 
-          onClick={() => navigate('/AdminLayout/VistaOlimpiadas')}
+          onClick={() => navigate('/AdminLayout/Olimpiadas')}
           className="flex items-center text-blue-600 hover:underline"
         >
           <ArrowLeft size={16} className="mr-1" /> Volver a Olimpiadas
@@ -324,7 +317,7 @@ const ConfOlimpiada = () => {
       </div>
       
       {/* Modal de confirmación */}
-      <ConfirmationModal
+      <Modal
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
         onConfirm={handleGuardarConfiguracion}
@@ -342,26 +335,14 @@ const ConfOlimpiada = () => {
           isOpen={true}
           onClose={() => {
             setSuccessMessage('');
-            navigate('/AdminLayout/VistaOlimpiadas');
+            navigate('/AdminLayout/Olimpiadas');
           }}
           title="¡Éxito!"
-        >
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <p className="text-gray-600 mb-6">{successMessage}</p>
-            <button
-              onClick={() => {
-                setSuccessMessage('');
-                navigate('/AdminLayout/VistaOlimpiadas');
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Continuar
-            </button>
-          </div>
-        </Modal>
+          message={successMessage}
+          variant="success"
+          confirmText="Volver a Olimpiadas"
+          showCancelButton={false}
+        />
       )}
   
       {error && (
@@ -369,14 +350,15 @@ const ConfOlimpiada = () => {
           variant="error" 
           title="Error de Configuración"
           onClose={() => setError(null)}
+          autoClose={true}
+          autoCloseDelay={5000}
         >
-          {error}
+          <div>{error}</div>
         </Alert>
       )}
     </div>
   </div>
-  
   );
 };
 
-export default ConfOlimpiada
+export default ConfOlimpiada;

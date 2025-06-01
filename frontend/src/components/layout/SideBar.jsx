@@ -2,7 +2,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Home, Trophy, Users, Settings, BarChart3, BookOpen, X, LogOut, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "../../utils/cn"
-import { ConfirmationModal } from "../ui"
+import { Modal } from "../ui"
 import { useState } from "react"
 import logo from "../../assets/logo.png"
 
@@ -13,7 +13,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
 
   const navigation = [
     { name: "Dashboard", href: "/AdminLayout", icon: Home },
-    { name: "Olimpiadas", href: "/AdminLayout/VistaOlimpiadas", icon: Trophy },
+    { name: "Olimpiadas", href: "/AdminLayout/Olimpiadas", icon: Trophy },
     { name: "Áreas", href: "/AdminLayout/Areas", icon: BookOpen },
     { name: "Niveles y Categorías", href: "/AdminLayout/NivelCategoria", icon: BarChart3 },
     { name: "Reportes", href: "/AdminLayout/Reportes", icon: BarChart3 },
@@ -147,7 +147,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
       </div>
 
       {/* Logout Confirmation Modal */}
-      <ConfirmationModal
+      <Modal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         onConfirm={confirmLogout}
@@ -155,7 +155,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
         message="¿Está seguro que desea cerrar sesión? Será redirigido a la página principal."
         confirmText="Cerrar Sesión"
         cancelText="Cancelar"
-        variant="warning"
+        variant="info"
         icon={LogOut}
       />
     </>

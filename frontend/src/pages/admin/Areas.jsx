@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAreas, createArea } from '../../../service/areas.api';
 import Error from '../Error';
-import { Modal, ConfirmationModal, Button, Input, LoadingSpinner } from '../../components/ui';
+import { Modal, Button, Input, LoadingSpinner, Alert } from '../../components/ui';
 
 const Areas = () => {
   const queryClient = useQueryClient();
@@ -85,9 +85,16 @@ const Areas = () => {
       const nuevaArea = await createArea({ nombre: nombreArea });
       setNewArea('');
       setErrorMessage('');
+      
+      // Make sure we're adding a properly structured area object without any JSX attributes
+      const areaToAdd = {
+        ...nuevaArea.data,
+        nombre: nuevaArea.data.nombre // ensure we're getting just the string value
+      };
+      
       queryClient.setQueryData(['areas'], (oldData) => ({
         ...oldData,
-        data: [...oldData.data, nuevaArea.data],
+        data: [...oldData.data, areaToAdd],
       }));
       queryClient.invalidateQueries(['areas']);
       setSuccessMessage('Área creada exitosamente.');
@@ -109,6 +116,18 @@ const Areas = () => {
 
   return (
     <div className="p-6 flex flex-col gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
+      {/* Modal de Éxito */}
+      {successMessage && (
+        <Alert
+          variant="success"
+          title="Éxito"
+          autoClose={true}
+          autoCloseDelay={3000}
+          onClose={() => setSuccessMessage('')}
+        >
+          <div>{successMessage}</div>
+        </Alert>
+      )}
       {/* Lista de Áreas */}
       <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 py-4 min-h-[400px] max-h-[360px]">
         <h1 className="text-2xl font-bold text-[#20335C] mb-4 text-center">Áreas creadas</h1>
@@ -167,7 +186,7 @@ const Areas = () => {
       </div>
 
       {/* Modal de Confirmación */}
-      <ConfirmationModal
+      <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleAddArea}
@@ -175,17 +194,9 @@ const Areas = () => {
         message={`¿Estás seguro de que deseas agregar el área ${newArea}?`}
         confirmText="Confirmar"
         cancelText="Cancelar"
+        variant='warning'
         isLoading={isAdding}
-        confirmButtonColor="blue"
       />
-
-      {/* Modal de Éxito */}
-      {successMessage && (
-        <Modal
-          message={successMessage}
-          onClose={() => setSuccessMessage('')}
-        />
-      )}
     </div>
   )
 }

@@ -4,7 +4,7 @@ import AdminLayout from "./layouts/AdminLayout"
 import UserLayout from "./layouts/UserLayout"
 
 // Admin pages
-import VistaOlimpiadas from "./pages/admin/VistaOlimpiadas"
+import Olimpiadas from "./pages/admin/Olimpiadas"
 import Areas from "./pages/admin/Areas"
 import NivelCategoria from "./pages/admin/NivelCategoria"
 import ConfOlimpiada from "./pages/admin/ConfOlimpiada"
@@ -37,12 +37,12 @@ function App() {
 
         {/* Admin Layout */}
         <Route path="/AdminLayout" element={<AdminLayout />}>
-          <Route path="VistaOlimpiadas" element={<VistaOlimpiadas />} />
+          <Route path="Olimpiadas" element={<Olimpiadas />} />
           <Route path="Reportes" element={<Reportes />} />
-          <Route path="VistaOlimpiadas/CrearOlimpiada" element={<CrearOlimpiada />} />
-          <Route path="VistaOlimpiadas/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
-          <Route path="VistaOlimpiadas/:id/configurar-campos" element={<ConfigurarCamposOlimpiada />} />
-          <Route path="VistaOlimpiadas/:id/configurarParametros/:nombreOlimpiada" element={<ConfParamOlimpiada />} />
+          <Route path="Olimpiadas/CrearOlimpiada" element={<CrearOlimpiada />} />
+          <Route path="Olimpiadas/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
+          <Route path="Olimpiadas/:id/configurar-campos" element={<ConfigurarCamposOlimpiada />} />
+          <Route path="Olimpiadas/:id/configurarParametros/:nombreOlimpiada" element={<ConfParamOlimpiada />} />
           <Route path="Areas" element={<Areas />} />
           <Route path="NivelCategoria" element={<NivelCategoria />} />
         </Route>
