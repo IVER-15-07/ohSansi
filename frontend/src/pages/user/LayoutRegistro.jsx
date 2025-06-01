@@ -29,7 +29,7 @@ const LayoutRegistro = () => {
     <div className="pt-20 flex h-screen overflow-hidden bg-gray-100">
       {/* Sidebar fija a la izquierda */}
       <aside className="pt-24 w-80 h-full fixed top-0 left-0 bg-white shadow-md p-5 border-r border-gray-200 z-10">
-        <h2 className="text-xl font-bold mb-6 text-blue-800">Navegación</h2>
+        <h2 className="text-xl font-bold mb-6 text-blue-800">Apartado de Inscripciones</h2>
         <nav className="space-y-2">
           {steps.map((step) => (
             <button
