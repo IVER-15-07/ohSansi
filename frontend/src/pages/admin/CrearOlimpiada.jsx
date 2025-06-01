@@ -110,17 +110,54 @@ const CrearOlimpiada = () => {
   }, [datosFormulario, olimpiadas]);
 
   const handleArchivo = (e) => {
-    e.stopPropagation();
-    const archivo = e.target.files[0];
-    if (!archivo) return;
-    if (archivo.type !== 'application/pdf') {
-      setErrores(prev => ({ ...prev, convocatoria: 'Solo se permite subir archivos PDF.' }));
-      setDatosFormulario(prev => ({ ...prev, convocatoria: '' }));
-      return;
-    }
-    setErrores(prev => ({ ...prev, convocatoria: undefined }));
-    setDatosFormulario(prev => ({ ...prev, convocatoria: archivo }));
-  };
+  e.stopPropagation();
+  const archivo = e.target.files[0];
+  if (!archivo) return;
+  
+  console.log('Archivo seleccionado:', archivo.name, 'Tipo:', archivo.type);
+  
+  // Validar tanto por extensión como por MIME type
+  const fileExtension = archivo.name.split('.').pop().toLowerCase();
+  const errorMensaje = `Archivo inválido detectado: ${fileExtension} ${archivo.type}`;
+  
+  if (fileExtension !== 'pdf' || archivo.type !== 'application/pdf') {
+    console.warn(errorMensaje);
+    
+    // Mostrar mensaje de error detallado para el usuario
+    setErrores(prev => ({ 
+      ...prev, 
+      convocatoria: `Error: El archivo que intentas subir no es un PDF válido (${fileExtension}, ${archivo.type}). Solo se permiten archivos PDF.` 
+    }));
+    
+    // Limpiar el valor del campo convocatoria
+    setDatosFormulario(prev => ({ ...prev, convocatoria: '' }));
+    
+    // Mostrar el mensaje de error y hacer scroll
+    setTimeout(() => {
+      // Crear una alerta temporal más visible
+      setErrorGeneral(`FORMATO INVÁLIDO: ${errorMensaje}. Solo se permiten archivos PDF.`);
+      
+      // Desplazarse al área visible
+      if (inputArchivoRef.current) {
+        inputArchivoRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+    
+    // Limpiar el input file para que pueda subir de nuevo
+    e.target.value = "";
+    return;
+  }
+  
+  // Si llegamos aquí, el archivo es válido
+  setErrores(prev => ({ ...prev, convocatoria: undefined }));
+  setDatosFormulario(prev => ({ ...prev, convocatoria: archivo }));
+  // Limpiar cualquier error general previo
+  setErrorGeneral('');
+  
+  // Agregar un mensaje de éxito
+  setSuccessMessage(`El archivo "${archivo.name}" se ha cargado correctamente.`);
+  setTimeout(() => setSuccessMessage(''), 3000);
+};
 
   const manejarCambio = (e) => {
     const { name, value } = e.target;
@@ -343,7 +380,15 @@ const CrearOlimpiada = () => {
               id="convocatoria-input"
             />
             {errores.convocatoria && (
-              <p className="text-danger-600 text-xs mt-1">{errores.convocatoria}</p>
+              <div className="sticky bottom-4 left-0 right-0 z-20 mx-auto w-full px-4 mt-4">
+                <div className="bg-danger-100 border-2 border-danger-500 text-danger-700 p-4 rounded-md shadow-lg flex items-start animate-pulse">
+                  <div className="mr-2 flex-shrink-0 text-2xl">⚠️</div>
+                  <div>
+                    <h3 className="font-bold text-danger-800 mb-1">Error de formato</h3>
+                    <p className="font-medium">{errores.convocatoria}</p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </form>
@@ -386,7 +431,7 @@ const CrearOlimpiada = () => {
         <Modal
           isOpen={true}
           variant="success"
-          title="¡Olimpiada Creada!"
+          title={successMessage.includes("archivo") ? "¡Archivo PDF Cargado!" : "¡Olimpiada Creada!"}
           message={successMessage}
           showCancelButton={false}
           confirmText="Aceptar"
