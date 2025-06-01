@@ -21,7 +21,9 @@ class Olimpiada extends Model
         'fecha_inicio',
         'fecha_fin',
         'inicio_inscripcion',
-        'fin_inscripcion'
+        'fin_inscripcion',
+        'activo'
+        
     ];
 
     // Una olimpiada puede tener ser de muchas opciones de inscripcion

@@ -25,6 +25,7 @@ class CampoPostulanteSeeder extends Seeder
             [
                 'nombre' => "Departamento",
                 'id_tipo_campo' => 7,
+                
             ],
             [
                 'nombre' => "Provincia",
@@ -35,6 +36,7 @@ class CampoPostulanteSeeder extends Seeder
                 'nombre' => "Ciudad",
                 'id_tipo_campo' => 7,
                 'id_dependencia' => 3,
+                
             ],
             [
                 'nombre' => "Correo Electronico",

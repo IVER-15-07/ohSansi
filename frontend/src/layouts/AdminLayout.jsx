@@ -2,12 +2,15 @@
 
 import { useState } from "react"
 import { Menu, ChevronLeft, ChevronRight } from "lucide-react"
-import { Outlet } from "react-router-dom"
+import { Outlet ,  useLocation } from "react-router-dom"
 import Sidebar from "../components/layout/SideBar"
 
 const AdminLayout = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isMobileOpen, setIsMobileOpen] = useState(false)
+
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false); // Para dispositivos móviles
+  const location = useLocation();
+  const esReporte = location.pathname.startsWith('/AdminLayout/Reportes');
 
   const handleMenuClick = () => {
     const isMobile = window.matchMedia("(max-width: 768px)").matches
@@ -36,20 +39,12 @@ const AdminLayout = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Desktop Header with Collapse Button */}
-        <div className="hidden md:flex bg-white border-b border-slate-200 p-4 items-center">
-          <button
-            onClick={toggleCollapse}
-            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors duration-200"
-            aria-label={isCollapsed ? "Expandir sidebar" : "Contraer sidebar"}
-          >
-            {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-          </button>
-        </div>
-
-        {/* Mobile Header */}
-        <div className="md:hidden bg-white border-b border-slate-200 p-4">
+      <div
+        className={`flex-1 flex flex-col overflow-hidden ${
+          esReporte ? 'h-auto overflow-auto' : 'md:h-screen md:overflow-hidden h-auto overflow-auto'
+        }`}
+      >
+        <div className="pt-3 pl-4 pb-0">
           <button
             onClick={handleMenuClick}
             className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors duration-200"

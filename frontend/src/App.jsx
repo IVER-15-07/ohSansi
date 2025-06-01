@@ -27,6 +27,7 @@ function App() {
         {/* Public Layout */}
         <Route path="/" element={<UserLayout />}>
           <Route index element={<Home />} />
+          <Route index element={<Home />} />
           <Route path="versiones" element={<Versiones />} />
           <Route path="/olimpiadas/:idOlimpiada" element={<MenuOlimpiada />} />
           <Route path="IdentificarEncargado" element={<IdentificarEncargado />} />

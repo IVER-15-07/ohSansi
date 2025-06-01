@@ -97,6 +97,7 @@ Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiadasActivas']);
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
 Route::get('/olimpiadas/{id}', [OlimpiadaController::class, 'obtenerOlimpiada']);
+Route::post('/activarolimpiada/{id}', [OlimpiadaController::class, 'activarOlimpiada']);
 
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS DE POSTULANTE
 Route::get('/campos_postulante', [CampoPostulanteController::class, 'obtenerCatalogoCamposPostulante']);
@@ -166,6 +167,7 @@ Route::get('/registro_lista', [Registrolistcontroller::class, 'obtenerListaPostu
 Route::post('/registro_lista/importar', [Registrolistcontroller::class, 'importar']);
 
 
+
 //RUTAS PARA GENERAR ORDEN DE PAGO
 Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
 Route::post('/pagos/guardarOrdenPago', [PagoController::class, 'guardarOrdenPago']);
@@ -176,3 +178,4 @@ Route::get('/opciones_campo_postulante/agrupadas/{idCampoPostulante}', [OpcionCa
 
 // RUTAS DE REPOSRTE  DE INSCRITOS POR OLIMPIADA
 Route::get('/reporte_inscritos/{idOlimpiada}', [ReporteController::class, 'inscritosPorOlimpiada']);
+Route::get('/reporte/areas/{idOlimpiada}', [ReporteController::class, 'ReportePorArea']);
