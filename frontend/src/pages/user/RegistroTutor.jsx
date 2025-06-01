@@ -239,7 +239,7 @@ const RegistroTutor = () => {
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 md:p-8">
         <h1 className="text-2xl font-bold text-center mb-6">Registro de Encargado de Inscripción</h1>
         <p className="text-gray-600 mb-8 text-center">
-          Complete el siguiente formulario para registrarse como responsable de inscripción de competidores.
+          Complete el siguiente formulario para registrarse como encargado de inscripción de competidores.
         </p>
 
         <div className="space-y-6">
