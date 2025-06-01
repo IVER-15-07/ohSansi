@@ -1,6 +1,6 @@
 
 
-import {  useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { AlertCircle, CheckCircle, X } from "lucide-react"
 import { createEncargado } from "../../../service/encargados.api"
@@ -41,7 +41,7 @@ const RegistroTutor = () => {
         const personaRes = (await getPersonaByCI(formData.ci)).data;
         console.log("Respuesta de getPersonaByCI:", personaRes);
         if (personaRes) {
-          if( personaRes.fecha_nacimiento) {
+          if (personaRes.fecha_nacimiento) {
             const [year, month, day] = personaRes.fecha_nacimiento.split("-");
             personaRes.fecha_nacimiento = `${day}/${month}/${year}`;
           }
@@ -62,7 +62,7 @@ const RegistroTutor = () => {
     if (formData.ci) {
       fetchPersona()
     }
-  }, [formData.ci]); 
+  }, [formData.ci]);
 
   // Manejador de cambios en los inputs
   const handleChange = (e) => {
@@ -237,7 +237,7 @@ const RegistroTutor = () => {
   return (
     <div className=" container mx-auto py-8 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 md:p-8">
-        <h1 className="text-2xl font-bold text-center mb-6">Registro de Responsable de Inscripción</h1>
+        <h1 className="text-2xl font-bold text-center mb-6">Registro de Encargado de Inscripción</h1>
         <p className="text-gray-600 mb-8 text-center">
           Complete el siguiente formulario para registrarse como responsable de inscripción de competidores.
         </p>
@@ -358,7 +358,7 @@ const RegistroTutor = () => {
                 {errors.correo && <p className="mt-1 text-sm text-red-600">{errors.correo}</p>}
               </div>
 
-              
+
 
               {/* Fecha de Nacimiento */}
               <div>
