@@ -67,12 +67,7 @@ class ReporteController extends Controller
                             ],
                             'datos_adicionales' => [$datos_personalizados,]
                         ],
-                        'tutor' => $tutor ? [
-                            'nombres' => $tutor->persona->nombres ?? null,
-                            'apellidos' => $tutor->persona->apellidos ?? null,
-                            'ci' => $tutor->persona->ci ?? null,
-                            'datos_adicionales' => [$datos_tutor,]
-                        ] : null,
+                    
                         'encargado' => $encargado ? [
                             'nombres' => $encargado->persona->nombres ?? null,
                             'apellidos' => $encargado->persona->apellidos ?? null,
@@ -108,11 +103,15 @@ class ReporteController extends Controller
             $cacheKey = "reporte_area_{$idOlimpiada}_{$area}_{$categoria}";
             $postulantes = Cache::remember($cacheKey, 300, function () use ($idOlimpiada, $area, $categoria) {
                 $inscritos = Inscripcion::with([
-                    'registro.postulante.persona',
-                    'registro.postulante.datos.olimpiadaCampoPostulante.campo_postulante',
-                    'registro.encargado.persona',
+                     'registro.postulante.persona',
                     'registro.inscripciones.opcionInscripcion.area',
                     'registro.inscripciones.opcionInscripcion.nivel_categoria',
+                    'registro.postulante.datos.olimpiadaCampoPostulante.campo_postulante',
+                    'registro.tutores.persona',
+                    'registro.tutores.tutor.datos.olimpiadaCampoTutor.campo_tutor',
+                    'registro.encargado.persona',
+                    'registro.inscripciones.pago',
+                    'registro.inscripciones.lista',
                 ])
                 ->whereHas('registro', function ($q) use ($idOlimpiada) {
                     $q->where('id_olimpiada', $idOlimpiada);
@@ -132,8 +131,12 @@ class ReporteController extends Controller
                 return $inscritos->map(function ($inscripcion) {
                     $registro = $inscripcion->registro;
                     $postulante = $registro->postulante ?? null;
-                    $tutor = $registro->encargado ?? null;
                     $opcion = $inscripcion->opcionInscripcion ?? null;
+                    $tutor = $registro->encargado ?? null;
+                     $encargado = $registro->encargado ?? null;
+                    $pago = $inscripcion->pago ?? null;
+
+                     
 
                     if (!$postulante) return null;
 
@@ -164,12 +167,15 @@ class ReporteController extends Controller
                             ],
                             'datos_adicionales' => [$datos_personalizados,]
                         ],
-                        'tutor' => $tutor ? [
-                            'nombres' => $tutor->persona->nombres ?? null,
-                            'apellidos' => $tutor->persona->apellidos ?? null,
-                            'ci' => $tutor->persona->ci ?? null,
-                            'datos_adicionales' => [$datos_tutor]
+                         'encargado' => $encargado ? [
+                            'nombres' => $encargado->persona->nombres ?? null,
+                            'apellidos' => $encargado->persona->apellidos ?? null,
+                            'ci' => $encargado->persona->ci ?? null,
+                            'correo' => $encargado->correo ?? null,
                         ] : null,
+                        'estado_pago' => $pago ? ($pago->fecha_pago ? 'Pagado' : 'Pendiente') : 'Sin pago',
+                        'validado' => $pago && $pago->fecha_pago ? 'Validado' : 'Pendiente',
+                        'tipo_inscripcion' => $inscripcion->lista ? 'Por lista' : 'Individual',
                     ];
                 })->filter()->values();
             });

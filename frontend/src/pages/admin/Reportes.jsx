@@ -6,6 +6,7 @@ import { getReportes } from "../../../service/Reporte.api"; // Asegúrate de ten
 import { useParams } from "react-router-dom";
 import { User, FileText, Users } from "lucide-react";
 import Estadisticas from "./Estadisticas";
+import ExportarReportes from "./ExportarReportes";
 
 
 
@@ -87,7 +88,10 @@ const Reportes = () => {
     return (
       (r.postulante.nombres && r.postulante.nombres.toLowerCase().includes(texto)) ||
       (r.postulante.apellidos && r.postulante.apellidos.toLowerCase().includes(texto)) ||
-      (r.postulante.ci && r.postulante.ci.toLowerCase().includes(texto))
+      (r.postulante.ci && r.postulante.ci.toLowerCase().includes(texto)) ||
+      (r.encargado?.nombres && r.encargado.nombres.toLowerCase().includes(texto)) ||
+      (r.encargado?.apellidos && r.encargado.apellidos.toLowerCase().includes(texto)) ||
+      (r.encargado?.ci && r.encargado.ci.toLowerCase().includes(texto))
     );
   });
 
@@ -151,7 +155,7 @@ const Reportes = () => {
       </div>
 
       {olimpiadaSeleccionada && (
-        <div className="w-full px-10 mt-8">
+        <div className="w-full px-10 mt-8 my-20">
           <h3 className="text-lg font-bold mb-2">
             Reportes de la olimpiada seleccionada (ID: {olimpiadaSeleccionada.nombre})
           </h3>
@@ -235,8 +239,8 @@ const Reportes = () => {
                 <table className="min-w-full border">
                   <thead>
                     <tr>
-                      <th className="border px-2 py-1">Nombres</th>
-                      <th className="border px-2 py-1">Apellidos</th>
+                      <th className="border px-2 py-1">Nombres postulante</th>
+
                       <th className="border px-2 py-1">CI</th>
                       <th className="border px-2 py-1">Área</th>
                       <th className="border px-2 py-1">Categoría</th>
@@ -245,9 +249,11 @@ const Reportes = () => {
                         <th key={campo} className="border px-2 py-1">{campo}</th>
                       ))}
 
-                      <th className="border px-2 py-1">Tutor Nombres</th>
-                      <th className="border px-2 py-1">Tutor Apellidos</th>
-                      <th className="border px-2 py-1">Tutor CI</th>
+                      <th className="border px-2 py-1">Nombres Responsablee</th>
+
+                      <th className="border px-2 py-1"> CI Responsable</th>
+                      <th className="border px-2 py-1"> Correo Responsable</th>
+
 
 
                       {/* Si quieres mostrar datos del tutor, agrega aquí */}
@@ -263,8 +269,8 @@ const Reportes = () => {
                   <tbody>
                     {reportesFiltrados.map((r, idx) => (
                       <tr key={idx}>
-                        <td className="border px-2 py-1">{r.postulante.nombres}</td>
-                        <td className="border px-2 py-1">{r.postulante.apellidos}</td>
+                        <td className="border px-2 py-1">{r.postulante.nombres} {r.postulante.apellidos}</td>
+
                         <td className="border px-2 py-1">{r.postulante.ci}</td>
                         <td className="border px-2 py-1">{r.postulante.area_categoria.area}</td>
                         <td className="border px-2 py-1">{r.postulante.area_categoria.categoria}</td>
@@ -277,9 +283,11 @@ const Reportes = () => {
                         })}
 
                         {/* Datos principales del tutor */}
-                        <td className="border px-2 py-1">{r.tutor?.nombres || ""}</td>
-                        <td className="border px-2 py-1">{r.tutor?.apellidos || ""}</td>
-                        <td className="border px-2 py-1">{r.tutor?.ci || ""}</td>
+                        <td className="border px-2 py-1">{r.encargado?.nombres || ""} {r.encargado?.apellidos || ""}</td>
+
+                        <td className="border px-2 py-1">{r.encargado?.ci || ""}</td>
+                        <td className="border px-2 py-1">{r.encargado?.correo || ""}</td>
+
                         {/* ...campos adicionales del tutor... */}
 
 
@@ -293,8 +301,32 @@ const Reportes = () => {
                         })}
 
 
-                        <td className="border px-2 py-1">{r.estado_pago}</td>
-                        <td className="border px-2 py-1">{r.validado}</td>
+                        <td className="border px-2 py-1">
+                          <span
+                            className={
+                              r.estado_pago === "Pagado"
+                                //BERTORO AQUI CAMBIAS LOS COLORES DE LOS ESTADOS DE PAGO
+                                ? "bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold text-sm"
+                                : "bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-semibold text-sm"
+                            }
+                          >
+                            {r.estado_pago}
+                          </span>
+                        </td>
+                        <td className="border px-2 py-1">
+                          <span
+                            className={
+                              r.validado === "Validado"
+                                // LO  PROPIO AQUI ES QUE CAMBIES LOS COLORES DE LOS ESTADOS DE VALIDACION
+                                ? "bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold text-sm"
+                                : "bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-semibold text-sm"
+                            }
+                          >
+                            {r.validado}
+                          </span>
+                        </td>
+
+
                         <td className="border px-2 py-1">
                           {r.tipo_inscripcion === "Individual" ? (
                             <>
@@ -314,7 +346,18 @@ const Reportes = () => {
               )}
 
             </>
+
           )}
+          <div className="mt-6 my-8 px-10">
+
+            <ExportarReportes
+              reportesFiltrados={reportesFiltrados}
+              camposAdicionales={camposAdicionales}
+              camposTutor={camposTutor}
+              nombreOlimpiada={olimpiadaSeleccionada?.nombre}
+            />
+
+          </div>
 
           {tab === "estadisticas" && (
             <div>
@@ -325,8 +368,13 @@ const Reportes = () => {
               )}
             </div>
           )}
+
+
         </div>
+
+
       )}
+
     </div>
   )
 }
