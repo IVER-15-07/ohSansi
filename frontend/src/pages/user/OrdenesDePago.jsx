@@ -15,6 +15,7 @@ const OrdenesDePago = () => {
   const [mensajeOrdenes, setMensajeOrdenes] = useState("");
   const [cargando, setCargando] = useState(true);
   const [nombreOlimpiada, setNombreOlimpiada] = useState("");
+  const [verDetallesLista, setVerDetallesLista] = useState(null);
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -192,7 +193,53 @@ const OrdenesDePago = () => {
     }
   };
 
+if (verDetallesLista) {
+    const listaRegistros = registrosPorLista.find(([id]) => id === verDetallesLista)?.[1] || [];
+    return (
+      <div className="p-4 max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold text-center mb-6 text-blue-900">
+          Detalles de la lista #{verDetallesLista}
+        </h2>
+        <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse text-sm">
+              <thead className="bg-blue-800 text-white">
+                <tr>
+                  <th className="border border-black p-2">Nombres</th>
+                  <th className="border border-black p-2">Apellidos</th>
+                  <th className="border border-black p-2">Área</th>
+                  <th className="border border-black p-2">Grado</th>
+                  <th className="border border-black p-2">Nivel/Categoria</th>
+                </tr>
+              </thead>
+              <tbody>
+                {listaRegistros.map((registro) => (
+                  <tr key={registro.id_inscripcion} className="hover:bg-gray-50">
+                    <td className="border border-black p-2">{registro.nombres}</td>
+                    <td className="border border-black p-2">{registro.apellidos}</td>
+                    <td className="border border-black p-2">{registro.nombre_area}</td>
+                    <td className="border border-black p-2">{registro.grado}</td>
+                    <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="flex justify-center">
+          <button
+            className="px-6 py-3 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition"
+            onClick={() => setVerDetallesLista(null)}
+          >
+            Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
+    
     <div className="p-4 max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold text-center mb-6 text-blue-900">
         {"Órdenes de Pago"}
@@ -247,7 +294,7 @@ const OrdenesDePago = () => {
           </div>
 
           {/* Registros por lista */}
-          {registrosPorLista.length > 0 && (
+          {registrosPorLista.length > 0 ? (
             <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
               <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
                 Registros por lista
@@ -259,6 +306,7 @@ const OrdenesDePago = () => {
                       <th className="border border-black p-2">Seleccionar</th>
                       <th className="border border-black p-2">Concepto</th>
                       <th className="border border-black p-2">Número de lista</th>
+                      <th className="border border-black p-2">Detalles</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -280,12 +328,29 @@ const OrdenesDePago = () => {
                             Lista de {listaRegistros.length} postulantes a la olimpiada {nombreOlimpiada}
                           </td>
                           <td className="border border-black p-2">{idLista}</td>
+                          <td className="border border-black p-2 text-center">
+                            <button
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                              onClick={() => setVerDetallesLista(idLista)}
+                            >
+                              Ver detalles
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
               </div>
+            </div>
+          ) : (
+            <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
+              <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+                Registros por lista
+              </h2>
+              <p className="text-center text-gray-700">
+                No hay registros por lista pendientes para generar una orden de pago.
+              </p>
             </div>
           )}
 
