@@ -4,40 +4,64 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { obtenerInscripciones } from "../../../service/inscripcion.api";
 import { generarDatosDeOrden, guardarOrdenPago, obtenerOrdenesDePago } from "../../../service/pagos.api";
-import { getOlimpiada } from "../../../service/olimpiadas.api"; // Debes tener este método en tu service
+import { getOlimpiada } from "../../../service/olimpiadas.api";
 
 const OrdenesDePago = () => {
   const { idEncargado, idOlimpiada } = useParams();
   const [registros, setRegistros] = useState([]);
   const [registrosSeleccionados, setRegistrosSeleccionados] = useState([]);
   const [ordenesDePago, setOrdenesDePago] = useState([]);
-  const [sinRegistros, setSinRegistros] = useState(false);
-  const [sinOrdenes, setSinOrdenes] = useState(false);
+  const [mensajeRegistros, setMensajeRegistros] = useState("");
+  const [mensajeOrdenes, setMensajeOrdenes] = useState("");
   const [cargando, setCargando] = useState(true);
   const [nombreOlimpiada, setNombreOlimpiada] = useState("");
 
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const ordenesResponse = await obtenerOrdenesDePago(idEncargado, idOlimpiada);
-        if (ordenesResponse.data.length === 0) {
-          setSinOrdenes(true);
-        } else {
-          setOrdenesDePago(ordenesResponse.data);
+        // Inscripciones
+        try {
+          const inscripcionesResponse = await obtenerInscripciones(idEncargado, idOlimpiada);
+          if (inscripcionesResponse.data && inscripcionesResponse.data.length > 0) {
+            setRegistros(inscripcionesResponse.data);
+            setMensajeRegistros("");
+          } else {
+            setRegistros([]);
+            setMensajeRegistros(inscripcionesResponse.message || "");
+          }
+        } catch (error) {
+          setRegistros([]);
+          setMensajeRegistros(
+            error.response?.data?.message ||
+            "Error al cargar registros."
+          );
         }
 
-        // Obtener nombre de la olimpiada por id
-        const olimpiadaResponse = await getOlimpiada(idOlimpiada);
-        setNombreOlimpiada(olimpiadaResponse.nombre);
-
-        const inscripcionesResponse = await obtenerInscripciones(idEncargado, idOlimpiada);
-        if (inscripcionesResponse.data.length === 0) {
-          setSinRegistros(true);
-        } else {
-          setRegistros(inscripcionesResponse.data);
+        // Órdenes de pago
+        try {
+          const ordenesResponse = await obtenerOrdenesDePago(idEncargado, idOlimpiada);
+          if (ordenesResponse.data && ordenesResponse.data.length > 0) {
+            setOrdenesDePago(ordenesResponse.data);
+            setMensajeOrdenes("");
+          } else {
+            setOrdenesDePago([]);
+            setMensajeOrdenes(ordenesResponse.message || "");
+          }
+        } catch (error) {
+          setOrdenesDePago([]);
+          setMensajeOrdenes(
+            error.response?.data?.message ||
+            "Error al cargar órdenes de pago."
+          );
         }
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
+
+        // Nombre olimpiada
+        try {
+          const olimpiadaResponse = await getOlimpiada(idOlimpiada);
+          setNombreOlimpiada(olimpiadaResponse.nombre);
+        } catch {
+          setNombreOlimpiada("");
+        }
       } finally {
         setCargando(false);
       }
@@ -53,12 +77,11 @@ const OrdenesDePago = () => {
       listasMap[r.id_lista_inscripcion].push(r);
     }
   });
-  const registrosPorLista = Object.entries(listasMap); // [ [id_lista, [registros...]], ... ]
+  const registrosPorLista = Object.entries(listasMap);
   const registrosIndividuales = registros.filter(
     (r) => !r.id_lista_inscripcion || isNaN(r.id_lista_inscripcion)
   );
 
-  // Selección individual
   const handleSeleccionarRegistro = (idInscripcion) => {
     setRegistrosSeleccionados((prev) =>
       prev.includes(idInscripcion)
@@ -67,50 +90,44 @@ const OrdenesDePago = () => {
     );
   };
 
-  // Seleccionar/deseleccionar todos los individuales
-const handleSeleccionarTodosIndividuales = () => {
-  const idsIndividuales = registrosIndividuales.map((r) => r.id_inscripcion);
-  const todosSeleccionados = idsIndividuales.every((id) => registrosSeleccionados.includes(id));
-  if (todosSeleccionados) {
-    setRegistrosSeleccionados((prev) => prev.filter((id) => !idsIndividuales.includes(id)));
-  } else {
-    setRegistrosSeleccionados((prev) => [
-      ...prev,
-      ...idsIndividuales.filter((id) => !prev.includes(id)),
-    ]);
-  }
-};
+  const handleSeleccionarTodosIndividuales = () => {
+    const idsIndividuales = registrosIndividuales.map((r) => r.id_inscripcion);
+    const todosSeleccionados = idsIndividuales.every((id) => registrosSeleccionados.includes(id));
+    if (todosSeleccionados) {
+      setRegistrosSeleccionados((prev) => prev.filter((id) => !idsIndividuales.includes(id)));
+    } else {
+      setRegistrosSeleccionados((prev) => [
+        ...prev,
+        ...idsIndividuales.filter((id) => !prev.includes(id)),
+      ]);
+    }
+  };
 
-// Seleccionar/deseleccionar todos los de lista
-const handleSeleccionarTodosListas = () => {
-  const idsListas = registrosPorLista.flatMap(([_, listaRegistros]) =>
-    listaRegistros.map((r) => r.id_inscripcion)
-  );
-  const todosSeleccionados = idsListas.every((id) => registrosSeleccionados.includes(id));
-  if (todosSeleccionados) {
-    setRegistrosSeleccionados((prev) => prev.filter((id) => !idsListas.includes(id)));
-  } else {
-    setRegistrosSeleccionados((prev) => [
-      ...prev,
-      ...idsListas.filter((id) => !prev.includes(id)),
-    ]);
-  }
-};
+  const handleSeleccionarTodosListas = () => {
+    const idsListas = registrosPorLista.flatMap(([_, listaRegistros]) =>
+      listaRegistros.map((r) => r.id_inscripcion)
+    );
+    const todosSeleccionados = idsListas.every((id) => registrosSeleccionados.includes(id));
+    if (todosSeleccionados) {
+      setRegistrosSeleccionados((prev) => prev.filter((id) => !idsListas.includes(id)));
+    } else {
+      setRegistrosSeleccionados((prev) => [
+        ...prev,
+        ...idsListas.filter((id) => !prev.includes(id)),
+      ]);
+    }
+  };
 
-  // Seleccionar todos los registros de una lista
   const handleSeleccionarLista = (listaRegistros) => {
     const idsLista = listaRegistros.map((r) => r.id_inscripcion);
     const todosSeleccionados = idsLista.every((id) => registrosSeleccionados.includes(id));
     if (todosSeleccionados) {
-      // Deseleccionar todos los de la lista
       setRegistrosSeleccionados((prev) => prev.filter((id) => !idsLista.includes(id)));
     } else {
-      // Seleccionar todos los de la lista (sin duplicados)
       setRegistrosSeleccionados((prev) => [...prev, ...idsLista.filter((id) => !prev.includes(id))]);
     }
   };
 
-  // Generar orden de pago (igual que antes)
   const generarOrdenDePago = async () => {
     try {
       const datosOrdenResponse = await generarDatosDeOrden({
@@ -191,10 +208,8 @@ const handleSeleccionarTodosListas = () => {
             <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
               Registros Individuales
             </h2>
-            {sinRegistros && registrosIndividuales.length === 0 ? (
-              <p className="text-center text-gray-700">
-                No hay registros individuales pendientes para generar una orden de pago.
-              </p>
+            {mensajeRegistros ? (
+              <p className="text-center text-gray-700">{mensajeRegistros}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse text-sm">
@@ -315,10 +330,8 @@ const handleSeleccionarTodosListas = () => {
             <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
               Órdenes de Pago
             </h2>
-            {sinOrdenes ? (
-              <p className="text-center text-gray-700">
-                No hay órdenes de pago pendientes por pagar.
-              </p>
+            {mensajeOrdenes ? (
+              <p className="text-center text-gray-700">{mensajeOrdenes}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse text-sm">
