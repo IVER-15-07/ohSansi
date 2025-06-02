@@ -15,13 +15,6 @@ const ConfParamOlimpiada = () => {
   const [mensaje, setMensaje] = useState('');
   const inputArchivoRef = useRef();
 
-function formatoDDMMAAAA(fecha) {
-  if (!fecha) return '';
-  const [y, m, d] = fecha.split('-');
-  if (!y || !m || !d) return fecha;
-  return `${d}/${m}/${y}`;
-}
-
   useEffect(() => {
     getOlimpiada(id)
       .then(data => {

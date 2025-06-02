@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { AlertCircle, CheckCircle, X } from "lucide-react"
 import { createEncargado } from "../../../service/encargados.api"
 import { getPersonaByCI } from "../../../service/personas.api"
+import { FormField, Button, Modal, Alert } from "../../components/ui"
 
 const RegistroTutor = () => {
   const location = useLocation();
@@ -18,6 +18,7 @@ const RegistroTutor = () => {
     ci: CIinicial,
     fecha_nacimiento: "",
     correo: "",
+    nro_celular: "",
     termsAccepted: false,
   })
 
@@ -41,16 +42,12 @@ const RegistroTutor = () => {
         const personaRes = (await getPersonaByCI(formData.ci)).data;
         console.log("Respuesta de getPersonaByCI:", personaRes);
         if (personaRes) {
-          if (personaRes.fecha_nacimiento) {
-            const [year, month, day] = personaRes.fecha_nacimiento.split("-");
-            personaRes.fecha_nacimiento = `${day}/${month}/${year}`;
-          }
           setFormData((prevState) => ({
             ...prevState,
             idPersona: personaRes.id,
             nombre: personaRes.nombres,
             apellido: personaRes.apellidos,
-            fecha_nacimiento: personaRes.fecha_nacimiento,
+            fecha_nacimiento: personaRes.fecha_nacimiento || "",
           }))
           setPersona(personaRes);
         }
@@ -67,6 +64,50 @@ const RegistroTutor = () => {
   // Manejador de cambios en los inputs
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
+    
+    // Para el campo CI, aplicar validación en tiempo real
+    if (name === "ci") {
+      // Validar caracteres especiales y letras con tilde
+      const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+      const letrasConTilde = /[áéíóúÁÉÍÓÚñÑ]/;
+      
+      if (caracteresEspeciales.test(value) || letrasConTilde.test(value)) {
+        // No actualizar el valor si contiene caracteres no permitidos
+        return;
+      }
+      
+      // Permitir solo letras sin tilde, números y espacios
+      const regex = /^[a-zA-Z0-9 ]*$/;
+      if (!regex.test(value)) {
+        return;
+      }
+    }
+
+    // Para campos de nombre y apellido, validar en tiempo real
+    if (name === "nombre" || name === "apellido") {
+      // Validar caracteres especiales
+      const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+      if (caracteresEspeciales.test(value)) {
+        return; // No permitir caracteres especiales
+      }
+      
+      // Permitir solo letras con y sin tilde y espacios (sin números)
+      const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$/;
+      if (!regex.test(value)) {
+        return;
+      }
+    }
+
+    // Para el campo fecha_nacimiento, manejar como string directamente
+    if (name === "fecha_nacimiento") {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+      validateField(name, value);
+      return;
+    }
+    
     setFormData({
       ...formData,
       [name]: type === "checkbox" ? checked : value,
@@ -86,10 +127,16 @@ const RegistroTutor = () => {
           newErrors.nombre = "El nombre del encargado es obligatorio"
         } else if (value.length > 100) {
           newErrors.nombre = "El nombre no debe exceder los 100 caracteres"
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]+$/.test(value)) {
-          newErrors.nombre = "El nombre solo debe contener letras, números y espacios"
         } else {
-          delete newErrors.nombre
+          // Validar caracteres especiales
+          const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+          if (caracteresEspeciales.test(value)) {
+            newErrors.nombre = "No se permiten caracteres especiales en el nombre"
+          } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(value)) {
+            newErrors.nombre = "El nombre solo debe contener letras y espacios"
+          } else {
+            delete newErrors.nombre
+          }
         }
         break
 
@@ -98,20 +145,38 @@ const RegistroTutor = () => {
           newErrors.apellido = "El apellido del encargado es obligatorio"
         } else if (value.length > 100) {
           newErrors.apellido = "El apellido no debe exceder los 100 caracteres"
-        } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]+$/.test(value)) {
-          newErrors.apellido = "El apellido solo debe contener letras, números y espacios"
         } else {
-          delete newErrors.apellido
+          // Validar caracteres especiales
+          const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+          if (caracteresEspeciales.test(value)) {
+            newErrors.apellido = "No se permiten caracteres especiales en el apellido"
+          } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(value)) {
+            newErrors.apellido = "El apellido solo debe contener letras y espacios"
+          } else {
+            delete newErrors.apellido
+          }
         }
         break
 
       case "ci":
         if (!value) {
           newErrors.ci = "El número de carnet es obligatorio"
-        } else if (!/^[a-zA-Z0-9 ]+$/.test(value)) {
-          newErrors.ci = "El carnet solo debe contener letras, números y espacios"
         } else {
-          delete newErrors.ci
+          // Validar caracteres especiales
+          const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+          if (caracteresEspeciales.test(value)) {
+            newErrors.ci = "No se permiten caracteres especiales como !@#$%^&*(),.?\":{}|<>/\\`~_+=[];'-"
+          } else {
+            // Validar letras con tilde
+            const letrasConTilde = /[áéíóúÁÉÍÓÚñÑ]/;
+            if (letrasConTilde.test(value)) {
+              newErrors.ci = "No se permiten letras con tilde (á, é, í, ó, ú, ñ)"
+            } else if (!/^[a-zA-Z0-9 ]+$/.test(value)) {
+              newErrors.ci = "Solo se permiten letras sin tilde, números y espacios"
+            } else {
+              delete newErrors.ci
+            }
+          }
         }
         break
 
@@ -128,10 +193,37 @@ const RegistroTutor = () => {
       case "fecha_nacimiento":
         if (!value) {
           newErrors.fecha_nacimiento = "La fecha de nacimiento es obligatoria"
-        } else if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(value)) {
-          newErrors.fecha_nacimiento = "El formato debe ser dd/mm/aaaa"
         } else {
-          delete newErrors.fecha_nacimiento
+          // Crear objeto Date desde string YYYY-MM-DD
+          const birthDate = new Date(value);
+          
+          // Validar que la fecha sea válida
+          if (isNaN(birthDate.getTime())) {
+            newErrors.fecha_nacimiento = "Fecha de nacimiento inválida";
+          } else {
+            // Validar que la fecha no sea futura
+            const today = new Date();
+            if (birthDate > today) {
+              newErrors.fecha_nacimiento = "La fecha de nacimiento no puede ser futura";
+            } else {
+              // Calcular la edad
+              const age = today.getFullYear() - birthDate.getFullYear();
+              const monthDiff = today.getMonth() - birthDate.getMonth();
+              
+              let actualAge = age;
+              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                actualAge--;
+              }
+              
+              if (actualAge < 18) {
+                newErrors.fecha_nacimiento = "El encargado debe ser mayor de edad (18 años)";
+              } else if (actualAge > 120) {
+                newErrors.fecha_nacimiento = "Ingrese una fecha de nacimiento válida";
+              } else {
+                delete newErrors.fecha_nacimiento;
+              }
+            }
+          }
         }
         break
 
@@ -142,13 +234,36 @@ const RegistroTutor = () => {
           delete newErrors.termsAccepted
         }
         break
-
+      case "nro_celular":
+        if (!value) {
+          newErrors.nro_celular = "Debe ingresar un número de celular"
+        } else if (!/^\d{8,15}$/.test(value)) {
+          newErrors.nro_celular = "El número de celular debe tener entre 8 y 15 dígitos"
+        } else {
+          delete newErrors.nro_celular
+        }
+        break
       default:
         break
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
+  }
+
+  // Función para verificar si el formulario es completamente válido
+  const isFormValid = () => {
+    // Verificar que todos los campos obligatorios están llenos
+    const requiredFields = ['nombre', 'apellido', 'ci', 'correo', 'fecha_nacimiento', 'nro_celular'];
+    const allFieldsFilled = requiredFields.every(field => formData[field]?.toString().trim());
+    
+    // Verificar que no hay errores de validación
+    const hasNoErrors = Object.keys(errors).length === 0;
+    
+    // Verificar que se aceptaron los términos
+    const termsAccepted = formData.termsAccepted;
+    
+    return allFieldsFilled && hasNoErrors && termsAccepted;
   }
 
   // Validación de todo el formulario
@@ -158,16 +273,18 @@ const RegistroTutor = () => {
 
     // Validar cada campo
     Object.entries(formData).forEach(([key, value]) => {
-      if (!validateField(key, value)) {
-        isValid = false
+      if (key !== 'idPersona' && key !== 'termsAccepted') {
+        if (!validateField(key, value)) {
+          isValid = false
+        }
       }
     })
 
     // Verificar campos obligatorios vacíos
-    if (!formData.nombre) newErrors.nombre = "El nombre(s) es obligatorio"
-    if (!formData.apellido) newErrors.apellido = "El apellido(s) es obligatorio"
-    if (!formData.ci) newErrors.ci = "El número de carnet es obligatorio"
-    if (!formData.correo) newErrors.correo = "El correo electrónico es obligatorio"
+    if (!formData.nombre?.trim()) newErrors.nombre = "El nombre es obligatorio"
+    if (!formData.apellido?.trim()) newErrors.apellido = "El apellido es obligatorio"
+    if (!formData.ci?.trim()) newErrors.ci = "El número de carnet es obligatorio"
+    if (!formData.correo?.trim()) newErrors.correo = "El correo electrónico es obligatorio"
     if (!formData.fecha_nacimiento) newErrors.fecha_nacimiento = "La fecha de nacimiento es obligatoria"
     if (!formData.termsAccepted) newErrors.termsAccepted = "Debe aceptar los términos y condiciones"
 
@@ -182,7 +299,6 @@ const RegistroTutor = () => {
     if (validateForm()) {
       setShowConfirmDialog(true)
     }
-
   }
 
   // Manejador de confirmación
@@ -190,9 +306,7 @@ const RegistroTutor = () => {
     setShowConfirmDialog(false)
     const { termsAccepted, idPersona, ...dataToSend } = formData // Quitamos el campo de terminos del formulario
 
-    // Convertir la fecha de nacimiento a un objeto Date
-    const [day, month, year] = dataToSend.fecha_nacimiento.split("/");
-    dataToSend.fecha_nacimiento = new Date(`${year}-${month}-${day}`); // Formato ISO (aaaa-mm-dd)
+    // La fecha ya es un objeto Date, no necesita conversión adicional
     console.log("Datos a enviar:", dataToSend);
     setIsAdding(true)
     try {
@@ -200,16 +314,6 @@ const RegistroTutor = () => {
       const response = await createEncargado(dataToSend);
       const idEncargado = response.data.id;
       setShowSuccessAlert(true);
-      /*
-      setFormData({
-        nombre: "",
-        apellido: "",
-        ci: "",
-        fecha_nacimiento: "",
-        telefono: "",
-        correo: "",
-        termsAccepted: false,
-      });*/
 
       // Ocultar mensaje de éxito después de 5 segundos
       setTimeout(() => {
@@ -245,140 +349,101 @@ const RegistroTutor = () => {
         <div className="space-y-6">
           {/* Alerta de error */}
           {errorMessage && (
-            <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 relative">
-              <div className="flex items-start">
-                <AlertCircle className="h-5 w-5 text-red-600 mr-2 mt-0.5" />
-                <div>
-                  <h3 className="font-medium">Error</h3>
-                  <p className="text-sm text-red-700">{errorMessage}</p>
-                </div>
-              </div>
-              <button className="absolute top-4 right-4" onClick={() => setErrorMessage(null)} aria-label="Cerrar">
-                <X className="h-4 w-4 text-red-600" />
-              </button>
-            </div>
+            <Alert
+              variant="error"
+              title="Error"
+              onClose={() => setErrorMessage(null)}
+            >
+              {errorMessage}
+            </Alert>
           )}
 
           {/* Alerta de éxito */}
           {showSuccessAlert && (
-            <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 relative">
-              <div className="flex items-start">
-                <CheckCircle className="h-5 w-5 text-green-600 mr-2 mt-0.5" />
-                <div>
-                  <h3 className="font-medium">Registro exitoso</h3>
-                  <p className="text-sm text-green-700">
-                    Sus datos han sido registrados correctamente.
-                  </p>
-                </div>
-              </div>
-              <button className="absolute top-4 right-4" onClick={() => setShowSuccessAlert(false)} aria-label="Cerrar">
-                <X className="h-4 w-4 text-green-600" />
-              </button>
-            </div>
+            <Alert
+              variant="success"
+              title="Registro exitoso"
+              onClose={() => setShowSuccessAlert(false)}
+            >
+              Sus datos han sido registrados correctamente.
+            </Alert>
           )}
 
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Nombre(s) */}
-              <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre(s) *
-                </label>
-                <input
-                  type="text"
-                  id="nombre"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleChange}
-                  disabled={formData.idPersona}
-                  placeholder="Ingrese su nombre(s)"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 
-                    ${errors.nombre ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"}
-                    ${formData.idPersona ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                />
-                {errors.nombre && <p className="mt-1 text-sm text-red-600">{errors.nombre}</p>}
-              </div>
+              <FormField
+                label="Nombre(s)"
+                name="nombre"
+                type="text"
+                value={formData.nombre}
+                onChange={handleChange}
+                disabled={formData.idPersona}
+                placeholder="Ingrese su nombre(s)"
+                required
+                error={errors.nombre}
+              />
 
               {/* Apellido(s) */}
-              <div>
-                <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-1">
-                  Apellido(s) *
-                </label>
-                <input
-                  type="text"
-                  id="apellido"
-                  name="apellido"
-                  value={formData.apellido}
-                  onChange={handleChange}
-                  disabled={formData.idPersona}
-                  placeholder="Ingrese su apellido(s)"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 
-                    ${errors.apellido ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"}
-                    ${formData.idPersona ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                />
-                {errors.apellido && <p className="mt-1 text-sm text-red-600">{errors.apellido}</p>}
-              </div>
+              <FormField
+                label="Apellido(s)"
+                name="apellido"
+                type="text"
+                value={formData.apellido}
+                onChange={handleChange}
+                disabled={formData.idPersona}
+                placeholder="Ingrese su apellido(s)"
+                required
+                error={errors.apellido}
+              />
 
               {/* Número de Carnet */}
-              <div>
-                <label htmlFor="ci" className="block text-sm font-medium text-gray-700 mb-1">
-                  Número de Carnet de Identidad *
-                </label>
-                <input
-                  type="text"
-                  id="ci"
-                  name="ci"
-                  value={formData.ci}
-                  disabled={true}
-                  onChange={handleChange}
-                  placeholder="Ingrese su número de carnet"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 
-                    ${errors.idNumber ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"}
-                    ${formData.ci ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                />
-                {errors.ci && <p className="mt-1 text-sm text-red-600">{errors.ci}</p>}
-              </div>
+              <FormField
+                label="Número de Carnet de Identidad"
+                name="ci"
+                type="text"
+                value={formData.ci}
+                onChange={handleChange}
+                disabled={true}
+                placeholder="Ingrese su número de carnet"
+                required
+                error={errors.ci}
+              />
 
               {/* Correo Electrónico */}
-              <div>
-                <label htmlFor="correo" className="block text-sm font-medium text-gray-700 mb-1">
-                  Correo Electrónico *
-                </label>
-                <input
-                  type="email"
-                  id="correo"
-                  name="correo"
-                  value={formData.correo}
-                  onChange={handleChange}
-                  placeholder="ejemplo@correo.com"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.correo ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
-                    }`}
-                />
-                {errors.correo && <p className="mt-1 text-sm text-red-600">{errors.correo}</p>}
-              </div>
-
-
+              <FormField
+                label="Correo Electrónico"
+                name="correo"
+                type="email"
+                value={formData.correo}
+                onChange={handleChange}
+                placeholder="ejemplo@correo.com"
+                required
+                error={errors.correo}
+              />
 
               {/* Fecha de Nacimiento */}
-              <div>
-                <label htmlFor="fecha_nacimiento" className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha de Nacimiento *
-                </label>
-                <input
-                  type="text"
-                  id="fecha_nacimiento"
-                  name="fecha_nacimiento"
-                  value={formData.fecha_nacimiento}
-                  onChange={handleChange}
-                  disabled={persona?.fecha_nacimiento}
-                  placeholder="dd/mm/aaaa"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 
-                    ${errors.fecha_nacimiento ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"}
-                    ${persona?.fecha_nacimiento ? "bg-gray-100 cursor-not-allowed" : ""}`}
-                />
-                {errors.fecha_nacimiento && <p className="mt-1 text-sm text-red-600">{errors.fecha_nacimiento}</p>}
-              </div>
+              <FormField
+                label="Fecha de Nacimiento"
+                name="fecha_nacimiento"
+                type="date"
+                value={formData.fecha_nacimiento}
+                onChange={handleChange}
+                disabled={persona?.fecha_nacimiento}
+                required
+                error={errors.fecha_nacimiento}
+              />
+              <FormField
+                label="Numero de Celular"
+                name="nro_celular"
+                type="number"
+                value={formData.nro_celular}
+                onChange={handleChange}
+                disabled={persona?.nro_celular}
+                required
+                error={errors.nro_celular}
+              />
             </div>
 
             {/* Términos y Condiciones */}
@@ -407,55 +472,40 @@ const RegistroTutor = () => {
             </div>
 
 
-            {/* Botón de Guardar */}
+            {/* Botones */}
             <div className="flex justify-between mt-6">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={handleVolver}
-                className="px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700:bg-gray-500 mr-3"
-
               >
                 Identificarte
-              </button>
+              </Button>
 
-              <button
+              <Button
                 type="submit"
-                disabled={!formData.termsAccepted || isAdding}
-                className={`px-4 py-2 rounded-md text-white ${(formData.termsAccepted && !isAdding)
-                  ? "bg-black hover:bg-gray-800 cursor-pointer"
-                  : "bg-gray-400 cursor-not-allowed"
-                  }`}
+                disabled={!isFormValid() || isAdding}
+                loading={isAdding}
+                size="md"
+                variant={!isFormValid() || isAdding ? "secondary" : "success"}
               >
-                {isAdding ? "Cargando..." : "Guardar"}
-              </button>
+                Guardar
+              </Button>
             </div>
           </form>
 
-          {/* Diálogo de confirmación */}
-          {showConfirmDialog && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-lg">
-                <h3 className="text-lg font-medium mb-2">Confirmar registro</h3>
-                <p className="text-gray-600 mb-6">
-                  ¿Está seguro que desea guardar los datos del responsable de inscripción?
-                </p>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={() => setShowConfirmDialog(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleConfirm}
-                    className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
-                  >
-                    Confirmar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Modal de confirmación */}
+          <Modal
+            isOpen={showConfirmDialog}
+            onClose={() => setShowConfirmDialog(false)}
+            onConfirm={handleConfirm}
+            variant="info"
+            title="Confirmar registro"
+            message="¿Está seguro que desea guardar los datos del responsable de inscripción?"
+            confirmText="Confirmar"
+            cancelText="Cancelar"
+            isLoading={isAdding}
+          />
         </div>
       </div>
     </div>
