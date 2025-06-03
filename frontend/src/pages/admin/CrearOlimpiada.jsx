@@ -34,6 +34,7 @@ const CrearOlimpiada = () => {
   });
 
   const [errores, setErrores] = useState({});
+  const [camposTocados, setCamposTocados] = useState({});
 
   useEffect(() => {
     getOlimpiadas()
@@ -134,7 +135,17 @@ const CrearOlimpiada = () => {
   const manejarCambio = (e) => {
     const { name, value } = e.target;
     if (name === 'descripcion' && value.length > 500) return;
+    
+    // Marcar el campo como tocado
+    setCamposTocados(prev => ({ ...prev, [name]: true }));
+    
     setDatosFormulario(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Función para manejar cuando un campo pierde el foco (blur)
+  const manejarBlur = (e) => {
+    const { name } = e.target;
+    setCamposTocados(prev => ({ ...prev, [name]: true }));
   };
 
   const validarFormularioCompleto = () => {
@@ -150,6 +161,15 @@ const CrearOlimpiada = () => {
   const manejarEnvio = async (e) => {
     e.preventDefault();
     setErrorGeneral('');
+    
+    // Al enviar el formulario, marcar todos los campos obligatorios como tocados
+    setCamposTocados(prev => ({
+      ...prev,
+      nombre: true,
+      fechaInicio: true,
+      fechaFin: true,
+    }));
+    
     if (!validarFormularioCompleto()) {
       setErrorGeneral('Por favor, complete todos los campos obligatorios correctamente antes de continuar.');
       return;
@@ -182,6 +202,20 @@ const CrearOlimpiada = () => {
       await createOlimpiada(formData);
       // Invalidar consultas para actualizar la lista de olimpiadas
       await clienteQuery.invalidateQueries(['olimpiadas']);
+      
+      // Resetear formulario y campos tocados
+      setDatosFormulario({
+        nombre: '',
+        convocatoria: '',
+        descripcion: '',
+        costo: '',
+        max_areas: '',
+        fechaInicio: '',
+        fechaFin: '',
+        inicioInscripcion: '',
+        finInscripcion: '',
+      });
+      setCamposTocados({});
       
       // Pequeña pausa para asegurar que React procese todos los cambios de estado
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -254,7 +288,8 @@ const CrearOlimpiada = () => {
             required={true}
             value={datosFormulario.nombre}
             onChange={manejarCambio}
-            error={errores.nombre}
+            onBlur={manejarBlur}
+            error={camposTocados.nombre ? errores.nombre : undefined}
           />
           
           <FormField
@@ -265,7 +300,8 @@ const CrearOlimpiada = () => {
             required={true}
             value={datosFormulario.fechaInicio}
             onChange={manejarCambio}
-            error={errores.fechaInicio}
+            onBlur={manejarBlur}
+            error={camposTocados.fechaInicio ? errores.fechaInicio : undefined}
           />
           
           <FormField
@@ -276,7 +312,8 @@ const CrearOlimpiada = () => {
             required={true}
             value={datosFormulario.fechaFin}
             onChange={manejarCambio}
-            error={errores.fechaFin}
+            onBlur={manejarBlur}
+            error={camposTocados.fechaFin ? errores.fechaFin : undefined}
           />
           
           {/* Campos opcionales */}
@@ -293,7 +330,7 @@ const CrearOlimpiada = () => {
             helperText="Fecha de inicio inscripciones"
             value={datosFormulario.inicioInscripcion}
             onChange={manejarCambio}
-            error={errores.inicioInscripcion}
+            error={camposTocados.inicioInscripcion ? errores.inicioInscripcion : undefined}
           />
           
           <FormField
@@ -305,7 +342,7 @@ const CrearOlimpiada = () => {
             helperText="Fecha de fin inscripciones"
             value={datosFormulario.finInscripcion}
             onChange={manejarCambio}
-            error={errores.finInscripcion}
+            error={camposTocados.finInscripcion ? errores.finInscripcion : undefined}
           />
           
           <FormField
@@ -318,7 +355,7 @@ const CrearOlimpiada = () => {
             helperText="Costo de la inscripción"
             value={datosFormulario.costo}
             onChange={manejarCambio}
-            error={errores.costo}
+            error={camposTocados.costo ? errores.costo : undefined}
           />
           
           <FormField
@@ -331,7 +368,7 @@ const CrearOlimpiada = () => {
             helperText="Máximo de áreas que un participante puede inscribirse"
             value={datosFormulario.max_areas}
             onChange={manejarCambio}
-            error={errores.max_areas}
+            error={camposTocados.max_areas ? errores.max_areas : undefined}
           />
           
           <div className="col-span-1 md:col-span-3">
@@ -345,7 +382,7 @@ const CrearOlimpiada = () => {
               onChange={manejarCambio}
               placeholder="Inserte la descripción"
               className={`w-full px-3 py-2 border rounded-lg text-sm transition-colors duration-200 placeholder:text-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent h-20 resize-none ${
-                errores.descripcion 
+                (camposTocados.descripcion && errores.descripcion)
                   ? 'border-danger-300 bg-danger-50 focus:ring-danger-500' 
                   : 'border-secondary-300 bg-white hover:border-secondary-400'
               }`}
