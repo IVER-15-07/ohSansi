@@ -368,6 +368,21 @@ const CrearOlimpiada = () => {
               acceptAttribute=".pdf,application/pdf"
               maxFileSize={10 * 1024 * 1024} // 10MB
               allowEdit={true}
+              hasExistingFile={false} // En crear olimpiada nunca hay archivo existente
+              showFileStatus={true} // Mostrar mensajes de estado
+              currentFileName="" // No hay archivo actual al crear
+              newFile={datosFormulario.convocatoria instanceof File ? datosFormulario.convocatoria : null}
+              onCancelFile={() => {
+                setDatosFormulario(prev => ({ ...prev, convocatoria: '' }));
+                if (inputArchivoRef.current) {
+                  inputArchivoRef.current.value = '';
+                }
+              }}
+              baseUrl="http://127.0.0.1:8000/storage"
+              fileTypeMessage="convocatoria"
+              onFileValidationError={(error) => {
+                setErrorGeneral(error);
+              }}
             />
           </div>
         </form>

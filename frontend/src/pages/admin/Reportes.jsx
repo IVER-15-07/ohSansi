@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { getOlimpiadasActivas, getOlimpiadas } from "../../../service/olimpiadas.api";
-
 import { getReportes } from "../../../service/Reporte.api"; // Asegúrate de tener esta función en tu servicio
-
 import { useParams } from "react-router-dom";
 import { User, FileText, Users } from "lucide-react";
-import Estadisticas from "./Estadisticas";
-import ExportarReportes from "./ExportarReportes";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
+
+// Lazy load componentes pesados que contienen librerías de exportación
+const Estadisticas = lazy(() => import("./Estadisticas"));
+const ExportarReportes = lazy(() => import("./ExportarReportes"));
 
 
 
