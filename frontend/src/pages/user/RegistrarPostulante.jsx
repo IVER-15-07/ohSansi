@@ -24,6 +24,7 @@ import { getPostulanteByCI, createPostulante} from "../../../service/postulantes
 import { getGrados } from "../../../service/grados.api";
 import { getOpcionesInscripcion } from "../../../service/opciones_inscripcion.api";
 import { getPersonaByCI } from "../../../service/personas.api";
+import { getOpcionesCampoPostulante } from "../../../service/opciones_campo_postulante.api";
 
 
 const RegistrarPostulante = () => {
@@ -97,18 +98,46 @@ const RegistrarPostulante = () => {
         return;
       }
       const registroEncontrado = registroBuscado.data;
-      console.log("Registro encontrado:", registroEncontrado);
-      const camposPostulanteRes = await getOlimpiadaCamposPostulante(idOlimpiada, registroEncontrado.id_postulante);
+      const camposPostulanteRes = (await getOlimpiadaCamposPostulante(idOlimpiada, registroEncontrado.id_postulante)).data;
       const datosIniciales = [];
-      camposPostulanteRes.data.forEach((campo) => {
+      camposPostulanteRes.forEach(async (campo) =>  {
         const campoNuevo = {};
         campoNuevo["idOlimpiadaCampoPostulante"] = campo.id;
+        campoNuevo["idCampoPostulante"] = campo.campo_postulante.id;
+        campoNuevo["idDependencia"] = campo.campo_postulante.id_dependencia;
         campoNuevo["tipo_campo"] = campo.campo_postulante.tipo_campo.nombre;
         campoNuevo["esObligatorio"] = campo.esObligatorio;
         campoNuevo["nombre_campo"] = campo.campo_postulante.nombre;
         campoNuevo["valor"] = campo.datos_postulante?.length > 0
         ? campo.datos_postulante[0].valor
         : "";
+        if(campo.campo_postulante.tipo_campo.esLista){
+          const opcionesCampoPostulante = (await getOpcionesCampoPostulante(campo.campo_postulante.id)).data;
+          if(campoNuevo["idDependencia"] === undefined || campoNuevo["idDependencia"] === null) {
+            campoNuevo["opciones"] = opcionesCampoPostulante["ROOT"];
+            const opcionSeleccionada = campoNuevo["opciones"].find((opcion) => opcion.valor === campoNuevo["valor"]);
+            if(opcionSeleccionada) {
+              campoNuevo["idValor"] = opcionSeleccionada.id;
+            }else{
+              campoNuevo["idValor"] = null;
+            }
+          }else{
+            campoNuevo["opciones"] = opcionesCampoPostulante;
+            const campoDependencia = datosIniciales.find(
+              c => c.idCampoPostulante === campoNuevo["idDependencia"]
+            );
+            if(campoDependencia.idValor !== null && campoDependencia.idValor !== undefined) {
+              const opcionSeleccionada = campoNuevo["opciones"][campoDependencia.idValor].find((opcion) => opcion.valor === campoNuevo["valor"]);
+              if(opcionSeleccionada) {
+                campoNuevo["idValor"] = opcionSeleccionada.id;
+              }else{
+                campoNuevo["idValor"] = null;
+              }
+            }else{
+              campoNuevo["idValor"] = null;
+            }
+          }
+        }
         datosIniciales.push(campoNuevo);
       });
       setPostulante({
@@ -141,13 +170,18 @@ const RegistrarPostulante = () => {
       const tutoresGuardados = await Promise.all(
         registrosTutores.map(async (registro) => {
           const camposTutor = (await getOlimpiadaCamposTutor(idOlimpiada, registro.id_tutor)).data;
-          const datosIniciales = camposTutor.map((campo) => ({
-            idOlimpiadaCampoTutor: campo.id,
-            tipo_campo: campo.campo_tutor.tipo_campo.nombre,
-            esObligatorio: campo.esObligatorio,
-            nombre_campo: campo.campo_tutor.nombre,
-            valor: campo.datos_tutor?.length > 0 ? campo.datos_tutor[0].valor : "",
-          }));
+          const datosIniciales = [];
+          camposTutor.forEach((campo) => {
+            const campoNuevo = {};
+            campoNuevo["idOlimpiadaCampoTutor"] = campo.id;
+            campoNuevo["tipo_campo"] = campo.campo_tutor.tipo_campo.nombre;
+            campoNuevo["esObligatorio"] = campo.esObligatorio;
+            campoNuevo["nombre_campo"] = campo.campo_tutor.nombre;
+            campoNuevo["valor"] = campo.datos_tutor?.length > 0
+            ? campo.datos_tutor[0].valor
+            : "";
+            datosIniciales.push(campoNuevo);
+          });
           return {
             idRegistroTutor: registro.id,
             idPersona: registro.tutor.persona.id, 
@@ -163,6 +197,7 @@ const RegistrarPostulante = () => {
       );
       setTutores(tutoresGuardados);
     }catch (error) {
+      console.error("Error al buscar el registro:", error);
       alert("Error al buscar el registro: " + error.message);
     }finally {
       setIsLoading(false);
@@ -183,7 +218,6 @@ const RegistrarPostulante = () => {
     Object.entries(opcionesInscripcionCatalogo).forEach(([areaId, area]) => {
       // Filtrar niveles_categorias que tengan el id_grado igual al seleccionado
       const nivelesFiltrados = area.niveles_categorias.filter(nc => nc.grados.some(g => g.id == gradoId));
-      console.log("nivelesFiltrados", nivelesFiltrados);
       if (nivelesFiltrados.length > 0){
         opcionesFiltradas.push({
           ...area,
@@ -197,6 +231,12 @@ const RegistrarPostulante = () => {
 
   {/*FUNCIONES RELACIONADAS A POSTULANTE*/}
   const handlePostulanteChange = (field, value) => {
+    if (field === "nombres" || field === "apellidos") {
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
+        alert("Solo se permiten letras y espacios en este campo.");
+        return;
+      }
+    }
   // Si el field es del tipo datos[índice].valor
   const match = field.match(/^datos\[(\d+)\]\.valor$/);
     if (match) {
@@ -228,15 +268,44 @@ const RegistrarPostulante = () => {
         alert("No se encontró algún postulante con ese CI.");
         const camposPostulanteRes = await getOlimpiadaCamposPostulante(idOlimpiada);
         const datosIniciales = [];
-        camposPostulanteRes.data.forEach((campo) => {
+        camposPostulanteRes.data.forEach(async (campo) =>  {
           const campoNuevo = {};
           campoNuevo["idOlimpiadaCampoPostulante"] = campo.id;
+          campoNuevo["idCampoPostulante"] = campo.campo_postulante.id;
+          campoNuevo["idDependencia"] = campo.campo_postulante.id_dependencia;
           campoNuevo["tipo_campo"] = campo.campo_postulante.tipo_campo.nombre;
           campoNuevo["esObligatorio"] = campo.esObligatorio;
           campoNuevo["nombre_campo"] = campo.campo_postulante.nombre;
           campoNuevo["valor"] = campo.datos_postulante?.length > 0
           ? campo.datos_postulante[0].valor
           : "";
+          if(campo.campo_postulante.tipo_campo.esLista){
+            const opcionesCampoPostulante = (await getOpcionesCampoPostulante(campo.campo_postulante.id)).data;
+            if(campoNuevo["idDependencia"] === undefined || campoNuevo["idDependencia"] === null) {
+              campoNuevo["opciones"] = opcionesCampoPostulante["ROOT"];
+              const opcionSeleccionada = campoNuevo["opciones"].find((opcion) => opcion.id === campoNuevo["valor"]);
+              if(opcionSeleccionada) {
+                campoNuevo["idValor"] = opcionSeleccionada.id;
+              }else{
+                campoNuevo["idValor"] = null;
+              }
+            }else{
+              campoNuevo["opciones"] = opcionesCampoPostulante;
+              const campoDependencia = datosIniciales.find(
+                c => c.idCampoPostulante === campoNuevo["idDependencia"]
+              );
+              if(campoDependencia.idValor !== null && campoDependencia.idValor !== undefined) {
+                const opcionSeleccionada = campoNuevo["opciones"][campoDependencia.idValor].find((opcion) => opcion.id === campoNuevo["valor"]);
+                if(opcionSeleccionada) {
+                  campoNuevo["idValor"] = opcionSeleccionada.id;
+                }else{
+                  campoNuevo["idValor"] = null;
+                }
+              }else{
+                campoNuevo["idValor"] = null;
+              }
+            }
+          }
           datosIniciales.push(campoNuevo);
         });
 
@@ -263,15 +332,44 @@ const RegistrarPostulante = () => {
       const postulanteEncontrado = postulanteBuscado.data;
       const camposPostulanteRes = await getOlimpiadaCamposPostulante(idOlimpiada, postulanteEncontrado.id);
       const datosIniciales = [];
-      camposPostulanteRes.data.forEach((campo) => {
+      camposPostulanteRes.data.forEach(async (campo) =>  {
         const campoNuevo = {};
         campoNuevo["idOlimpiadaCampoPostulante"] = campo.id;
+        campoNuevo["idCampoPostulante"] = campo.campo_postulante.id;
+        campoNuevo["idDependencia"] = campo.campo_postulante.id_dependencia;
         campoNuevo["tipo_campo"] = campo.campo_postulante.tipo_campo.nombre;
         campoNuevo["esObligatorio"] = campo.esObligatorio;
         campoNuevo["nombre_campo"] = campo.campo_postulante.nombre;
         campoNuevo["valor"] = campo.datos_postulante?.length > 0
         ? campo.datos_postulante[0].valor
         : "";
+        if(campo.campo_postulante.tipo_campo.esLista){
+          const opcionesCampoPostulante = (await getOpcionesCampoPostulante(campo.campo_postulante.id)).data;
+          if(campoNuevo["idDependencia"] === undefined || campoNuevo["idDependencia"] === null) {
+            campoNuevo["opciones"] = opcionesCampoPostulante["ROOT"];
+            const opcionSeleccionada = campoNuevo["opciones"].find((opcion) => opcion.id === campoNuevo["valor"]);
+            if(opcionSeleccionada) {
+              campoNuevo["idValor"] = opcionSeleccionada.id;
+            }else{
+              campoNuevo["idValor"] = null;
+            }
+          }else{
+            campoNuevo["opciones"] = opcionesCampoPostulante;
+            const campoDependencia = datosIniciales.find(
+              c => c.idCampoPostulante === campoNuevo["idDependencia"]
+            );
+            if(campoDependencia.idValor !== null && campoDependencia.idValor !== undefined) {
+              const opcionSeleccionada = campoNuevo["opciones"][campoDependencia.idValor].find((opcion) => opcion.id === campoNuevo["valor"]);
+              if(opcionSeleccionada) {
+                campoNuevo["idValor"] = opcionSeleccionada.id;
+              }else{
+                campoNuevo["idValor"] = null;
+              }
+            }else{
+              campoNuevo["idValor"] = null;
+            }
+          }
+        }
         datosIniciales.push(campoNuevo);
       });
       setPersonaPostulate(postulanteEncontrado.persona);
@@ -391,15 +489,23 @@ const RegistrarPostulante = () => {
     setTutores(prevTutores => prevTutores.map((tutor, i) => {
       if (i !== index) return tutor;
 
+      
       // Si el campo es directo (nombres, apellidos, ci, etc.)
       if (field in tutor) {
         // Si cambia el CI, resetea buscado
         if (field === "ci") {
           return { ...tutor, [field]: value, buscado: false };
         }
+
+        if (field === "nombres" || field === "apellidos") {
+          if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
+            alert("Solo se permiten letras y espacios en este campo.");
+            return { ...tutor, [field]: tutor[field] }; // No actualiza el campo
+          }
+        }
         return { ...tutor, [field]: value };
       }
-
+      
       // Si es un campo dinámico de datos (por nombre_campo)
       return {
         ...tutor,
@@ -431,21 +537,20 @@ const RegistrarPostulante = () => {
 
   const buscarTutor = async (index) => {
     const tutor = tutores[index];
-    console.log(tutor)
     if (!tutor.ci) {
       alert("Por favor, ingrese el CI del tutor antes de buscar.");
       return;
     }
     const tutorBuscado = await getTutor(tutor.ci);
-    console.log(tutorBuscado);
     if (!tutorBuscado.data) {
       alert("No se encontró un tutor con ese CI.");
       const camposTutor = (await getOlimpiadaCamposTutor(idOlimpiada)).data;
-      console.log("camposTutor", camposTutor);
       const datosIniciales = [];
-      camposTutor.forEach((campo) => {
+      camposTutor.forEach((campo, index) => {
         const campoNuevo = {};
         campoNuevo["idOlimpiadaCampoTutor"] = campo.id;
+        campoNuevo["idCampoTutor"] = campo.campo_tutor.id;
+        campoNuevo["idDependencia"] = campo.campo_tutor.id_dependencia; 
         campoNuevo["tipo_campo"] = campo.campo_tutor.tipo_campo.nombre;
         campoNuevo["esObligatorio"] = campo.esObligatorio;
         campoNuevo["nombre_campo"] = campo.campo_tutor.nombre;
@@ -492,7 +597,6 @@ const RegistrarPostulante = () => {
         : "";
       datosIniciales.push(campoNuevo);
     });
-    console.log("campos", camposTutor);
     const nuevosTutores = [...tutores];
     nuevosTutores[index] = {
       ...nuevosTutores[index],
@@ -689,9 +793,19 @@ const RegistrarPostulante = () => {
       setIsLoading(false);
     }
   };
-
   if(isLoading) { return <Cargando />; }
   
+  const handleOpcionSeleccionPostulanteChange = (index, valor, opciones) => {
+    const idValor = opciones.find(opcion => opcion.valor === valor)?.id || null;
+    setPostulante(prev => ({
+      ...prev,
+      datos: prev.datos.map((dato, i) =>
+        i === index ? { ...dato, valor, idValor } : dato
+      ),
+    }));
+  };
+
+  console.log(postulante);
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md">
       <h1 className="text-3xl font-bold text-blue-900 mb-6">Registro de Postulante</h1>
@@ -827,6 +941,52 @@ const RegistrarPostulante = () => {
                       <input type="email" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
                     </div>
                   );
+                case "checkbox":
+                  return (
+                    <div key={index} className="mb-4">
+                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
+                      {campo.idDependencia !== null ?(
+                      <div>
+                        {(() => {
+                          // Buscar el campo padre (dependencia)
+                          const campoPadre = postulante.datos.find(c => c.idCampoPostulante === campo.idDependencia);
+                          // Si no se seleccionó el valor en la dependencia
+                          if (!campoPadre || !campoPadre.idValor) {
+                            return (
+                              <select disabled className="w-full px-3 py-2 border rounded-md bg-gray-100 text-gray-400">
+                                <option value="">Primero seleccione {campoPadre ? campoPadre.nombre_campo : "la opción anterior"}</option>
+                              </select>
+                            );
+                          }
+                          // Opciones válidas según el valor seleccionado en la dependencia
+                          const opcionesValidas = campo.opciones[campoPadre.idValor] || [];
+                          return (
+                            <select
+                              value={campo.valor}
+                              onChange={e => handleOpcionSeleccionPostulanteChange(index, e.target.value, opcionesValidas)}
+                              className="w-full px-3 py-2 border rounded-md"
+                            >
+                              <option value="">Seleccione una opción</option>
+                              {opcionesValidas.map((opcion, idx) => (
+                                <option key={idx} value={opcion.valor}>{opcion.valor}</option>
+                              ))}
+                            </select>
+                          );
+                        })()}
+                      </div> 
+                      ):(
+                      <div>
+                        <select value={campo.valor} onChange={(e) => handleOpcionSeleccionPostulanteChange(index, e.target.value, campo.opciones)} className="w-full px-3 py-2 border rounded-md">
+                          <option value="">Seleccione una opción</option>
+                          {campo.opciones.map((opcion, idx) => (
+                            <option key={idx} value={opcion.valor}>{opcion.valor}</option>
+                          ))}
+                        </select>
+                      </div>
+                      )}
+                      
+                    </div>
+                  )
                 default:
                   return null;
                 }

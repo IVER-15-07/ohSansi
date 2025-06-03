@@ -52,9 +52,20 @@ class OpcionCampoPostulante extends Model
 
     public static function obtenerOpcionesAgrupadasPorPadre($idCampoPostulante)
     {
-        return self::where('id_campo_postulante', $idCampoPostulante)
+        $opciones = self::where('id_campo_postulante', $idCampoPostulante)
             ->orderBy('valor')
-            ->get()
-            ->groupBy(['id_dependencia']);
+            ->get();
+
+        $agrupadas = [];
+        foreach ($opciones as $opcion) {
+            if ($opcion->id_dependencia === null) {
+                $clave = 'ROOT';
+            } else {
+                $padre = self::find($opcion->id_dependencia);
+                $clave = $padre ? $padre->id : 'SIN_PADRE';
+            }
+            $agrupadas[$clave][] = $opcion;
+        }
+        return $agrupadas;
     }
 }
