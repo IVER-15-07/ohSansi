@@ -56,7 +56,7 @@ class InscripcionController extends Controller
             if ($inscripciones->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No se encontraron registros pendientes por generar una orden de pago.',
+                    'message' => 'No se encontraron registros individuales pendientes por generar una orden de pago.',
                 ], 404);
             }
 

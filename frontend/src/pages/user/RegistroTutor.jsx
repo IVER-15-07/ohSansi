@@ -330,7 +330,7 @@ const RegistroTutor = () => {
                   id="ci"
                   name="ci"
                   value={formData.ci}
-                  disabled={true}
+                  disabled={false}
                   onChange={handleChange}
                   placeholder="Ingrese su número de carnet"
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 

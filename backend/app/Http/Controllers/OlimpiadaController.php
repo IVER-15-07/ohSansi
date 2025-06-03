@@ -212,7 +212,7 @@ class OlimpiadaController extends Controller
         ];
 
         // Validaciones cruzadas de fechas
-         $fecha_inicio = $request->input('fecha_inicio', $olimpiada->fecha_inicio);
+        $fecha_inicio = $request->input('fecha_inicio', $olimpiada->fecha_inicio);
         $fecha_fin = $request->input('fecha_fin', $olimpiada->fecha_fin);
         $inicio_inscripcion = $request->input('inicio_inscripcion', $olimpiada->inicio_inscripcion);
         $fin_inscripcion = $request->input('fin_inscripcion', $olimpiada->fin_inscripcion);
@@ -227,7 +227,23 @@ class OlimpiadaController extends Controller
             $rules['fin_inscripcion'] .= '|after_or_equal:' . $inicio_inscripcion . '|before_or_equal:' . $fecha_fin;
         }
 
-        $validated = $request->validate($rules);
+        try {
+            $validated = $request->validate($rules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $mensajes = [];
+            foreach ($errors as $campo => $mensajesCampo) {
+                foreach ($mensajesCampo as $mensaje) {
+                    $mensajes[] = "Error en el campo '$campo': $mensaje";
+                }
+            }
+            return response()->json([
+                'success' => false,
+                'status' => 'validation_error',
+                'message' => implode(' ', $mensajes),
+                'errors' => $errors,
+            ], 422);
+        }
 
         $campos = [
             'nombre', 'descripcion', 'costo', 'max_areas',

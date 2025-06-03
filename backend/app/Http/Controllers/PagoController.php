@@ -128,60 +128,80 @@ class PagoController extends Controller
             $idPago = $ultimoPago ? $ultimoPago->id + 1 : 1;
 
             // Obtener las inscripciones seleccionadas y sus detalles
-            $detalles = DB::table('inscripcion')
-                ->join('opcion_inscripcion', 'inscripcion.id_opcion_inscripcion', '=', 'opcion_inscripcion.id')
-                ->join('registro', 'inscripcion.id_registro', '=', 'registro.id')
-                ->join('postulante', 'registro.id_postulante', '=', 'postulante.id')
-                ->join('persona', 'postulante.id_persona', '=', 'persona.id')
-                ->join('area', 'opcion_inscripcion.id_area', '=', 'area.id')
-                ->join('nivel_categoria', 'opcion_inscripcion.id_nivel_categoria', '=', 'nivel_categoria.id')
-                ->join('grado', 'registro.id_grado', '=', 'grado.id')
-                ->whereIn('inscripcion.id', $registros)
-                ->select(
-                    'persona.nombres as nombres',
-                    'persona.apellidos as apellidos',
-                    'area.nombre as nombre_area',
-                    'nivel_categoria.nombre as nombre_nivel_categoria',
-                    'grado.nombre as grado'
-                )
-                ->get();
+        $inscripciones = DB::table('inscripcion')
+            ->join('opcion_inscripcion', 'inscripcion.id_opcion_inscripcion', '=', 'opcion_inscripcion.id')
+            ->join('registro', 'inscripcion.id_registro', '=', 'registro.id')
+            ->join('postulante', 'registro.id_postulante', '=', 'postulante.id')
+            ->join('persona', 'postulante.id_persona', '=', 'persona.id')
+            ->join('area', 'opcion_inscripcion.id_area', '=', 'area.id')
+            ->join('nivel_categoria', 'opcion_inscripcion.id_nivel_categoria', '=', 'nivel_categoria.id')
+            ->join('grado', 'registro.id_grado', '=', 'grado.id')
+            ->whereIn('inscripcion.id', $registros)
+            ->select(
+                'inscripcion.id',
+                'inscripcion.id_lista_inscripcion',
+                'persona.nombres as nombres',
+                'persona.apellidos as apellidos',
+                'area.nombre as nombre_area',
+                'nivel_categoria.nombre as nombre_nivel_categoria',
+                'grado.nombre as grado'
+            )
+            ->get();
 
-            // Generar el detalle concatenado
-            $detalle = $detalles->map(function ($item) {
-                return "inscripción: {$item->nombres} {$item->apellidos} - {$item->nombre_area} ({$item->nombre_nivel_categoria}) - {$item->grado}";
-            })->join(', ');
+        // Agrupar por id_lista_inscripcion
+        $agrupados = $inscripciones->groupBy(function($item) {
+            return is_numeric($item->id_lista_inscripcion) ? $item->id_lista_inscripcion : 'individual';
+        });
 
-            // Calcular la cantidad, precio por unidad e importe total
-            $cantidad = count($registros);
-            $costoPorUnidad = $olimpiada->costo;
-            $importeTotal = $cantidad * $costoPorUnidad;
+        // Generar el detalle concatenado
+        $detalle = collect();
 
-            // Convertir el importe total a literal
-            $importeEnLiteral = $this->convertirNumeroALiteral($importeTotal);
+        foreach ($agrupados as $key => $grupo) {
+            if ($key !== 'individual') {
+                // Es un grupo por lista
+                $detalle->push("inscripcion realizada por la lista de incripcion numero: {$key} para " . count($grupo) . " registros");
+            } else {
+                // Son individuales, usar el formato anterior
+                foreach ($grupo as $item) {
+                    $detalle->push("inscripción: {$item->nombres} {$item->apellidos} - {$item->nombre_area} ({$item->nombre_nivel_categoria}) - {$item->grado}");
+                }
+            }
+        }
 
-            // Obtener la fecha actual en formato aaaa-mm-dd
-            $fechaPago = now()->format('Y-m-d');
+        $detalleConcatenado = $detalle->join(', ');
 
-            // Construir los datos de la orden de pago
-            $datosOrden = [
-                'id_pago' => $idPago,
-                'nombre_completo_encargado' => $persona->nombres . ' ' . $persona->apellidos,
-                'ci_encargado' => $persona->ci,
-                'nombre_olimpiada' => $olimpiada->nombre,
-                'cantidad' => $cantidad,
-                'concepto' => "Decanato - Olimpiada de Ciencias ({$olimpiada->nombre})",
-                'detalle' => $detalle,
-                'precio_por_unidad' => $costoPorUnidad,
-                'importe_total' => $importeTotal,
-                'importe_en_literal' => $importeEnLiteral,
-                'fecha_pago' => $fechaPago,
-            ];
+        // ...resto del código igual...
+        // Calcular la cantidad, precio por unidad e importe total
+        $cantidad = count($registros);
+        $costoPorUnidad = $olimpiada->costo;
+        $importeTotal = $cantidad * $costoPorUnidad;
 
-            // Retornar los datos generados
-            return response()->json([
-                'success' => true,
-                'data' => $datosOrden,
-            ], 200);
+        // Convertir el importe total a literal
+        $importeEnLiteral = $this->convertirNumeroALiteral($importeTotal);
+
+        // Obtener la fecha actual en formato aaaa-mm-dd
+        $fechaPago = now()->format('Y-m-d');
+
+        // Construir los datos de la orden de pago
+        $datosOrden = [
+            'id_pago' => $idPago,
+            'nombre_completo_encargado' => $persona->nombres . ' ' . $persona->apellidos,
+            'ci_encargado' => $persona->ci,
+            'nombre_olimpiada' => $olimpiada->nombre,
+            'cantidad' => $cantidad,
+            'concepto' => "Decanato - Olimpiada de Ciencias ({$olimpiada->nombre})",
+            'detalle' => $detalleConcatenado,
+            'precio_por_unidad' => $costoPorUnidad,
+            'importe_total' => $importeTotal,
+            'importe_en_literal' => $importeEnLiteral,
+            'fecha_pago' => $fechaPago,
+        ];
+
+        // Retornar los datos generados
+        return response()->json([
+            'success' => true,
+            'data' => $datosOrden,
+        ], 200);
         } catch (\Exception $e) {
             // Manejar errores y retornar una respuesta
             return response()->json([
