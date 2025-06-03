@@ -321,7 +321,23 @@ class OlimpiadaController extends Controller
             $rules['fin_inscripcion'] .= '|after_or_equal:' . $inicio_inscripcion . '|before_or_equal:' . $fecha_fin;
         }
 
-        $validated = $request->validate($rules);
+        try {
+            $validated = $request->validate($rules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $mensajes = [];
+            foreach ($errors as $campo => $mensajesCampo) {
+                foreach ($mensajesCampo as $mensaje) {
+                    $mensajes[] = "Error en el campo '$campo': $mensaje";
+                }
+            }
+            return response()->json([
+                'success' => false,
+                'status' => 'validation_error',
+                'message' => implode(' ', $mensajes),
+                'errors' => $errors,
+            ], 422);
+        }
 
         $campos = [
             'nombre',
