@@ -139,13 +139,27 @@ const ValidarComprobante = () => {
     }
   };
 
+  const handleFileValidationError = (errorMessage) => {
+    setMensajeError(errorMessage);
+    // Auto-limpiar después de un tiempo
+    setTimeout(() => {
+      setMensajeError("");
+    }, 6000);
+  };
+
   return (
    <div className="p-6">
   <SubirArchivo
-    nombreArchivo="Subir Comprobante"
-    tipoArchivo="jpg"
+    nombreArchivo={archivo ? archivo.name : "Subir Comprobante (PDF, JPG, PNG)"}
+    tipoArchivo="comprobante"
     handleArchivo={handleArchivo}
     inputRef={inputRef}
+    onFileValidationError={handleFileValidationError}
+    acceptedFormats={['pdf', 'jpg', 'jpeg', 'png']}
+    acceptedMimeTypes={['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']}
+    acceptAttribute=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+    maxFileSize={15 * 1024 * 1024} // 15MB para imágenes
+    allowEdit={true}
   />
 
   <div className="mt-6">

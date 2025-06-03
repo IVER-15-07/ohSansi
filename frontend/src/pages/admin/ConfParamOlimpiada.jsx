@@ -217,10 +217,10 @@ const ConfParamOlimpiada = () => {
         {campoEditable('Descripción', 'descripcion')}
         {campoEditable('Costo', 'costo', 'number')}
         {campoEditable('Maximo inscripciones', 'max_areas', 'number')}
-        {campoEditable('Fecha de Inicio', 'fecha_inicio', 'text')}
-        {campoEditable('Fecha de Fin', 'fecha_fin', 'text')}
-        {campoEditable('Inicio Inscripción', 'inicio_inscripcion', 'text')}
-        {campoEditable('Fin Inscripción', 'fin_inscripcion', 'text')}
+        {campoEditable('Fecha de Inicio', 'fecha_inicio', 'date')}
+        {campoEditable('Fecha de Fin', 'fecha_fin', 'date')}
+        {campoEditable('Inicio Inscripción', 'inicio_inscripcion', 'date')}
+        {campoEditable('Fin Inscripción', 'fin_inscripcion', 'date')}
         {/* Convocatoria */}
         <div className="mb-3 flex flex-col">
           <div className="flex items-center">

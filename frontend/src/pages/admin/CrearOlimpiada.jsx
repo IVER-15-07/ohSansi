@@ -19,6 +19,7 @@ const CrearOlimpiada = () => {
   const [agregando, setAgregando] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorGeneral, setErrorGeneral] = useState(''); // Estado único para errores
 
   const [datosFormulario, setDatosFormulario] = useState({
     nombre: '',
@@ -33,12 +34,14 @@ const CrearOlimpiada = () => {
   });
 
   const [errores, setErrores] = useState({});
-  const [errorGeneral, setErrorGeneral] = useState('');
 
   useEffect(() => {
     getOlimpiadas()
       .then(response => setOlimpiadas(response.data))
-      .catch(error => console.error('Error al obtener olimpiadas:', error));
+      .catch(error => {
+        console.error('Error al obtener olimpiadas:', error);
+        setErrorGeneral('No se pudieron cargar las olimpiadas existentes');
+      });
   }, []);
 
   // Validar todos los campos relevantes cada vez que datosFormulario cambie
@@ -105,59 +108,28 @@ const CrearOlimpiada = () => {
         nuevosErrores.finInscripcion = 'La fecha de fin de inscripción debe ser posterior a la fecha de inicio de inscripción.';
       }
     }
-
+    
     setErrores(nuevosErrores);
   }, [datosFormulario, olimpiadas]);
 
+  // Efecto separado para manejar la limpieza de successMessage
+  useEffect(() => {
+    if (successMessage && successMessage.includes('archivo')) {
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
   const handleArchivo = (e) => {
-  e.stopPropagation();
-  const archivo = e.target.files[0];
-  if (!archivo) return;
-  
-  console.log('Archivo seleccionado:', archivo.name, 'Tipo:', archivo.type);
-  
-  // Validar tanto por extensión como por MIME type
-  const fileExtension = archivo.name.split('.').pop().toLowerCase();
-  const errorMensaje = `Archivo inválido detectado: ${fileExtension} ${archivo.type}`;
-  
-  if (fileExtension !== 'pdf' || archivo.type !== 'application/pdf') {
-    console.warn(errorMensaje);
-    
-    // Mostrar mensaje de error detallado para el usuario
-    setErrores(prev => ({ 
-      ...prev, 
-      convocatoria: `Error: El archivo que intentas subir no es un PDF válido (${fileExtension}, ${archivo.type}). Solo se permiten archivos PDF.` 
-    }));
-    
-    // Limpiar el valor del campo convocatoria
-    setDatosFormulario(prev => ({ ...prev, convocatoria: '' }));
-    
-    // Mostrar el mensaje de error y hacer scroll
-    setTimeout(() => {
-      // Crear una alerta temporal más visible
-      setErrorGeneral(`FORMATO INVÁLIDO: ${errorMensaje}. Solo se permiten archivos PDF.`);
-      
-      // Desplazarse al área visible
-      if (inputArchivoRef.current) {
-        inputArchivoRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-    
-    // Limpiar el input file para que pueda subir de nuevo
-    e.target.value = "";
-    return;
-  }
-  
-  // Si llegamos aquí, el archivo es válido
-  setErrores(prev => ({ ...prev, convocatoria: undefined }));
-  setDatosFormulario(prev => ({ ...prev, convocatoria: archivo }));
-  // Limpiar cualquier error general previo
-  setErrorGeneral('');
-  
-  // Agregar un mensaje de éxito
-  setSuccessMessage(`El archivo "${archivo.name}" se ha cargado correctamente.`);
-  setTimeout(() => setSuccessMessage(''), 3000);
-};
+    e.stopPropagation();
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    setDatosFormulario(prev => ({ ...prev, convocatoria: archivo }));
+    setErrorGeneral('');
+    setSuccessMessage(`El archivo "${archivo.name}" se ha cargado correctamente.`);
+  };
 
   const manejarCambio = (e) => {
     const { name, value } = e.target;
@@ -188,6 +160,8 @@ const CrearOlimpiada = () => {
   const handleConfirmCrear = async () => {
     setShowConfirmModal(false);
     setAgregando(true);
+    setErrorGeneral(''); // Clear any previous errors
+    
     try {
       const formData = new FormData();
       formData.append('nombre', datosFormulario.nombre);
@@ -209,18 +183,16 @@ const CrearOlimpiada = () => {
       // Invalidar consultas para actualizar la lista de olimpiadas
       await clienteQuery.invalidateQueries(['olimpiadas']);
       
-      // Mostrar modal de éxito antes de redirigir
-      setSuccessMessage(`La olimpiada "${datosFormulario.nombre}" se ha creado exitosamente.`);
+      // Pequeña pausa para asegurar que React procese todos los cambios de estado
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Esperar un momento antes de redirigir
-      setTimeout(() => {
-        redirigir('/AdminLayout/Olimpiadas', { 
-          state: { 
-            successMessage: `La olimpiada "${datosFormulario.nombre}" se ha creado exitosamente.`,
-            olimpiadaCreada: true
-          } 
-        });
-      }, 2000);
+      // Redirigir directamente con mensaje de éxito
+      redirigir('/AdminLayout/Olimpiadas', { 
+        state: { 
+          successMessage: `La olimpiada "${datosFormulario.nombre}" se ha creado exitosamente.`,
+          olimpiadaCreada: true
+        } 
+      });
     } catch (error) {
       console.error('Error al crear la olimpiada:', error);
       if (error.response && error.response.data && error.response.data.message) {
@@ -245,12 +217,24 @@ const CrearOlimpiada = () => {
         <Alert 
           variant="error" 
           title="Error" 
-          className="mb-4"
           autoClose={true}
-          autoCloseDelay={5000}
+          autoCloseDelay={6000}
           onClose={() => setErrorGeneral('')}
         >
           <div>{errorGeneral}</div>
+        </Alert>
+      )}
+
+      {/* Mostrar mensaje de éxito para archivos */}
+      {successMessage && successMessage.includes("archivo") && (
+        <Alert 
+          variant="success" 
+          title="¡Archivo cargado!" 
+          autoClose={true}
+          autoCloseDelay={6000}
+          onClose={() => setSuccessMessage('')}
+        >
+          <div>{successMessage}</div>
         </Alert>
       )}
 
@@ -351,10 +335,11 @@ const CrearOlimpiada = () => {
           />
           
           <div className="col-span-1 md:col-span-3">
-            <label className="block text-sm font-medium text-secondary-700 mb-1">
+            <label htmlFor="descripcion" className="block text-sm font-medium text-secondary-700 mb-1">
               Descripción (Máx. 500 caracteres)
             </label>
             <textarea
+              id="descripcion"
               name="descripcion"
               value={datosFormulario.descripcion}
               onChange={manejarCambio}
@@ -374,22 +359,16 @@ const CrearOlimpiada = () => {
           <div className="col-span-1 md:col-span-3">
             <SubirArchivo
               nombreArchivo={datosFormulario.convocatoria && datosFormulario.convocatoria.name ? datosFormulario.convocatoria.name : "Subir la convocatoria de la olimpiada"}
-              tipoArchivo="pdf"
+              tipoArchivo="PDF"
               handleArchivo={handleArchivo}
               inputRef={inputArchivoRef}
               id="convocatoria-input"
+              acceptedFormats={['pdf']}
+              acceptedMimeTypes={['application/pdf']}
+              acceptAttribute=".pdf,application/pdf"
+              maxFileSize={10 * 1024 * 1024} // 10MB
+              allowEdit={true}
             />
-            {errores.convocatoria && (
-              <div className="sticky bottom-4 left-0 right-0 z-20 mx-auto w-full px-4 mt-4">
-                <div className="bg-danger-100 border-2 border-danger-500 text-danger-700 p-4 rounded-md shadow-lg flex items-start animate-pulse">
-                  <div className="mr-2 flex-shrink-0 text-2xl">⚠️</div>
-                  <div>
-                    <h3 className="font-bold text-danger-800 mb-1">Error de formato</h3>
-                    <p className="font-medium">{errores.convocatoria}</p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </form>
 
@@ -414,21 +393,25 @@ const CrearOlimpiada = () => {
       </div>
 
       {/* Modal de confirmación */}
-      <Modal
-        isOpen={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
-        onConfirm={handleConfirmCrear}
-        title="Confirmar creación de Olimpiada"
-        message="¿Está seguro que desea crear esta olimpiada con los datos ingresados?"
-        confirmText="Crear"
-        cancelText="Cancelar"
-        variant='warning'
-        isLoading={agregando}
-      />
+      {showConfirmModal && (
+        <Modal
+          key="confirm-modal"
+          isOpen={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={handleConfirmCrear}
+          title="Confirmar creación de Olimpiada"
+          message="¿Está seguro que desea crear esta olimpiada con los datos ingresados?"
+          confirmText="Crear"
+          cancelText="Cancelar"
+          variant='warning'
+          isLoading={agregando}
+        />
+      )}
 
       {/* Modal de éxito */}
-      {successMessage && (
+      {successMessage && !showConfirmModal && (
         <Modal
+          key="success-modal"
           isOpen={true}
           variant="success"
           title={successMessage.includes("archivo") ? "¡Archivo PDF Cargado!" : "¡Olimpiada Creada!"}
@@ -436,6 +419,7 @@ const CrearOlimpiada = () => {
           showCancelButton={false}
           confirmText="Aceptar"
           onClose={() => setSuccessMessage('')}
+          onConfirm={() => setSuccessMessage('')}
         />
       )}
       
