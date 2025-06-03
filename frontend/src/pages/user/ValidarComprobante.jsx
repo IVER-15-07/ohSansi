@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Tesseract from "tesseract.js";
 import * as pdfjsLib from "pdfjs-dist";
-import SubirArchivo from "../../components/SubirArchivo";
+import SubirArchivo from "../../components/ui/SubirArchivo";
 import { obtenerPagoAsociado, validarComprobantePago } from "../../../service/pagos.api";
 import { FileText, FileCheck2, AlertCircle, CheckCircle, Upload, Search } from "lucide-react";
 

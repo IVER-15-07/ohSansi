@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { getOlimpiada, updateOlimpiada } from '../../../service/olimpiadas.api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PencilIcon } from '../../../src/assets/Icons';
+import { LoadingSpinner } from '../../components/ui';
 
 const ConfParamOlimpiada = () => {
   const { id } = useParams();
@@ -170,7 +171,11 @@ const ConfParamOlimpiada = () => {
     setModal(false);
   };
 
-  if (!olimpiada) return <div>Cargando...</div>;
+  if (!olimpiada) return (
+    <div className="flex justify-center items-center h-screen bg-gray-50">
+      <LoadingSpinner size="xl" text="Cargando parámetros..." />
+    </div>
+  );
 
   // Helper para mostrar campo editable o no
   const campoEditable = (label, name, type = 'text') => (
@@ -253,7 +258,7 @@ const ConfParamOlimpiada = () => {
           <button
             type="button"
             className="bg-red-900 text-white px-4 py-2 rounded mr-2"
-            onClick={() => redirigir('/AdminLayout/Olympiad')}
+            onClick={() => redirigir('/AdminLayout/Olimpiadas')}
           >
             volver
           </button>

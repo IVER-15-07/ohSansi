@@ -45,41 +45,103 @@ class OlimpiadaController extends Controller
      */
     public function obtenerOlimpiadasActivas(Request $request)
     {
-        try {
-            // Intenta obtener las olimpiadas desde la caché
-            $olimpiadasActivas = Cache::remember('olimpiadasActivas', 3600, function () {
-                return Olimpiada::whereDate('fecha_inicio', '<=', now())
-                    ->whereDate('fecha_fin', '>=', now())
-                    ->get(); // Consulta a la base de datos si no está en caché
-            });
+         try {
+        // Primero, actualiza el estado de las olimpiadas vencidas
+        Olimpiada::where('activo', true)
+            ->whereDate('fecha_fin', '<', now())
+            ->update(['activo' => false]);
 
-            // Retornar una respuesta exitosa
-            return response()->json([
-                'success' => true,
-                'data' => $olimpiadasActivas,
-            ], 200);
+        // Limpia la caché antes de guardar el nuevo resultado
+        Cache::forget('olimpiadasActivas');
+
+        // Guarda en caché las olimpiadas activas actualizadas
+        $olimpiadasActivas = Cache::remember('olimpiadasActivas', 3600, function () {
+            return Olimpiada::where('activo', true)->get();
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $olimpiadasActivas,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'status' => 'error',
+            'message' => 'Error al obtener las olimpiadas activas: ' . $e->getMessage(),
+        ], 500);
+    }
+    }
+
+
+
+    public function activarOlimpiada($id)
+    {
+        try {
+            $olimpiada = Olimpiada::find($id);
+
+            if (!$olimpiada) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Olimpiada no encontrada',
+                ], 404);
+            }
+
+            $hoy = now()->toDateString();
+
+            // Verifica si la fecha actual está en el rango permitido
+            if ($olimpiada->fecha_inicio <= $hoy && $olimpiada->fecha_fin >= $hoy) {
+                $olimpiada->activo = true;
+                $olimpiada->save();
+
+                // Limpiar caché
+                Cache::forget('olimpiadas');
+                Cache::forget('olimpiadasActivas');
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Olimpiada activada correctamente',
+                    'data' => $olimpiada,
+                ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede activar la olimpiada fuera del rango de fechas',
+                ], 400);
+            }
         } catch (\Exception $e) {
-            // Manejar errores y retornar una respuesta
             return response()->json([
                 'success' => false,
-                'status' => 'error',
-                'message' => 'Error al obtener las olimpiadas activas: ' . $e->getMessage(),
+                'message' => 'Error al activar la olimpiada: ' . $e->getMessage(),
             ], 500);
         }
     }
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /**
      * Almacenar una nueva olimpiada.
      *
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function almacenarOlimpiada(Request $request){
-        try{
+    public function almacenarOlimpiada(Request $request)
+    {
+        try {
             // Definir reglas base de validación
             $rules = [
                 'nombre' => 'required|string|max:255',
-                'convocatoria' => 'nullable|file|mimes:pdf|max:2048', 
+                'convocatoria' => 'nullable|file|mimes:pdf|max:2048',
                 'descripcion' => 'nullable|string|max:255',
                 'costo' => 'nullable|numeric',
                 'max_areas' => 'nullable|integer',
@@ -135,13 +197,34 @@ class OlimpiadaController extends Controller
             // Retornar una respuesta
             return response()->json([
                 'success' => true,
-                'message' => 'Olimpiada creada exitosamente', 
+                'message' => 'Olimpiada creada exitosamente',
                 'data' => $olimpiada,
             ], 201);
-        }catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             // Capturar errores de validación
             $errors = $e->errors();
     
+            if (isset($errors['nombre'])) {
+                // Comprobar si es un error de nombre duplicado
+                $nombreErrors = $errors['nombre'];
+                foreach ($nombreErrors as $error) {
+                    if (strpos($error, 'already been taken') !== false || strpos($error, 'unique') !== false) {
+                        return response()->json([
+                            'success' => false,
+                            'status' => 'validation_error',
+                            'message' => 'El nombre de la olimpiada ya existe. Por favor, elija otro nombre.',
+                            'field' => 'nombre'
+                        ], 422);
+                    }
+                }
+                return response()->json([
+                    'success' => false,
+                    'status' => 'validation_error',
+                    'message' => 'Error en el nombre: ' . implode(' ', $nombreErrors),
+                    'field' => 'nombre'
+                ], 422);
+            }
+
             if (isset($errors['convocatoria'])) {
                 return response()->json([
                     'success' => false,
@@ -149,34 +232,45 @@ class OlimpiadaController extends Controller
                     'message' => 'Error con el archivo de convocatoria: ' . implode(' ', $errors['convocatoria']),
                 ], 422);
             }
-    
+
             return response()->json([
                 'success' => false,
                 'status' => 'validation_error',
                 'message' => 'Error de validación: ' . $e->getMessage(),
                 'errors' => $errors,
             ], 422);
-
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'status' => 'error',
-                'message' => 'Error al crear el olimpiada: '.$e->getMessage()
+                'message' => 'Error al crear el olimpiada: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    public function obtenerOlimpiada($id)
-    {
+    public function obtenerOlimpiada($id){
+    try {
         $olimpiada = Olimpiada::find($id);
 
         if (!$olimpiada) {
-            return response()->json(['message' => 'Olimpiada no encontrada'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Olimpiada no encontrada'
+            ], 404);
         }
 
-        return response()->json($olimpiada);
+        return response()->json([
+            'success' => true,
+            'data' => $olimpiada
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'status' => 'error',
+            'message' => 'Error al obtener la olimpiada: ' . $e->getMessage(),
+        ], 500);
     }
-
+    }
     public function modificarOlimpiada(Request $request, $id)
     {
         $olimpiada = \App\Models\Olimpiada::find($id);
@@ -246,8 +340,14 @@ class OlimpiadaController extends Controller
         }
 
         $campos = [
-            'nombre', 'descripcion', 'costo', 'max_areas',
-            'fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'
+            'nombre',
+            'descripcion',
+            'costo',
+            'max_areas',
+            'fecha_inicio',
+            'fecha_fin',
+            'inicio_inscripcion',
+            'fin_inscripcion'
         ];
 
         $datosActualizar = [];

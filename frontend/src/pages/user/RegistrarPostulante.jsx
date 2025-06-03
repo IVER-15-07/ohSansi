@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from "react";
 import { useParams } from "react-router-dom";
 import { Plus, Trash2, Search } from "lucide-react";
-import Cargando from "../Cargando";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 import { getOlimpiada } from "../../../service/olimpiadas.api";
 import { getOlimpiadaCamposPostulante } from "../../../service/olimpiada_campos_postulante.api";
@@ -793,7 +793,13 @@ const RegistrarPostulante = () => {
       setIsLoading(false);
     }
   };
-  if(isLoading) { return <Cargando />; }
+  if(isLoading) { 
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <LoadingSpinner size="xl" text="Cargando formulario..." />
+      </div>
+    ); 
+  }
   
   const handleOpcionSeleccionPostulanteChange = (index, valor, opciones) => {
     const idValor = opciones.find(opcion => opcion.valor === valor)?.id || null;
@@ -1156,7 +1162,7 @@ const RegistrarPostulante = () => {
           <div>
             <button type="button" className="flex gap-3 p-2 bg-green-500 text-white rounded-md" onClick={enviarDatos}>
               <Plus size={16} />
-              <lable>GUARDAR</lable>
+              <label>GUARDAR</label>
             </button>
           </div> 
         </div>

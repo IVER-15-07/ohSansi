@@ -2,12 +2,12 @@ import React, { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getGrados } from '../../../service/grados.api'
 import { getNivelesCategorias, createNivelCategoria } from '../../../service/niveles_categorias.api'
-import Cargando from '../Cargando';
-import Input from '../../components/Input';
-import Select from '../../components/Select';
-import Button from '../../components/Button';
-import TogleSwitch from '../../components/TogleSwitch';
-import Card from '../../components/Card';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
+import Button from '../../components/ui/Button';
+import ToggleSwitch from '../../components/ui/ToggleSwitch';
+import { Card } from '../../components/ui/Card';
 
 
 const NivelCategoria = () => {
@@ -31,9 +31,13 @@ const NivelCategoria = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  if (isLoadingNivelesCategorias || isLoadingGrados) return <Cargando />;
-  if (errorNivelesCategorias) return <Error error={errorNivelesCategorias} />;
-  if (errorGrados) return <Error error={errorGrados} />;
+  if (isLoadingNivelesCategorias || isLoadingGrados) return (
+    <div className="flex justify-center items-center h-screen bg-gray-50">
+      <LoadingSpinner size="xl" text="Cargando niveles y categorías..." />
+    </div>
+  );
+  if (errorNivelesCategorias) return <div className="p-6 text-red-500">Error cargando niveles/categorías: {errorNivelesCategorias.message}</div>;
+  if (errorGrados) return <div className="p-6 text-red-500">Error cargando grados: {errorGrados.message}</div>;
 
   const handleAddNivelCategoria = async () => {
     if (nombre.trim() === "") {
@@ -160,7 +164,7 @@ const NivelCategoria = () => {
         {/* Tabs */}
         <div className="flex justify-center gap-4 mb-2 items-center">
           <span className={`font-semibold ${isNivel ? "text-[#2640BE]" : "text-gray-400"}`}>Nivel</span>
-          <TogleSwitch
+          <ToggleSwitch
             checked={!isNivel ? false : true}
             onChange={() => setIsNivel(!isNivel)}
             color={isNivel ? "blue" : "red"}

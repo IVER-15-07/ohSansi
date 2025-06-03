@@ -47,6 +47,8 @@ use App\Http\Controllers\RegistroTutorController;
 
 use App\Http\Controllers\OpcionCampoPostulanteController;
 
+
+use App\Http\Controllers\ReporteController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -95,13 +97,14 @@ Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
 Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiadasActivas']);
 Route::post('/olimpiadas', [OlimpiadaController::class, 'almacenarOlimpiada']);
 Route::get('/olimpiadas/{id}', [OlimpiadaController::class, 'obtenerOlimpiada']);
-Route::put('/olimpiadas/{id}/modificar', [OlimpiadaController::class, 'modificarOlimpiada']);
+Route::post('/activarolimpiada/{id}', [OlimpiadaController::class, 'activarOlimpiada']);
 
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS DE POSTULANTE
 Route::get('/campos_postulante', [CampoPostulanteController::class, 'obtenerCatalogoCamposPostulante']);
 
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS DE TUTOR
 Route::get('/campos_tutor', [CampoTutorController::class, 'obtenerCatalogoCamposTutor']);
+Route::put('/olimpiadas/{id}/modificar', [OlimpiadaController::class, 'modificarOlimpiada']);
 
 //RUTAS PARA LOS CAMPOS DE POSTULANTE DADA UNA OLIMPIADA
 Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/{idPostulante}', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
@@ -164,6 +167,7 @@ Route::get('/registro_lista', [Registrolistcontroller::class, 'obtenerListaPostu
 Route::post('/registro_lista/importar', [Registrolistcontroller::class, 'importar']);
 
 
+
 //RUTAS PARA GENERAR ORDEN DE PAGO
 Route::post('/pagos/generarDatosPago', [PagoController::class, 'generarDatosDeOrden']);
 Route::post('/pagos/guardarOrdenPago', [PagoController::class, 'guardarOrdenPago']);
@@ -171,3 +175,7 @@ Route::post('/pagos/obtenerOrdenesDePago/{idEncargado}/{idOlimpiada}', [PagoCont
 
 // RUTAS PARA LAS OPCIONES DE CAMPO DE POSTULANTE
 Route::get('/opciones_campo_postulante/agrupadas/{idCampoPostulante}', [OpcionCampoPostulanteController::class, 'opcionesAgrupadas']);
+
+// RUTAS DE REPOSRTE  DE INSCRITOS POR OLIMPIADA
+Route::get('/reporte_inscritos/{idOlimpiada}', [ReporteController::class, 'inscritosPorOlimpiada']);
+Route::get('/reporte/areas/{idOlimpiada}', [ReporteController::class, 'ReportePorArea']);

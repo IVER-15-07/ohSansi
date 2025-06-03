@@ -1,10 +1,9 @@
 import {useState, useEffect}from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import Cargando from '../Cargando';
 import ElegirCamposPostulante from './ElegirCamposPostulante';
 import ElegirCamposTutor from './ElegirCamposTutor';
-import ConfirmationModal from '../../components/ConfirmationModal';
+import { Modal, LoadingSpinner } from '../../components/ui';
 
 import { getCatalogoCamposPostulante } from '../../../service/campos_postulante.api';
 import { getCatalogoCamposTutor } from '../../../service/campos_tutor.api';
@@ -14,6 +13,7 @@ import { getOlimpiadaCamposTutor, postOlimpiadaCampoTutor } from '../../../servi
 
 const ConfigurarCamposOlimpiada = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
 
   const [isAdding, setIsAdding] = useState(false);
@@ -108,14 +108,18 @@ const ConfigurarCamposOlimpiada = () => {
   };
   console.log(olimpiadaCamposPostulante);
   console.log(olimpiadaCamposTutor);
-  if (isLoading) return <Cargando />;
+  if (isLoading) return (
+    <div className="flex justify-center items-center h-screen bg-gray-50">
+      <LoadingSpinner size="xl" text="Cargando campos..." />
+    </div>
+  );
   return (
     <div className="flex flex-col p-6 gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
       <div className="flex flex-col gap-4 h-full">   
         {/* Botón para volver a la vista de Olimpiada */}
         <div className="flex flex-col items-center mb-2">
           <button 
-            onClick={() => navigate('/AdminLayout/Olympiad')}
+            onClick={() => navigate('/AdminLayout/Olimpiadas')}
             className="flex items-center text-blue-600 hover:underline"
           >
             <ArrowLeft size={16} className="mr-1" /> Volver a Olimpiadas
@@ -151,7 +155,8 @@ const ConfigurarCamposOlimpiada = () => {
             )}
           </div>
           {/* Modal de confirmación */}
-          <ConfirmationModal
+          <Modal
+            isConfirmationModal
             isOpen={showConfirmModal}
             onClose={() => setShowConfirmModal(false)}
             onConfirm={handleGuardarConfiguracionCampos}
@@ -160,7 +165,6 @@ const ConfigurarCamposOlimpiada = () => {
             confirmText="Confirmar"
             cancelText="Cancelar"
             isLoading={isAdding}
-            confirmButtonColor="blue"
           />
 
           {/* Botones de navegación */}

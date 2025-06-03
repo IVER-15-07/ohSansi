@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(),tailwindcss(),],
   optimizeDeps: {
-    include: ['xlsx','number-to-words'],
+    include: ['@e965/xlsx','number-to-words'],
   },
 
 })

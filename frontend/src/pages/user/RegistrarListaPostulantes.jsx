@@ -1,5 +1,5 @@
 
-import * as XLSX from "xlsx";
+import * as XLSX from "@e965/xlsx";
 import { useEffect, useState } from "react";
 import { FileUp, FileCheck2, FileX2 } from "lucide-react";
 import { enviarRegistrosLote } from '../../../service/registros.api';
