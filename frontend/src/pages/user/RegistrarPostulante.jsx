@@ -1,25 +1,19 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Plus, Trash2, Search } from "lucide-react";
-import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { Button, LoadingSpinner, Card, CardHeader, CardContent, Modal } from "../../components/ui";
+import { FormField, TutorForm, InscripcionForm } from "../../components/forms";
+import { useDeviceAgent } from "../../hooks/useDeviceAgent";
 
 import { getOlimpiada } from "../../../service/olimpiadas.api";
 import { getOlimpiadaCamposPostulante } from "../../../service/olimpiada_campos_postulante.api";
-
 import { saveDatosPostulante } from "../../../service/datos_postulante.api";
-
 import { getOlimpiadaCamposTutor } from "../../../service/olimpiada_campos_tutor.api";
-
 import { saveDatosTutor } from "../../../service/datos_tutor.api";
-
 import { getInscripcionesPorRegistro, createInscripcion, deleteInscripcion } from "../../../service/inscripcion.api";
-
 import { getRegistrosTutorPorRegistro, createRegistroTutor, deleteRegistroTutor} from "../../../service/registro_tutor.api";
-
 import { getRegistroByCI, createRegistro } from "../../../service/registros.api";
-
 import { getTutor, createTutor, getRolesTutor} from "../../../service/tutores.api";
-
 import { getPostulanteByCI, createPostulante} from "../../../service/postulantes.api";
 import { getGrados } from "../../../service/grados.api";
 import { getOpcionesInscripcion } from "../../../service/opciones_inscripcion.api";
@@ -27,40 +21,143 @@ import { getPersonaByCI } from "../../../service/personas.api";
 import { getOpcionesCampoPostulante } from "../../../service/opciones_campo_postulante.api";
 
 
+const initialPostulanteState = {
+  idPersona: null,
+  ci: "",
+  nombres: "",
+  apellidos: "",
+  fecha_nacimiento: "",
+  grado: { id: "", nombre: "" },
+  idPostulante: null,
+  idRegistro: null,
+  buscado: false,
+  datos: []
+};
+
 const RegistrarPostulante = () => {
-  const {idOlimpiada, idEncargado } = useParams();
+  const { idOlimpiada, idEncargado } = useParams();
+  const deviceInfo = useDeviceAgent();
+  
+  // Estados principales
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
+  
+  // Estados para modales de confirmación
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  // Estados de datos
   const [maxArea, setMaxArea] = useState(null);
-
-  const [personaPostulante, setPersonaPostulate] = useState(null); 
-  const [postulante, setPostulante] = useState({idPersona: null, ci: "", nombres: "", apellidos: "", fecha_nacimiento: "", grado: {id: "", nombre:""}, idPostulante: null, idRegistro: null, buscado: false, datos: []});
-
+  const [personaPostulante, setPersonaPostulate] = useState(null);
+  const [postulante, setPostulante] = useState(initialPostulanteState);
   const [catalogoGrados, setCatalogoGrados] = useState([]);
-
   const [rolesTutor, setRolesTutor] = useState([]);
   const [tutores, setTutores] = useState([]);
-
   const [opcionesInscripcionCatalogo, setOpcionesInscripcionCatalogo] = useState([]);
-  const [opcionesInscripcion, setOpcionesInscripcion] = useState([]); 
+  const [opcionesInscripcion, setOpcionesInscripcion] = useState([]);
   const [opcionesSeleccionadas, setOpcionesSeleccionadas] = useState([]);
 
-  // Funciones para formatear y parsear fechas
-  const defaultFormatDate = (dateStr) => {
+  // Funciones para formatear y parsear fechas mejoradas
+  const formatDate = useCallback((dateStr) => {
     if (!dateStr) return "";
-    // Espera formato aaaa-mm-dd
-    const [yyyy, mm, dd] = dateStr.split("-");
-    if (!yyyy || !mm || !dd) return "";
-    return `${dd}/${mm}/${yyyy}`;
-  };
+    
+    // Si ya está en formato YYYY-MM-DD (para input date)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return dateStr;
+    }
+    
+    // Si está en formato DD/MM/YYYY, convertir a YYYY-MM-DD
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      const [dd, mm, yyyy] = dateStr.split("/");
+      return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+    }
+    
+    return dateStr;
+  }, []);
 
-  const defaultParseDate = (dateStr) => {
-    // Espera formato dd/mm/aaaa
-    const [dd, mm, yyyy] = dateStr.split("/");
-    if (!yyyy || !mm || !dd) return "";
-    return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
-  };
+  const parseDate = useCallback((dateStr) => {
+    if (!dateStr) return "";
+    
+    // Si está en formato YYYY-MM-DD, mantener así
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return dateStr;
+    }
+    
+    // Si está en formato DD/MM/YYYY, convertir a YYYY-MM-DD
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      const [dd, mm, yyyy] = dateStr.split("/");
+      return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+    }
+    
+    return dateStr;
+  }, []);
+
+  // Función de validación de campos mejorada
+  const validateField = useCallback((name, value) => {
+    const newErrors = { ...formErrors };
+
+    switch (name) {
+      case "nombres":
+      case "apellidos":
+        if (!value.trim()) {
+          newErrors[name] = `${name === "nombres" ? "El nombre" : "El apellido"} es obligatorio`;
+        } else if (value.length > 100) {
+          newErrors[name] = `${name === "nombres" ? "El nombre" : "El apellido"} no debe exceder los 100 caracteres`;
+        } else {
+          // Validar caracteres especiales (permitir tildes y ñ)
+          const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+          if (caracteresEspeciales.test(value)) {
+            newErrors[name] = "No se permiten caracteres especiales";
+          } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/.test(value)) {
+            newErrors[name] = "Solo se permiten letras y espacios";
+          } else {
+            delete newErrors[name];
+          }
+        }
+        break;
+      
+      case "ci":
+        if (!value.trim()) {
+          newErrors.ci = "El Carnet de Identidad es obligatorio";
+        } else {
+          // Validar CI sin caracteres especiales ni tildes
+          const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+          const letrasConTilde = /[áéíóúÁÉÍÓÚñÑ]/;
+          
+          if (caracteresEspeciales.test(value) || letrasConTilde.test(value)) {
+            newErrors.ci = "El CI no puede contener caracteres especiales ni tildes";
+          } else if (!/^[a-zA-Z0-9 ]*$/.test(value)) {
+            newErrors.ci = "El CI solo puede contener letras, números y espacios";
+          } else {
+            delete newErrors.ci;
+          }
+        }
+        break;
+      
+      case "fecha_nacimiento":
+        if (!value) {
+          newErrors.fecha_nacimiento = "La fecha de nacimiento es obligatoria";
+        } else {
+          delete newErrors.fecha_nacimiento;
+        }
+        break;
+      
+      case "grado":
+        if (!value) {
+          newErrors.grado = "El grado es obligatorio";
+        } else {
+          delete newErrors.grado;
+        }
+        break;
+      
+      default:
+        break;
+    }
+
+    setFormErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formErrors]);
 
   {/**ESTA PARTE SE ENCARGA DEL RENDERIZADO DE LA PÁGINA**/}
   useEffect(() => {
@@ -71,6 +168,7 @@ const RegistrarPostulante = () => {
         const gradosRes = await getGrados();
         const opcionesInscripcionRes = await getOpcionesInscripcion(idOlimpiada);
         const rolesTutorRes = await getRolesTutor();
+        
         setMaxArea(olimpiadaRes.max_areas);
         setCatalogoGrados(gradosRes.data);
         setOpcionesInscripcionCatalogo(opcionesInscripcionRes.data);
@@ -229,16 +327,49 @@ const RegistrarPostulante = () => {
     setOpcionesSeleccionadas([]);
   };
 
-  {/*FUNCIONES RELACIONADAS A POSTULANTE*/}
-  const handlePostulanteChange = (field, value) => {
-    if (field === "nombres" || field === "apellidos") {
-      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
-        alert("Solo se permiten letras y espacios en este campo.");
-        return;
+  // Función mejorada para manejar cambios en postulante
+  const handlePostulanteChange = useCallback((field, value) => {
+    // Para el campo CI, aplicar validación en tiempo real
+    if (field === "ci") {
+      const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+      const letrasConTilde = /[áéíóúÁÉÍÓÚñÑ]/;
+      
+      if (caracteresEspeciales.test(value) || letrasConTilde.test(value)) {
+        return; // No actualizar si contiene caracteres no permitidos
+      }
+      
+      if (!/^[a-zA-Z0-9 ]*$/.test(value)) {
+        return; // No actualizar si no cumple el patrón
       }
     }
-  // Si el field es del tipo datos[índice].valor
-  const match = field.match(/^datos\[(\d+)\]\.valor$/);
+    
+    // Para nombres y apellidos, validar caracteres especiales pero permitir tildes
+    if (field === "nombres" || field === "apellidos") {
+      const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+      if (caracteresEspeciales.test(value)) {
+        return; // No actualizar si contiene caracteres especiales no permitidos
+      }
+      
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$/.test(value)) {
+        return; // No actualizar si no cumple el patrón
+      }
+    }
+
+    // Para fecha de nacimiento, manejar directamente como string
+    if (field === "fecha_nacimiento") {
+      setPostulante(prev => ({
+        ...prev,
+        [field]: value
+      }));
+      validateField(field, value);
+      return;
+    }
+
+    // Limpiar errores del campo
+    setFormErrors(prev => ({ ...prev, [field]: undefined }));
+
+    // Si el field es del tipo datos[índice].valor
+    const match = field.match(/^datos\[(\d+)\]\.valor$/);
     if (match) {
       const idx = Number(match[1]);
       setPostulante(prev => ({
@@ -253,7 +384,10 @@ const RegistrarPostulante = () => {
         [field]: value,
       }));
     }
-  };
+
+    // Validar el campo
+    validateField(field, value);
+  }, [validateField]);
 
   const buscarPostulante = async () => {
     if (!postulante.ci) {
@@ -392,12 +526,13 @@ const RegistrarPostulante = () => {
     
   };
 
-  const eliminarRegistro = () => {
-    setPostulante({idPersona: null, ci: "", nombres: "", apellidos: "", fecha_nacimiento: "", grado: {id: "", nombre:""}, idPostulante: null, idRegistro: null, buscado: false, datos: []});
+  const eliminarRegistro = useCallback(() => {
+    setPostulante(initialPostulanteState);
     setTutores([]);
     setOpcionesSeleccionadas([]);
     setOpcionesInscripcion([]);
-  };
+    setFormErrors({});
+  }, []);
 
   {/**ESTA PARTE SE ENCARGA DE LOS TUTORES**/}
   const agregarTutor = async () => {
@@ -485,23 +620,40 @@ const RegistrarPostulante = () => {
     ]);
   };
 
-  const handleTutorChange = (index, field, value) => {
+  const handleTutorChange = useCallback((index, field, value) => {
     setTutores(prevTutores => prevTutores.map((tutor, i) => {
       if (i !== index) return tutor;
 
+      // Validaciones similares a las del postulante
+      if (field === "ci") {
+        const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+        const letrasConTilde = /[áéíóúÁÉÍÓÚñÑ]/;
+        
+        if (caracteresEspeciales.test(value) || letrasConTilde.test(value)) {
+          return tutor; // No actualizar
+        }
+        
+        if (!/^[a-zA-Z0-9 ]*$/.test(value)) {
+          return tutor; // No actualizar
+        }
+      }
+
+      if (field === "nombres" || field === "apellidos") {
+        const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+        if (caracteresEspeciales.test(value)) {
+          return tutor; // No actualizar
+        }
+        
+        if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$/.test(value)) {
+          return tutor; // No actualizar
+        }
+      }
       
       // Si el campo es directo (nombres, apellidos, ci, etc.)
       if (field in tutor) {
         // Si cambia el CI, resetea buscado
         if (field === "ci") {
           return { ...tutor, [field]: value, buscado: false };
-        }
-
-        if (field === "nombres" || field === "apellidos") {
-          if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
-            alert("Solo se permiten letras y espacios en este campo.");
-            return { ...tutor, [field]: tutor[field] }; // No actualiza el campo
-          }
         }
         return { ...tutor, [field]: value };
       }
@@ -516,7 +668,7 @@ const RegistrarPostulante = () => {
         ),
       };
     }));
-  };
+  }, []);
 
   const eliminarTutor = async (index) =>  {
     if(tutores[index].idRegistroTutor) {
@@ -663,51 +815,70 @@ const RegistrarPostulante = () => {
   };
 
   const validarDatos = () => {
+    const errors = {};
     // Validar campos básicos del postulante
-    if (!postulante.ci.trim()) return "El Carnet de Identidad es obligatorio.";
-    if (!postulante.nombres.trim()) return "El nombre es obligatorio.";
-    if (!postulante.apellidos.trim()) return "El apellido es obligatorio.";
-    if (!postulante.fecha_nacimiento.trim()) return "La fecha de nacimiento es obligatoria.";
-    // Validar formato dd/mm/aaaa o aaaa-mm-dd
-    const esFechaValida =
-      /^\d{2}\/\d{2}\/\d{4}$/.test(postulante.fecha_nacimiento) ||
-      /^\d{4}-\d{2}-\d{2}$/.test(postulante.fecha_nacimiento);
-    if (!esFechaValida) return "La fecha de nacimiento debe tener el formato dd/mm/aaaa.";
-    if (!postulante.grado?.id) return "El grado es obligatorio.";
+    if (!postulante.ci.trim()) errors.ci = "El Carnet de Identidad es obligatorio";
+    if (!postulante.nombres.trim()) errors.nombres = "El nombre es obligatorio";
+    if (!postulante.apellidos.trim()) errors.apellidos = "El apellido es obligatorio";
+    if (!postulante.fecha_nacimiento.trim()) {
+      errors.fecha_nacimiento = "La fecha de nacimiento es obligatoria";
+    } else {
+      const esFechaValida =
+        /^\d{2}\/\d{2}\/\d{4}$/.test(postulante.fecha_nacimiento) ||
+        /^\d{4}-\d{2}-\d{2}$/.test(postulante.fecha_nacimiento);
+      if (!esFechaValida) errors.fecha_nacimiento = "La fecha debe tener formato dd/mm/aaaa";
+    }
+
+    if (!postulante.grado?.id) errors.grado = "El grado es obligatorio";
+
     // Validar campos dinámicos obligatorios del postulante
-    for (const campo of postulante.datos) {
+    postulante.datos.forEach((campo, index) => {
       if (campo.esObligatorio && !campo.valor.trim()) {
-        return `El campo "${campo.nombre_campo}" es obligatorio.`;
+        errors[`datos.${index}`] = `El campo "${campo.nombre_campo}" es obligatorio`;
       }
+    });
+
+    // Validar tutores
+    if (tutores.length === 0) {
+      errors.tutores = "Debe registrar al menos un tutor";
     }
-    // Validar al menos un tutor (si aplica)
-    if (tutores.length === 0) return "Debe registrar al menos un tutor.";
-    for (const [i, tutor] of tutores.entries()) {
-      if (!tutor.ci.trim()) return `El CI del tutor #${i + 1} es obligatorio.`;
-      if (!tutor.nombres.trim()) return `El nombre del tutor #${i + 1} es obligatorio.`;
-      if (!tutor.apellidos.trim()) return `El apellido del tutor #${i + 1} es obligatorio.`;
-      if (!tutor.idRol) return `La relación del tutor #${i + 1} es obligatoria.`;
-      for (const campo of tutor.datos) {
+
+    tutores.forEach((tutor, index) => {
+      if (!tutor.ci.trim()) errors[`tutor.${index}.ci`] = "El CI es obligatorio";
+      if (!tutor.nombres.trim()) errors[`tutor.${index}.nombres`] = "El nombre es obligatorio";
+      if (!tutor.apellidos.trim()) errors[`tutor.${index}.apellidos`] = "El apellido es obligatorio";
+      if (!tutor.idRol) errors[`tutor.${index}.idRol`] = "La relación es obligatoria";
+
+      tutor.datos.forEach((campo, campoIndex) => {
         if (campo.esObligatorio && !campo.valor.trim()) {
-          return `El campo "${campo.nombre_campo}" del tutor #${i + 1} es obligatorio.`;
+          errors[`tutor.${index}.datos.${campoIndex}`] = `El campo "${campo.nombre_campo}" del tutor #${index + 1} es obligatorio`;
         }
+      });
+    });
+
+    // Validar opciones de inscripción
+    if (opcionesSeleccionadas.length === 0) {
+      errors.opciones = "Debe seleccionar al menos un área de inscripción";
+    }
+    opcionesSeleccionadas.forEach((opcion, index) => {
+      if (!opcion.idOpcionInscripcion) {
+        errors[`opcion.${index}`] = "Debe seleccionar un área y categoría";
       }
-    }
-    // Validar al menos un área de inscripción
-    if (opcionesSeleccionadas.length === 0) return "Debe seleccionar al menos un área de inscripción.";
-    for (const [i, opcion] of opcionesSeleccionadas.entries()) {
-      if (!opcion.idOpcionInscripcion) return `Debe seleccionar un área y categoría en la opción #${i + 1}.`;
-    }
-    return null; // Todo OK
+    });
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
-  
+
   const enviarDatos = async () => {
-    const errorValidandoDatos = validarDatos();
-    if (errorValidandoDatos) {
-      alert(errorValidandoDatos);
-      return;
-    }
+    if (!validarDatos()) return;
+    setShowConfirmModal(true);
+  };
+
+  const confirmarEnvio = async () => {
+    setShowConfirmModal(false);
     setIsLoading(true);
+    
     try {
       const postulanteGuardado = {...postulante};
       const opcionesGuardadas = [...opcionesSeleccionadas];
@@ -764,8 +935,6 @@ const RegistrarPostulante = () => {
       });
 
       tutoresGuardados.forEach(async (tutor) => {
-        console.log("AAAAAAH");
-        console.log(tutor);
         if(!tutor.idRegistroTutor) {
           if(!tutor.idTutor) {
             const nuevoTutor = {
@@ -774,7 +943,6 @@ const RegistrarPostulante = () => {
               apellidos: tutor.apellidos,
             }
             const tutorCreado = (await createTutor(nuevoTutor)).data;
-            console.log(tutorCreado);
             tutor.idTutor = tutorCreado.id;
           }
           const nuevoRegistroTutor = {
@@ -783,7 +951,6 @@ const RegistrarPostulante = () => {
             id_rol_tutor: tutor.idRol,
           }
           const registroTutorCreado = (await createRegistroTutor(nuevoRegistroTutor)).data;
-          console.log(registroTutorCreado);
           tutor.idRegistroTutor = registroTutorCreado.id;
         }
         const datosTutorGuardados = {
@@ -792,12 +959,13 @@ const RegistrarPostulante = () => {
         }
         await saveDatosTutor(datosTutorGuardados);
       });
-      alert("Datos guardados correctamente");
+      
+      setShowSuccessModal(true);
       eliminarRegistro();
     } catch (error) {
       console.error("Error al guardar los datos:", error);
       alert("Error al guardar los datos: " + error.message);
-    }finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -819,368 +987,221 @@ const RegistrarPostulante = () => {
     }));
   };
 
-  console.log(postulante);
-  console.log(tutores);
-  console.log(opcionesSeleccionadas);
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md">
-      <h1 className="text-3xl font-bold text-blue-900 mb-6">Registro de Postulante</h1>
-      <div className="flex flex-col md:flex-row gap-4 items-center">
-
-        <div>
-          <label className="text-sm font-medium text-gray-700">Carnet de Identidad <span className="text-red-500">*</span> </label>
-          <input type="text" disabled={postulante.idPersona} value={postulante.ci} onChange={(e) => handlePostulanteChange("ci", e.target.value)} 
-          className={`w-full px-3 py-2 border rounded-md
-            ${postulante.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}
-          `}
-          />
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-          <button type="button" onClick={() => buscarRegistro()} className="p-2 bg-blue-500 text-white rounded-md">
-            <Search size={16} />
-          </button>
-
-          <button type="button" onClick={() => eliminarRegistro()} className="p-2 bg-red-500 text-white rounded-md">
-            <Trash2 size={16} />
-          </button>
-        </div>
-        {postulante.buscado && (
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div>
-              <label className="text-sm font-medium text-gray-700">Nombre(s) <span className="text-red-500">*</span> </label>
-              <input type="text" disabled={postulante.idPersona} value={postulante.nombres} onChange={(e) => handlePostulanteChange("nombres", e.target.value)} 
-              className={`w-full px-3 py-2 border rounded-md
-                ${postulante.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}
-              `}
+    <div className={`max-w-5xl mx-auto p-4 ${deviceInfo.isMobile ? 'px-2' : 'p-6'}`}>
+      <Card>
+        <CardHeader>
+          <h1 className={`${deviceInfo.isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-blue-900`}>
+            Registro de Postulante
+          </h1>
+          {error && <p className="text-red-500 mt-2">{error}</p>}
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          <div className={`grid grid-cols-1 ${deviceInfo.isDesktop ? 'md:grid-cols-2' : ''} gap-4 items-start`}>
+            <div className="space-y-4">
+              <FormField
+                label="Carnet de Identidad"
+                name="ci"
+                value={postulante.ci}
+                onChange={(e) => handlePostulanteChange("ci", e.target.value)}
+                disabled={postulante.idPersona}
+                placeholder="Ingrese el CI del postulante"
+                required
+                error={formErrors.ci}
               />
-            </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700">Apellido(s)   <span className="text-red-500">*</span> </label>
-              <input type="text" disabled={postulante.idPersona} value={postulante.apellidos} onChange={(e) => handlePostulanteChange("apellidos", e.target.value)} 
-              className={`w-full px-3 py-2 border rounded-md 
-                ${postulante.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}
-              `}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700">Fecha de Nacimiento <span className="text-red-500">*</span> </label>
-              <input
-                type="text"
-                placeholder="dd/mm/aaaa"
-                disabled={personaPostulante?.fecha_nacimiento}
-                value={
-                  /^\d{4}-\d{2}-\d{2}$/.test(postulante.fecha_nacimiento)
-                    ? defaultFormatDate(postulante.fecha_nacimiento)
-                    : postulante.fecha_nacimiento
-                }
-                onChange={e => {
-                  const val = e.target.value.replace(/[^0-9/]/g, "");
-                  // Si tiene el formato correcto, parsear y guardar en formato aaaa-mm-dd
-                  if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
-                    handlePostulanteChange("fecha_nacimiento", defaultParseDate(val));
-                  } else {
-                    // Si no, guardar el texto tal cual (para que el usuario pueda escribir)
-                    handlePostulanteChange("fecha_nacimiento", val);
-                  }
-                }}
-                className={`w-full px-3 py-2 border rounded-md ${personaPostulante?.fecha_nacimiento ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-700">Grado <span className="text-red-500">*</span> </label>
-              <div>
-                <select 
-                  value={postulante.grado?.id || ""} 
-                  onChange={(e) => handleGradoChange(e.target.value)} 
-                  className={`flex-1 px-3 py-2 border rounded-md
-                    ${postulante.idRegistro ? "bg-gray-200" : "bg-white"}
-                  `}
-                  disabled={postulante.idRegistro}
-                >
-                  <option value="">Seleccione un Grado</option>
-                  {Object.values(catalogoGrados).map((grado) => (
-                    <option key={grado.id} value={grado.id}>
-                      {grado.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-          </div>
-        )}
-      </div>
-
-      {postulante.buscado && (
-        <div>
-          {/**ESTA PARTE CONSISTIRA DE LOS DATOS QUE SE LE PIDE AL POSTULANTE PARA INSCRIBIRSE A UNA OLIMPIADA**/}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800">Datos del Postulante</h3>
-            {postulante.datos.map((campo, index) => {
-              switch (campo.tipo_campo) {
-                case "text":
-                  return (
-                    <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                      <input type="text" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-                    </div>
-                  );
-                case "number":
-                  return (
-                    <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                      <input type="number" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-                    </div>
-                  );
-                case "date":
-                  return (
-                    <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                      <input type="date" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-                    </div>
-                  );
-                case "tel":
-                  return (
-                    <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                      <input type="tel" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-                    </div>
-                  );
-                case "email":
-                  return (
-                    <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                      <input type="email" value={campo.valor} onChange={(e) => handlePostulanteChange(`datos[${index}].valor`, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-                    </div>
-                  );
-                case "checkbox":
-                  return (
-                    <div key={index} className="mb-4">
-                      <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                      {campo.idDependencia !== null ?(
-                      <div>
-                        {(() => {
-                          // Buscar el campo padre (dependencia)
-                          const campoPadre = postulante.datos.find(c => c.idCampoPostulante === campo.idDependencia);
-                          // Si no se seleccionó el valor en la dependencia
-                          if (!campoPadre || !campoPadre.idValor) {
-                            return (
-                              <select disabled className="w-full px-3 py-2 border rounded-md bg-gray-100 text-gray-400">
-                                <option value="">Primero seleccione {campoPadre ? campoPadre.nombre_campo : "la opción anterior"}</option>
-                              </select>
-                            );
-                          }
-                          // Opciones válidas según el valor seleccionado en la dependencia
-                          const opcionesValidas = campo.opciones[campoPadre.idValor] || [];
-                          return (
-                            <select
-                              value={campo.valor}
-                              onChange={e => handleOpcionSeleccionPostulanteChange(index, e.target.value, opcionesValidas)}
-                              className="w-full px-3 py-2 border rounded-md"
-                            >
-                              <option value="">Seleccione una opción</option>
-                              {opcionesValidas.map((opcion, idx) => (
-                                <option key={idx} value={opcion.valor}>{opcion.valor}</option>
-                              ))}
-                            </select>
-                          );
-                        })()}
-                      </div> 
-                      ):(
-                      <div>
-                        <select value={campo.valor} onChange={(e) => handleOpcionSeleccionPostulanteChange(index, e.target.value, campo.opciones)} className="w-full px-3 py-2 border rounded-md">
-                          <option value="">Seleccione una opción</option>
-                          {campo.opciones.map((opcion, idx) => (
-                            <option key={idx} value={opcion.valor}>{opcion.valor}</option>
-                          ))}
-                        </select>
-                      </div>
-                      )}
-                      
-                    </div>
-                  )
-                default:
-                  return null;
-                }
-              })}
-
-          </div> 
-
-          {/**ESTA PARTE CONSISTIRA DE LOS DATOS DE SUS TUTORES**/}
-          <div className="space-y-4 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800">Tutores</h3>
-            {tutores.map((tutor, index) => (
-              <div key={index} className="flex flex-col md:flex-row gap-4 items-center">
-                <div>
-                  <label className="text-sm font-medium text-gray-700" >Carnet de Identidad <span className="text-red-500">*</span> </label>
-                  <input 
-                    type="text" 
-                    disabled={tutor.idPersona} 
-                    value={tutor.ci} onChange={(e) => handleTutorChange(index, "ci", e.target.value)} 
-                    className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
+              {postulante.buscado && (
+                <>
+                  <FormField
+                    label="Nombre(s)"
+                    name="nombres"
+                    value={postulante.nombres}
+                    onChange={(e) => handlePostulanteChange("nombres", e.target.value)}
+                    disabled={postulante.idPersona}
+                    placeholder="Ingrese el nombre del postulante"
+                    required
+                    error={formErrors.nombres}
                   />
-                </div>
-    
-                <button type="button" onClick={() => buscarTutor(index)} disabled={tutor.idTutor} className="p-2 bg-blue-500 text-white rounded-md">
-                  <Search size={16} />
-                </button>
-    
-                <button type="button" onClick={() => eliminarTutor(index)} className="p-2 bg-red-500 text-white rounded-md">
-                  <Trash2 size={16} />
-                </button>
-    
-                {tutor.buscado && (
-                  <div className="w-full mt-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Nombre(s) <span className="text-red-500">*</span></label>
-                      <input 
-                        type="text" 
-                        disabled={tutor.idPersona} 
-                        value={tutor.nombres} 
-                        onChange={(e) => handleTutorChange(index, "nombres", e.target.value)} 
-                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Apellido(s) <span className="text-red-500">*</span></label>
-                      <input 
-                        type="text" 
-                        disabled={tutor.idPersona} 
-                        value={tutor.apellidos} onChange={(e) => handleTutorChange(index, "apellidos", e.target.value)} 
-                        className={`w-full px-3 py-2 border rounded-md text-sm font-medium text-gray-700 ${tutor.idPersona ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
-                      />
-                    </div>
-                    {tutor.datos.map((campo, idx) => {
-                      switch (campo.tipo_campo) {
-                        case "text":
-                          return (
-                            <div key={idx} className="mb-4">
-                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                              <input type="text" value={campo.valor} onChange={(e) => handleTutorChange(index, campo.nombre_campo, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-                            </div>
-                          );
-                        case "number":
-                          return (
-                            <div key={idx} className="mb-4">
-                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                              <input type="number" value={campo.valor} onChange={(e) => handleTutorChange(index, campo.nombre_campo, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-                            </div>
-                          );
-                        case "date":
-                          return (
-                            <div key={idx} className="mb-4">
-                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                              <input type="date" value={campo.valor} onChange={(e) => handleTutorChange(index, campo.nombre_campo, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-                            </div>
-                          );
-                        case "tel":
-                          return (
-                            <div key={idx} className="mb-4">
-                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                              <input type="tel" value={campo.valor} onChange={(e) => handleTutorChange(index, campo.nombre_campo, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-                            </div>
-                          );
-                        case "email":
-                          return (
-                            <div key={idx} className="mb-4">
-                              <label className="text-sm font-medium text-gray-700">{campo.nombre_campo} {campo.esObligatorio && (<span className="text-red-500">*</span>)}</label>
-                              <input type="email" value={campo.valor} onChange={(e) => handleTutorChange(index, campo.nombre_campo, e.target.value)} className="w-full px-3 py-2 border rounded-md" />
-                            </div>
-                          );
-                        default:
-                          return null;
-                      }
-                    })}
-                    <div >
-                      <label className="text-sm font-medium text-gray-700">Relación con el Postulante <span className="text-red-500">*</span> </label>
-                      <div>
-                        <select 
-                          value={tutor.idRol} 
-                          onChange={(e) => handleTutorChange(index, 'idRol', e.target.value)} 
-                          className={`flex-1 px-3 py-2 border rounded-md ${tutor.idRegistroTutor ? "bg-gray-200 cursor-not-allowed" : "bg-white"}`}
-                          disabled={tutor.idRegistroTutor}
-                        >
-                          <option value="">Seleccione un Rol</option>
-                          {Object.entries(rolesTutor).map(([id, rolTutor]) => (
-                            <option key={rolTutor.id} value={rolTutor.id}>{rolTutor.nombre}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+
+                  <FormField
+                    label="Apellido(s)"
+                    name="apellidos"
+                    value={postulante.apellidos}
+                    onChange={(e) => handlePostulanteChange("apellidos", e.target.value)}
+                    disabled={postulante.idPersona}
+                    placeholder="Ingrese el apellido del postulante"
+                    required
+                    error={formErrors.apellidos}
+                  />
+
+                  <FormField
+                    label="Fecha de Nacimiento"
+                    name="fecha_nacimiento"
+                    type="date"
+                    value={formatDate(postulante.fecha_nacimiento)}
+                    onChange={(e) => handlePostulanteChange("fecha_nacimiento", e.target.value)}
+                    disabled={personaPostulante?.fecha_nacimiento}
+                    required
+                    error={formErrors.fecha_nacimiento}
+                  />
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Grado <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={postulante.grado?.id || ""}
+                      onChange={(e) => handleGradoChange(e.target.value)}
+                      className={`w-full mt-1 px-3 py-2 border rounded-md ${
+                        postulante.idRegistro ? "bg-gray-100" : ""
+                      } ${formErrors.grado ? "border-red-500" : "border-gray-300"}`}
+                      disabled={postulante.idRegistro}
+                    >
+                      <option value="">Seleccione un Grado</option>
+                      {Object.values(catalogoGrados).map((grado) => (
+                        <option key={grado.id} value={grado.id}>
+                          {grado.nombre}
+                        </option>
+                      ))}
+                    </select>
+                    {formErrors.grado && (
+                      <span className="text-sm text-red-500">{formErrors.grado}</span>
+                    )}
                   </div>
-    
+                </>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div className={`flex ${deviceInfo.isMobile ? 'flex-col' : 'flex-row'} gap-2`}>
+                <Button 
+                  onClick={buscarRegistro} 
+                  variant="primary" 
+                  size={deviceInfo.isMobile ? "md" : "lg"}
+                  className={deviceInfo.isMobile ? "w-full" : ""}
+                >
+                  <Search className="h-5 w-5 mr-2" />
+                  Buscar
+                </Button>
+
+                <Button 
+                  onClick={eliminarRegistro} 
+                  variant="danger" 
+                  size={deviceInfo.isMobile ? "md" : "lg"}
+                  className={deviceInfo.isMobile ? "w-full" : ""}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {postulante.buscado && postulante.datos.length > 0 && (
+                <Card className="mt-4">
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold text-gray-800">Datos Adicionales</h3>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {postulante.datos.map((campo, index) => (
+                      <FormField
+                        key={index}
+                        label={campo.nombre_campo}
+                        name={`datos_${index}`}
+                        type={campo.tipo_campo}
+                        value={campo.valor}
+                        onChange={(e) =>
+                          handlePostulanteChange(`datos[${index}].valor`, e.target.value)
+                        }
+                        required={campo.esObligatorio}
+                        error={formErrors[`datos.${index}`]}
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {postulante.buscado && (
+            <>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800">Tutores</h3>
+                {formErrors.tutores && (
+                  <p className="text-sm text-red-500">{formErrors.tutores}</p>
+                )}
+                {tutores.map((tutor, index) => (
+                  <TutorForm
+                    key={index}
+                    tutor={tutor}
+                    index={index}
+                    rolesTutor={rolesTutor}
+                    onTutorChange={handleTutorChange}
+                    onBuscarTutor={buscarTutor}
+                    onEliminarTutor={eliminarTutor}
+                    formErrors={formErrors}
+                  />
+                ))}
+                {tutores.length < 2 && (
+                  <Button
+                    onClick={agregarTutor}
+                    variant="primary"
+                    className={`${deviceInfo.isMobile ? 'w-full' : 'w-full sm:w-auto'}`}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar Tutor
+                  </Button>
                 )}
               </div>
-            ))}
-            {tutores.length < 2 && (
-              <button type="button" onClick={agregarTutor} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                <Plus size={16} /> Agregar Tutor
-              </button>
-            )}
-          </div>
-          
-          {/**ESTA PARTE CONSISTIRA DE LAS AREAS A LAS QUE SE INSCRIBE EL POSTULANTE**/}
-          <div className="space-y-4 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800">Áreas de Inscripción</h3>
-            {opcionesSeleccionadas.map((opcionSeleccionada, index) => (
-              <div key={index} className="flex flex-col md:flex-row gap-4 items-center">
-                <select
-                  value={opcionSeleccionada.idOpcionInscripcion}
-                  onChange={e => actualizarOpcionSeleccionada(index, 'idOpcionInscripcion', e.target.value)}
-                  className={`flex-1 px-3 py-2 border rounded-md
-                    ${opcionSeleccionada.idInscripcion ? "bg-gray-200" : "bg-white"}
-                  `}
-                  disabled={opcionSeleccionada.idInscripcion}
-                >
-                  <option value="">Seleccione área y categoría</option>
-                  {opcionesInscripcion.flatMap(area =>
-                    area.niveles_categorias
-                      .filter(cat =>
-                        !opcionesSeleccionadas.some(
-                          (sel, idx) => sel.idOpcionInscripcion === String(cat.id_opcion_inscripcion) && idx !== index
-                        )
-                      )
-                      .map(cat => (
-                        <option
-                          key={cat.id_opcion_inscripcion}
-                          value={cat.id_opcion_inscripcion}
-                        >
-                          {area.nombre} - {cat.nombre}
-                        </option>
-                      ))
-                  )}
-                </select>
-                <button type="button" onClick={() => eliminarOpcionSeleccionada(index)} className="p-2 bg-red-500 text-white rounded-md">
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
-            
-            <button 
-              type="button" 
-              onClick={agregarOpcionSeleccionda}
-              className={`flex items-center gap-2 px-4 py-2 ${((typeof maxArea === 'number' && opcionesSeleccionadas.length >= maxArea) || opcionesSeleccionadas.length === opcionesInscripcion.reduce((acc, area) => acc + area.niveles_categorias.length, 0) || opcionesInscripcion.length === 0) ? "bg-gray-200" : "bg-blue-600 text-white rounded-md hover:bg-blue-700" } `}
-              
-            >
-              <Plus size={16} /> Agregar Área
-            </button>
-          
-          </div>
 
-          {/**AQUI ESTARÁ el BOTÓN DE GUARDADO**/}
-          <div>
-            <button type="button" className="flex gap-3 p-2 bg-green-500 text-white rounded-md" onClick={enviarDatos}>
-              <Plus size={16} />
-              <label>GUARDAR</label>
-            </button>
-          </div> 
-        </div>
-      )
-      }
+              <InscripcionForm
+                opcionesInscripcion={opcionesInscripcion}
+                opcionesSeleccionadas={opcionesSeleccionadas}
+                onAgregarOpcion={agregarOpcionSeleccionda}
+                onActualizarOpcion={actualizarOpcionSeleccionada}
+                onEliminarOpcion={eliminarOpcionSeleccionada}
+                maxArea={maxArea}
+                formErrors={formErrors}
+              />
+
+              <div className={`flex ${deviceInfo.isMobile ? 'justify-center' : 'justify-end'}`}>
+                <Button
+                  onClick={enviarDatos}
+                  variant="success"
+                  size={deviceInfo.isMobile ? "md" : "lg"}
+                  className={`font-semibold ${deviceInfo.isMobile ? 'w-full' : ''}`}
+                  disabled={isLoading}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Guardar
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Modal de confirmación */}
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={confirmarEnvio}
+        variant="warning"
+        title="Confirmar registro"
+        message="¿Está seguro que desea guardar los datos del postulante?"
+        confirmText="Guardar"
+        cancelText="Cancelar"
+        isLoading={isLoading}
+      />
+
+      {/* Modal de éxito */}
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        variant="success"
+        title="Registro exitoso"
+        message="Los datos del postulante han sido guardados correctamente."
+        confirmText="Aceptar"
+        showCancelButton={false}
+      />
     </div>
   ); 
 };
