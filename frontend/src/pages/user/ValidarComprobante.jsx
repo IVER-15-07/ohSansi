@@ -150,14 +150,14 @@ const ValidarComprobante = () => {
   return (
    <div className="p-6">
   <SubirArchivo
-    nombreArchivo={archivo ? archivo.name : "Subir Comprobante (PDF, JPG, PNG)"}
+    nombreArchivo={archivo ? archivo.name : "Subir Comprobante (JPG, PNG)"}
     tipoArchivo="comprobante"
     handleArchivo={handleArchivo}
     inputRef={inputRef}
     onFileValidationError={handleFileValidationError}
-    acceptedFormats={['pdf', 'jpg', 'jpeg', 'png']}
-    acceptedMimeTypes={['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']}
-    acceptAttribute=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+    acceptedFormats={['jpg']}
+    acceptedMimeTypes={['image/jpeg', 'image/jpg', 'image/png']}
+    acceptAttribute=".jpg,.jpeg,.png,image/jpeg,image/png"
     maxFileSize={15 * 1024 * 1024} // 15MB para imágenes
     allowEdit={true}
   />
