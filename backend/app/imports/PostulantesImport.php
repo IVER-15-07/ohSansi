@@ -27,8 +27,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use App\Models\OlimpiadaCampoTutor;
 use App\Models\Persona;
-use App\Models\OpcionIncripcion;
-use App\Models\ListaInscripcion;
+
 
 
 class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInserts
@@ -60,11 +59,10 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         $this->categorias = NivelCategoria::all()->keyBy(fn($c) => $this->limpiarTexto($c->nombre));
         $this->grados = Grado::all()->keyBy(fn($g) => $this->limpiarTexto($g->nombre));
         $this->roles = RolTutor::all()->keyBy(fn($r) => $this->limpiarTexto($r->nombre));
-        $this->camposPostulante = CampoPostulante::all()->keyBy(fn($c) => $this->limpiarTexto($c->nombre));
-        $this->camposTutor = CampoTutor::all()->keyBy(fn($c) => $this->normalizarNombreCampo($c->nombre));
-        $this->olimpiadaCamposTutor = OlimpiadaCampoTutor::where('id_olimpiada', $idOlimpiada)->get()->keyBy(function ($c) {
-            return $this->normalizarNombreCampo($c->campoTutor->nombre ?? '');
-        });
+        $this->camposPostulante = CampoPostulante::all()->keyBy(fn($c) => $this->normalizarCampoExcel($c->nombre));
+        $this->camposTutor = CampoTutor::all()->keyBy(fn($c) => $this->normalizarCampoExcel($c->nombre));
+
+        $this->olimpiadaCamposTutor = OlimpiadaCampoTutor::where('id_olimpiada', $idOlimpiada)->get()->keyBy('id_campo_tutor');
 
         $this->olimpiadaCamposPostulante = OlimpiadaCampoPostulante::where('id_olimpiada', $idOlimpiada)->get()->keyBy('id_campo_postulante');
 
@@ -100,6 +98,8 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             }
         });
 
+
+
         if (!empty($errores)) {
             throw new \Exception(json_encode([
                 'message' => 'Errores encontrados en el archivo.',
@@ -130,12 +130,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         foreach ($this->olimpiadaCamposPostulante as $campo) {
             if ($campo->esObligatorio) {
                 $nombre = $this->normalizarCampoExcel($campo->campo_postulante->nombre);
-                Log::info("Validando campo obligatorio", [
-                    'campo_original' => $campo->campo_postulante->nombre,
-                    'campo_normalizado' => $nombre,
-                    'valor_en_fila' => $fila[$nombre] ?? null,
-                    'fila_completa' => $fila
-                ]);
+
                 if (empty($fila[$nombre])) {
                     $errores[] = "El campo obligatorioee '{$campo->campo_postulante->nombre}' está vacío.";
                 }
@@ -161,10 +156,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
 
 
-
-
-
-
     private function normalizarFila($fila)
     {
         $normalizada = [];
@@ -178,10 +169,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
     {
         return empty(array_filter($fila, fn($v) => !is_null($v) && $v !== ''));
     }
-
-
-
-
 
 
     private function procesarFila($fila)
@@ -254,10 +241,9 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
     }
 
 
-
-
     private function insertarDatosPostulante($fila, $idPostulante)
     {
+
         $errores = [];
 
         $camposObligatorios = $this->olimpiadaCamposPostulante->filter(fn($c) => $c->esObligatorio)
@@ -266,6 +252,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
         foreach ($camposObligatorios as $campoObligatorio) {
             $campoNormalizado = $this->normalizarCampoExcel($campoObligatorio);
+
             if (!array_key_exists($campoNormalizado, $fila) || empty($fila[$campoNormalizado])) {
                 $errores[] = "El campo obligatorio '$campoObligatorio' es requerido para esta olimpiada y no está presente o está vacío en el Excel.";
             }
@@ -275,19 +262,22 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         $clavesParaBuscar = [];
 
         foreach ($fila as $campo => $valor) {
+
             if (is_null($valor) || $valor === '' || preg_match('/_(papa|mama|profesor)$/i', $campo)) {
                 continue;
             }
+            $campoNormalizado = $this->normalizarCampoExcel($campo);
 
-            $campoNormalizado = $this->limpiarTexto($campo);
-            $campoPostulanteId = $this->camposPostulante[$campoNormalizado]->id ?? null;
-            if (!$campoPostulanteId) {
+            $campoPostulante = $this->camposPostulante[$campoNormalizado] ?? null;
+            if (!$campoPostulante) {
                 continue;
             }
+            $campoPostulanteId = $campoPostulante->id;
+
             $olimpiadaCampoPostulante = $this->olimpiadaCamposPostulante[$campoPostulanteId] ?? null;
             if (!$olimpiadaCampoPostulante) {
-                $errores[] = "El campo '$campo' no está habilitado para esta olimpiada.";
                 continue;
+                $errores[] = "El campo '$campo' no está habilitado para esta olimpiada.";
             }
 
             if ($olimpiadaCampoPostulante->esObligatorio && empty($valor)) {
@@ -324,68 +314,41 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
             });
         }
 
+        // Lanzar error si no hay datos para insertar
+        if (empty($datosParaInsertar)) {
+
+            throw new \Exception("No se insertó ningún dato adicional para el postulante. Verifique que los campos adicionales estén habilitados y presentes en el Excel.");
+        }
+
         if (!empty($errores)) {
+
             throw new \Exception(implode(' | ', $errores));
         }
 
         if (!empty($datosParaInsertar)) {
+
             DatoPostulante::insert($datosParaInsertar);
         }
     }
 
 
-    private function obtenerRolesEnExcel($fila)
-    {
-        $rolesEnExcel = [];
-        foreach (array_keys($fila) as $campo) {
-            if (preg_match('/^ci([a-z]+)/i', $campo, $matches)) {
-                $rol = $this->limpiarTexto($matches[1]);
-                $rolesEnExcel[$rol] = true;
-            }
-        }
-        return array_keys($rolesEnExcel);
-    }
-
-
-
-
 
     private function procesarTutores($fila, $idRegistro)
     {
-        Log::info('--- INICIO procesarTutores ---', [
-            'fila' => $fila,
-            'idRegistro' => $idRegistro,
-        ]);
+
 
         $ciTutor = $fila['ci_tutor'] ?? null;
         $nombresTutor = $fila['nombre_tutor'] ?? null;
         $apellidosTutor = $fila['apellidos_tutor'] ?? null;
         $parentesco = $fila['parentesco'] ?? null;
 
-        Log::info('Datos básicos tutor', [
-            'ciTutor' => $ciTutor,
-            'nombresTutor' => $nombresTutor,
-            'apellidosTutor' => $apellidosTutor,
-            'parentesco' => $parentesco,
-        ]);
-
         if ($ciTutor && $nombresTutor && $apellidosTutor && $parentesco) {
             $parentescoNormalizado = $this->limpiarTexto($parentesco);
-            Log::info('Parentesco normalizado', [
-                'parentescoNormalizado' => $parentescoNormalizado,
-                'roles_keys' => $this->roles->keys(),
-            ]);
+
             $rolTutor = $this->roles->get($parentescoNormalizado);
 
-            Log::info('RolTutor encontrado', [
-                'rolTutor' => $rolTutor,
-            ]);
-
             if (!$rolTutor) {
-                Log::error("El parentesco/rol '$parentesco' no existe en la base de datos.", [
-                    'parentescoNormalizado' => $parentescoNormalizado,
-                    'roles_disponibles' => $this->roles->keys(),
-                ]);
+
                 throw new \Exception("El parentesco/rol '$parentesco' no existe en la base de datos.");
             }
 
@@ -397,14 +360,10 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                     'fecha_nacimiento' => $fila['fecha_nacimiento_tutor'] ?? null
                 ]
             );
-            Log::info('Persona tutor creada o encontrada', [
-                'personaTutor' => $personaTutor
-            ]);
+
 
             $tutor = Tutor::firstOrCreate(['id_persona' => $personaTutor->id]);
-            Log::info('Tutor creado o encontrado', [
-                'tutor' => $tutor
-            ]);
+
 
             $nombreRol = $rolTutor->nombre;
 
@@ -419,15 +378,12 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                 'registroTutor' => $registroTutor
             ]);
         } else {
-            Log::error('Faltan datos obligatorios del tutor', [
-                'ciTutor' => $ciTutor,
-                'nombresTutor' => $nombresTutor,
-                'apellidosTutor' => $apellidosTutor,
-                'parentesco' => $parentesco,
-            ]);
+
             throw new \Exception("Faltan datos obligatorios del tutor (CI, nombre, apellido o parentesco).");
         }
     }
+
+
 
     private function normalizarNombreCampo($nombre)
     {
@@ -446,14 +402,13 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         // Quitar paréntesis y su contenido
         $nombre = preg_replace('/\(.+\)/', '', $nombre);
         // Quitar sufijo _tutor SOLO para comparar con campos de tutor
-        $nombre = preg_replace('/_tutor$/', '', $nombre);
+
         // Quitar cualquier otro carácter especial
         $nombre = preg_replace('/[^a-z0-9_]/', '', $nombre);
         // Quitar guiones bajos al principio o final
         $nombre = trim($nombre, '_');
         return $nombre;
     }
-
 
 
     private function insertarDatosTutor($filaNormalizada, $idTutor, $nombreRol)
@@ -478,8 +433,8 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
 
         // 2. Validar obligatorios
         $camposObligatorios = $this->olimpiadaCamposTutor
-            ->filter(fn($c) => $c->esObligatorio && $c->campoTutor)
-            ->map(fn($c) => $this->normalizarNombreCampo($c->campoTutor->nombre))
+            ->filter(fn($c) => $c->esObligatorio && $c->campo_tutor)
+            ->map(fn($c) => $this->normalizarNombreCampo($c->campo_tutor->nombre))
             ->toArray();
 
         foreach ($camposObligatorios as $campoObligatorio) {
@@ -493,10 +448,11 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         $clavesParaBuscar = [];
 
         foreach ($camposUnicos as $campoNormalizado => $valor) {
-            $campoTutorId = $this->campo_tutor[$campoNormalizado]->id ?? null;
+            $campoTutorId = $this->camposTutor[$campoNormalizado]->id ?? null;
             if (!$campoTutorId) {
                 continue;
             }
+
             $olimpiadaCampoTutor = $this->olimpiadaCamposTutor[$campoTutorId] ?? null;
             if (!$olimpiadaCampoTutor) {
                 $errores[] = "El campo '$campoNormalizado' no está habilitado para tutores en esta olimpiada.";
@@ -552,13 +508,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         }
         Log::info('--- FIN insertarDatosTutor ---');
     }
-
-
-
-
-
-
-
 
     private function insertarRegistroEInscripcion($fila, $idPostulante)
     {
@@ -685,9 +634,6 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         $campo = preg_replace('/[^a-z0-9_]/', '', $campo);
         return $campo;
     }
-
-
-
 
 
     public function batchSize(): int
