@@ -22,6 +22,7 @@ const ConfParamOlimpiada = () => {
   const [modal, setModal] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [datosIniciales, setDatosIniciales] = useState({});
+  const [camposTocados, setCamposTocados] = useState({}); // Nuevo estado para rastrear campos tocados
   const inputArchivoRef = useRef();
 
   // Convierte fecha de formato YYYY-MM-DD a DD/MM/YYYY para mostrar
@@ -102,6 +103,19 @@ const ConfParamOlimpiada = () => {
           fin_inscripcion: false,
           convocatoria: false,
         });
+        
+        // Inicializar todos los campos como no tocados
+        setCamposTocados({
+          nombre: false,
+          descripcion: false,
+          costo: false,
+          max_areas: false,
+          fecha_inicio: false,
+          fecha_fin: false,
+          inicio_inscripcion: false,
+          fin_inscripcion: false,
+          convocatoria: false,
+        });
       } catch (error) {
         if (isMounted) {
           console.error('Error al cargar olimpiada:', error);
@@ -124,24 +138,33 @@ const ConfParamOlimpiada = () => {
     };
   }, [id]);
 
-  // Solo validar cuando se esté editando un campo específico
+  // Solo validar cuando se esté editando un campo específico y haya sido tocado
   const validarCampos = useCallback((valores) => {
     const errs = {};
     
-    // Solo validar campos que están siendo editados
-    if (editando.descripcion && valores.descripcion && valores.descripcion.length > 500) {
+    // Validar el nombre si está siendo editado y ha sido tocado
+    if (editando.nombre && camposTocados.nombre) {
+      if (!valores.nombre || valores.nombre.trim() === '') {
+        errs.nombre = 'El nombre es obligatorio.';
+      } else if (/[!"#$%&/{}\[\]*]/.test(valores.nombre)) {
+        errs.nombre = 'El nombre no debe contener caracteres especiales como !"#$%&/{}[]*';
+      }
+    }
+    
+    // Solo validar campos que están siendo editados y han sido tocados
+    if (editando.descripcion && camposTocados.descripcion && valores.descripcion && valores.descripcion.length > 500) {
       errs.descripcion = 'La descripción debe tener máximo 500 caracteres.';
     }
     
-    // Costo - solo validar si se está editando
-    if (editando.costo) {
+    // Costo - solo validar si se está editando y ha sido tocado
+    if (editando.costo && camposTocados.costo) {
       if (!valores.costo || isNaN(valores.costo) || Number(valores.costo) < 1) {
         errs.costo = 'El costo debe ser un número mayor o igual a 1.';
       }
     }
     
-    // Máximo inscripciones - solo validar si se está editando
-    if (editando.max_areas) {
+    // Máximo inscripciones - solo validar si se está editando y ha sido tocado
+    if (editando.max_areas && camposTocados.max_areas) {
       if (valores.max_areas === '' || isNaN(valores.max_areas)) {
         errs.max_areas = 'El máximo de áreas debe ser un número.';
       } else if (Number(valores.max_areas) < 0) {
@@ -149,7 +172,7 @@ const ConfParamOlimpiada = () => {
       }
     }
     
-    // Validaciones de fechas - solo validar si se están editando los campos respectivos
+    // Validaciones de fechas - solo validar si se están editando los campos respectivos y han sido tocados
     if (Object.keys(editando).some(key => ['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'].includes(key) && editando[key])) {
       // Obtener hoy en GMT-4 y dejar solo la fecha
       const now = new Date();
@@ -160,22 +183,32 @@ const ConfParamOlimpiada = () => {
       const inicio_inscripcion = soloFecha(parseFecha(valores.inicio_inscripcion));
       const fin_inscripcion = soloFecha(parseFecha(valores.fin_inscripcion));
 
-      // Validar fecha_inicio solo si se está editando
-      if (editando.fecha_inicio && (!fecha_inicio || fecha_inicio < hoyGMT4)) {
-        errs.fecha_inicio = 'La fecha de inicio debe ser hoy o una fecha futura.';
+      // Validar fecha_inicio solo si se está editando y ha sido tocado
+      if (editando.fecha_inicio && camposTocados.fecha_inicio) {
+        if (!fecha_inicio) {
+          errs.fecha_inicio = 'La fecha de inicio es obligatoria.';
+        } else if (fecha_inicio < hoyGMT4) {
+          errs.fecha_inicio = 'La fecha de inicio debe ser hoy o una fecha futura.';
+        }
       }
       
-      // Validar fecha_fin solo si se está editando
-      if (editando.fecha_fin && (!fecha_fin || fecha_fin < hoyGMT4)) {
-        errs.fecha_fin = 'La fecha de fin debe ser hoy o una fecha futura.';
+      // Validar fecha_fin solo si se está editando y ha sido tocado
+      if (editando.fecha_fin && camposTocados.fecha_fin) {
+        if (!fecha_fin) {
+          errs.fecha_fin = 'La fecha de fin es obligatoria.';
+        } else if (fecha_fin < hoyGMT4) {
+          errs.fecha_fin = 'La fecha de fin debe ser hoy o una fecha futura.';
+        }
       }
       
-      // Validaciones cruzadas solo si los campos están siendo editados
-      if ((editando.fecha_inicio || editando.fecha_fin) && fecha_inicio && fecha_fin && fecha_fin < fecha_inicio) {
-        errs.fecha_fin = 'La fecha de fin debe ser igual o posterior a la fecha de inicio.';
+      // Validaciones cruzadas solo si los campos están siendo editados y han sido tocados
+      if ((editando.fecha_inicio && camposTocados.fecha_inicio) || (editando.fecha_fin && camposTocados.fecha_fin)) {
+        if (fecha_inicio && fecha_fin && fecha_fin < fecha_inicio) {
+          errs.fecha_fin = 'La fecha de fin debe ser igual o posterior a la fecha de inicio.';
+        }
       }
       
-      if (editando.inicio_inscripcion) {
+      if (editando.inicio_inscripcion && camposTocados.inicio_inscripcion) {
         if (inicio_inscripcion && fecha_inicio && inicio_inscripcion < fecha_inicio) {
           errs.inicio_inscripcion = 'El inicio de inscripción debe ser igual o posterior a la fecha de inicio.';
         }
@@ -184,7 +217,7 @@ const ConfParamOlimpiada = () => {
         }
       }
       
-      if (editando.fin_inscripcion) {
+      if (editando.fin_inscripcion && camposTocados.fin_inscripcion) {
         if (fin_inscripcion && inicio_inscripcion && fin_inscripcion < inicio_inscripcion) {
           errs.fin_inscripcion = 'El fin de inscripción debe ser igual o posterior al inicio de inscripción.';
         }
@@ -194,14 +227,29 @@ const ConfParamOlimpiada = () => {
       }
     }
     setErrores(errs);
-  }, [editando]);
+  }, [editando, camposTocados]);
 
+  // Función para verificar si algún campo ha sido modificado
+  const hayModificaciones = useMemo(() => {
+    if (!datosIniciales || Object.keys(datosIniciales).length === 0) return false;
+    
+    // Comprobar si algún valor ha cambiado
+    return Object.keys(form).some(key => {
+      return form[key] !== datosIniciales[key];
+    }) || archivo !== null; // Incluir cambios en el archivo
+  }, [form, datosIniciales, archivo]);
+  
   useEffect(() => {
     // Solo validar si hay campos siendo editados
     if (Object.keys(editando).some(key => editando[key])) {
       validarCampos(form);
     }
-  }, [form, editando, validarCampos]);
+    
+    // Limpiar mensaje cuando se hacen cambios
+    if (hayModificaciones && mensaje === 'No hay cambios para guardar.') {
+      setMensaje('');
+    }
+  }, [form, editando, validarCampos, hayModificaciones, mensaje]);
 
   const soloFecha = useCallback((date) => {
     if (!date) return null;
@@ -237,11 +285,26 @@ const ConfParamOlimpiada = () => {
       processedValue = '0';
     }
     
+    // Marcar el campo como tocado y en edición
+    setCamposTocados(prev => ({ ...prev, [name]: true }));
+    setEditando(prev => ({ ...prev, [name]: true }));
+    
     setForm(prev => ({ ...prev, [name]: processedValue }));
   }, [formatoDDMMAAAA]);
+  
+  // Función para manejar cuando un campo pierde el foco
+  const handleBlur = useCallback((e) => {
+    const { name } = e.target;
+    setCamposTocados(prev => ({ ...prev, [name]: true }));
+  }, []);
 
   const handleArchivo = useCallback((e) => {
     const file = e.target.files[0];
+    
+    // Marcar el campo como tocado y en edición
+    setCamposTocados(prev => ({ ...prev, convocatoria: true }));
+    setEditando(prev => ({ ...prev, convocatoria: true }));
+    
     if (!file) {
       // Resetear archivo seleccionado si no hay archivo
       setArchivo(null);
@@ -287,8 +350,32 @@ const ConfParamOlimpiada = () => {
 
   const handleGuardar = useCallback(async (e) => {
     e.preventDefault();
+    
+    // Marcar todos los campos editados como tocados para validación completa
+    const camposEditados = Object.keys(editando).filter(key => editando[key]);
+    const nuevosCamposTocados = { ...camposTocados };
+    camposEditados.forEach(campo => {
+      nuevosCamposTocados[campo] = true;
+    });
+    setCamposTocados(nuevosCamposTocados);
+    
+    // Validar nuevamente antes de guardar
+    validarCampos(form);
+    
+    // Verificar si hay errores de validación
+    if (Object.keys(errores).length > 0) {
+      setMensaje('Por favor, corrija los errores antes de guardar.');
+      return;
+    }
+    
+    // Verificar si hay cambios
+    if (!hayModificaciones) {
+      setMensaje('No hay cambios para guardar.');
+      return;
+    }
+    
     setModal(true);
-  }, []);
+  }, [editando, camposTocados, form, errores, hayModificaciones, validarCampos]);
 
   const confirmarGuardar = useCallback(async () => {
     setGuardando(true);
@@ -402,7 +489,17 @@ const ConfParamOlimpiada = () => {
 
     const valor = getValorInput(name, type);
     const placeholder = `Ingrese ${label.toLowerCase()}`;
-
+    
+    // Mostrar error solo si el campo ha sido tocado
+    const errorToShow = camposTocados[name] ? errores[name] : undefined;
+    
+    // Comprobar si el valor ha cambiado respecto al original
+    const valorOriginal = type === 'date' 
+      ? formatoInputDate(olimpiada[name] || '') 
+      : (olimpiada[name]?.toString() || '');
+    const valorActual = type === 'date' ? formatoInputDate(valor) : valor;
+    const hasChanged = valorActual !== valorOriginal;
+    
     return (
       <div className="mb-6 w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -414,22 +511,23 @@ const ConfParamOlimpiada = () => {
               label={label}
               placeholder={placeholder}
               onChange={handleChange}
+              onBlur={handleBlur}
               helperText={`Valor registrado: ${getValorOriginal(name)}`}
+              error={errorToShow}
+              className={hasChanged ? "border-primary-300" : ""}
               {...inputProps}
             />
           </div>
-          <PencilIcon/>
+          <PencilIcon className={hasChanged ? "text-primary-500" : ""}/>
         </div>
-        {errores[name] && (
-          <div className="mt-1 sm:ml-48">
-            <span className="text-sm text-red-600">{errores[name]}</span>
-          </div>
-        )}
       </div>
     );
   };
 
   const hayErrores = Object.keys(errores).length > 0;
+  
+  // Deshabilitar botón si hay errores o no hay cambios
+  const botonDeshabilitado = hayErrores || !hayModificaciones;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -441,8 +539,14 @@ const ConfParamOlimpiada = () => {
             </h1>
             
             {mensaje && (
-              <div className="mb-6 p-4 rounded-md bg-green-50 border border-green-200">
-                <p className="text-green-700 font-medium text-center">{mensaje}</p>
+              <div className={`mb-6 p-4 rounded-md ${mensaje.includes('error') || mensaje.includes('corrija')
+                ? 'bg-red-50 border border-red-200' 
+                : 'bg-green-50 border border-green-200'}`}>
+                <p className={`${mensaje.includes('error') || mensaje.includes('corrija')  
+                  ? 'text-red-700' 
+                  : 'text-green-700'} font-medium text-center`}>
+                  {mensaje}
+                </p>
               </div>
             )}
 
@@ -533,7 +637,9 @@ const ConfParamOlimpiada = () => {
                   type="submit"
                   variant="primary"
                   loading={guardando}
+                  disabled={botonDeshabilitado}
                   className="px-6"
+                  title={botonDeshabilitado ? (hayErrores ? 'Corrija los errores antes de guardar' : 'No hay cambios para guardar') : 'Guardar cambios'}
                 >
                   {guardando ? 'Guardando...' : 'Guardar configuración'}
                 </Button>
