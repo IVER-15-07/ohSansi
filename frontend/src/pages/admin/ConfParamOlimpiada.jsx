@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { getOlimpiada, updateOlimpiada } from '../../../service/olimpiadas.api';
-import { useParams, useNavigate, data } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { PencilIcon } from '../../../src/assets/Icons';
 import { LoadingSpinner , Modal, Button, SubirArchivo, FormField} from '../../components/ui';
 
@@ -8,6 +8,7 @@ const ConfParamOlimpiada = () => {
   const { id } = useParams();
   const redirigir = useNavigate();
   const [olimpiada, setOlimpiada] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [editando, setEditando] = useState({});
   const [form, setForm] = useState({});
   
@@ -24,15 +25,15 @@ const ConfParamOlimpiada = () => {
   const inputArchivoRef = useRef();
 
   // Convierte fecha de formato YYYY-MM-DD a DD/MM/YYYY para mostrar
-  function formatoDDMMAAAA(fecha) {
+  const formatoDDMMAAAA = useCallback((fecha) => {
     if (!fecha) return '';
     const [y, m, d] = fecha.split('-');
     if (!y || !m || !d) return fecha;
     return `${d}/${m}/${y}`;
-  }
+  }, []);
 
   // Convierte fecha de formato YYYY-MM-DD a formato nativo del input date
-  function formatoInputDate(fecha) {
+  const formatoInputDate = useCallback((fecha) => {
     if (!fecha) return '';
     // Si ya está en formato YYYY-MM-DD, devolverla como está
     if (fecha.match(/^\d{4}-\d{2}-\d{2}$/)) return fecha;
@@ -40,14 +41,23 @@ const ConfParamOlimpiada = () => {
     const [d, m, y] = fecha.split('/');
     if (y && m && d) return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
     return '';
-  }
+  }, []);
 
   useEffect(() => {
-    getOlimpiada(id)
-      .then(response => {
+    let isMounted = true;
+    
+    const loadOlimpiada = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getOlimpiada(id);
+        
+        if (!isMounted) return;
+        
         console.log('Datos obtenidos de la API:', response);
-        const data = response.data;
+        const data = response; // Los datos ya vienen procesados del servicio
+        console.log('Datos procesados:', data);
         setOlimpiada(data);
+        console.log('Estado olimpiada actualizado');
         
         // Verificar si hay un archivo existente
         if (data.convocatoria) {
@@ -92,25 +102,30 @@ const ConfParamOlimpiada = () => {
           fin_inscripcion: false,
           convocatoria: false,
         });
-      })
-      .catch(() => setMensaje('No se pudo cargar la olimpiada.'));
+      } catch (error) {
+        if (isMounted) {
+          console.error('Error al cargar olimpiada:', error);
+          setMensaje('No se pudo cargar la olimpiada. Por favor, inténtelo nuevamente.');
+        }
+      } finally {
+        if (isMounted) {
+          console.log('Finalizando carga, setIsLoading(false)');
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    if (id) {
+      loadOlimpiada();
+    }
+    
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   // Solo validar cuando se esté editando un campo específico
-  useEffect(() => {
-    // Solo validar si hay campos siendo editados
-    if (Object.keys(editando).some(key => editando[key])) {
-      validarCampos(form);
-    }
-    // eslint-disable-next-line
-  }, [form, editando]);
-
-  function soloFecha(date) {
-    if (!date) return null;
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-
-  const validarCampos = (valores) => {
+  const validarCampos = useCallback((valores) => {
     const errs = {};
     
     // Solo validar campos que están siendo editados
@@ -127,7 +142,7 @@ const ConfParamOlimpiada = () => {
     
     // Máximo inscripciones - solo validar si se está editando
     if (editando.max_areas) {
-      if (!valores.max_areas || isNaN(valores.max_areas) || Number(valores.max_areas) < 1) {
+      if (!valores.max_areas || isNaN(valores.max_areas) || Number(valores.max_areas) < 0) {
         errs.max_areas = 'El máximo de inscripciones debe ser un número mayor o igual a 1.';
       }
     }
@@ -177,9 +192,21 @@ const ConfParamOlimpiada = () => {
       }
     }
     setErrores(errs);
-  };
+  }, [editando]);
 
-  function parseFecha(fecha) {
+  useEffect(() => {
+    // Solo validar si hay campos siendo editados
+    if (Object.keys(editando).some(key => editando[key])) {
+      validarCampos(form);
+    }
+  }, [form, editando, validarCampos]);
+
+  const soloFecha = useCallback((date) => {
+    if (!date) return null;
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }, []);
+
+  const parseFecha = useCallback((fecha) => {
     if (!fecha) return null;
     const partes = fecha.split('/');
     if (partes.length === 3) {
@@ -192,9 +219,9 @@ const ConfParamOlimpiada = () => {
       return new Date(fecha);
     }
     return null;
-  }
+  }, []);
   
-  const handleChange = e => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     let processedValue = value;
     
@@ -204,9 +231,9 @@ const ConfParamOlimpiada = () => {
     }
     
     setForm(prev => ({ ...prev, [name]: processedValue }));
-  };
+  }, [formatoDDMMAAAA]);
 
-  const handleArchivo = e => {
+  const handleArchivo = useCallback((e) => {
     const file = e.target.files[0];
     if (!file) {
       // Resetear archivo seleccionado si no hay archivo
@@ -240,23 +267,23 @@ const ConfParamOlimpiada = () => {
     setErrores(prev => ({ ...prev, convocatoria: undefined }));
     console.log('Archivo válido seleccionado:', file.name);
     // No mostrar mensaje de éxito hasta que se guarde efectivamente
-  };
+  }, []);
 
-  const limpiarArchivoSeleccionado = () => {
+  const limpiarArchivoSeleccionado = useCallback(() => {
     setArchivo(null);
     setErrores(prev => ({ ...prev, convocatoria: undefined }));
     // Limpiar el input file
     if (inputArchivoRef.current) {
       inputArchivoRef.current.value = '';
     }
-  };
+  }, []);
 
-  const handleGuardar = async e => {
+  const handleGuardar = useCallback(async (e) => {
     e.preventDefault();
     setModal(true);
-  };
+  }, []);
 
-  const confirmarGuardar = async () => {
+  const confirmarGuardar = useCallback(async () => {
     setGuardando(true);
     setMensaje('');
     const formData = new FormData();
@@ -265,6 +292,7 @@ const ConfParamOlimpiada = () => {
     });
     if (archivo) formData.append('convocatoria', archivo);
     formData.append('_method', 'PUT');
+    
     try {
       const response = await updateOlimpiada(id, formData);
       setMensaje('Cambios guardados correctamente.');
@@ -282,21 +310,27 @@ const ConfParamOlimpiada = () => {
       setEditando({});
       setModal(false);
     } catch (error) {
-      setMensaje('Error al guardar cambios.');
+      const errorMsg = error.response?.status === 429 
+        ? 'Demasiadas solicitudes. Por favor, espere un momento e inténtelo nuevamente.'
+        : 'Error al guardar cambios. Por favor, inténtelo nuevamente.';
+      setMensaje(errorMsg);
       console.error('Error al guardar:', error);
     }
     setGuardando(false);
-  };
+  }, [form, archivo, id]);
 
-  const cancelarGuardar = () => {
+  const cancelarGuardar = useCallback(() => {
     setModal(false);
-  };
+  }, []);
 
-  if (!olimpiada) return (
-    <div className="flex justify-center items-center h-screen bg-gray-50">
-      <LoadingSpinner size="xl" text="Cargando parámetros..." />
-    </div>
-  );
+  // Condicional de carga mejorada
+  if (isLoading || !olimpiada) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <LoadingSpinner size="xl" text="Cargando parámetros..." />
+      </div>
+    );
+  }
 
   // Helper para mostrar campo editable o no
   const campoEditable = (label, name, type = 'text') => {
@@ -365,7 +399,7 @@ const ConfParamOlimpiada = () => {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {campoEditable('Costo', 'costo', 'number')}
-                  {campoEditable('Máximo inscripciones', 'max_areas', 'number')}
+                  {campoEditable('Máxima Cantidad de Áreas por Persona', 'max_areas', 'number')}
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
