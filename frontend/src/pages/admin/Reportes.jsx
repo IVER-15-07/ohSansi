@@ -3,7 +3,8 @@ import { getOlimpiadasActivas, getOlimpiadas } from "../../../service/olimpiadas
 import { getReportes } from "../../../service/Reporte.api"; // Asegúrate de tener esta función en tu servicio
 import { useParams } from "react-router-dom";
 import { User, FileText, Users } from "lucide-react";
-import LoadingSpinner from "../../components/ui/LoadingSpinner";
+//import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { Card, CardHeader, CardTitle, CardContent, Button, Alert, LoadingSpinner } from "../../components/ui";
 
 // Lazy load componentes pesados que contienen librerías de exportación
 const Estadisticas = lazy(() => import("./Estadisticas"));
@@ -45,17 +46,12 @@ const Reportes = () => {
     }
   }, [idOlimpiada, olimpiadas]);
 
-
   const cargarReportes = (olimpiada, area = "", categoria = "") => {
     setLoadingReportes(true);
     setOlimpiadaSeleccionada(olimpiada);
     getReportes(olimpiada.id, area, categoria)
-    
       .then(res => {
-          console.log("Respuesta de reportes:", res);
-  console.log("res.data:", res.data);
         setReportes(res.data);
-        // Extraer áreas y categorías únicas
         const areasUnicas = Array.from(
           new Set(res.data.map(r => r.postulante.area_categoria.area).filter(Boolean))
         );
@@ -77,16 +73,14 @@ const Reportes = () => {
     }
   };
 
-
   const handleAreaChange = (e) => {
     const area = e.target.value;
     setAreaSeleccionada(area);
     if (olimpiadaSeleccionada) {
-      cargarReportes(olimpiadaSeleccionada, area);
+      cargarReportes(olimpiadaSeleccionada, area, categoriaSeleccionada);
     }
   };
 
-  // Buscador: filtra reportes por nombre, apellido o CI
   const reportesFiltrados = reportes.filter(r => {
     const texto = busqueda.toLowerCase();
     return (
@@ -108,7 +102,6 @@ const Reportes = () => {
     )
   );
 
-  // Obtén todos los nombres de campos adicionales únicos de los tutores (si los usas)
   const camposTutor = Array.from(
     new Set(
       reportes.flatMap(
@@ -122,265 +115,245 @@ const Reportes = () => {
 
 
   return (
-    <div className="flex flex-col   px-2">
-      <h1 className=" text-2xl text-center font-bold mb-4">Reporte de Inscripciones</h1>
-      {error && <p className="text-red-500">{error}</p>}
+   <div className="flex flex-col px-2 py-4 min-h-screen bg-slate-50">
+      <Card className="max-w-7xl mx-auto w-full">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center font-bold mb-2">Reporte de Inscripciones</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert variant="error" title="Error" className="mb-4">
+              {error}
+            </Alert>
+          )}
 
-      <div className="w-full px-10">
-        <h2 className="text-xl font-semibold mt-6 mb-2 text-green-700">Olimpiadas Activas</h2>
-        <ul className="mb-6">
-          {olimpiadasActivas.length === 0 && <li className="text-gray-500">No hay olimpiadas activas.</li>}
-          {olimpiadasActivas.map((o) => (
-            <li key={o.id} className="flex justify-between items-center border-b py-2">
-              <span>{o.nombre}</span>
-              <button
-                className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                onClick={() => cargarReportes(o)}
-              >
-                Ver Reporte
-              </button>
-            </li>
-          ))}
-        </ul>
-
-        <h2 className="text-xl font-semibold mb-2 text-blue-700">Todas las Olimpiadas</h2>
-        <ul>
-          {olimpiadas.length === 0 && <li className="text-gray-500">No hay olimpiadas registradas.</li>}
-          {olimpiadas.map((o) => (
-            <li key={o.id} className="flex justify-between items-center border-b py-2">
-              <span>{o.nombre}</span>
-              <button
-                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                onClick={() => cargarReportes(o)}
-              >
-                Ver Reporte
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {olimpiadaSeleccionada && (
-        <div className="w-full px-10 mt-8 my-20">
-          <h3 className="text-lg font-bold mb-2">
-            Reportes de la olimpiada seleccionada (ID: {olimpiadaSeleccionada.nombre})
-          </h3>
-
-          {/* Tabs */}
-          <div className="flex mb-4 border-b">
-            <button
-              className={`px-4 py-2 font-semibold ${tab === "reporte"
-                ? "border-b-2 border-blue-600 text-black"
-                : "text-gray-500"
-                }`}
-              onClick={() => setTab("reporte")}
-            >
-              Reporte
-            </button>
-            <button
-              className={`px-4 py-2 font-semibold ${tab === "estadisticas"
-                ? "border-b-2 border-blue-600 text-black"
-                : "text-gray-500"
-                }`}
-              onClick={() => setTab("estadisticas")}
-            >
-              Estadísticas
-            </button>
+          {/* Listado de olimpiadas */}
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-8 mb-8">
+            <div>
+              <h2 className="text-xl font-semibold mb-2 text-green-700">Olimpiadas Activas</h2>
+              <ul className="mb-4">
+                {olimpiadasActivas.length === 0 && <li className="text-gray-500">No hay olimpiadas activas.</li>}
+                {olimpiadasActivas.map((o) => (
+                  <li key={o.id} className="flex justify-between items-center border-b py-2">
+                    <span className="truncate">{o.nombre}</span>
+                    <Button
+                      variant="success"
+                      size="sm"
+                      onClick={() => cargarReportes(o)}
+                    >
+                      Ver Reporte
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-2 text-blue-700">Todas las Olimpiadas</h2>
+              <ul>
+                {olimpiadas.length === 0 && <li className="text-gray-500">No hay olimpiadas registradas.</li>}
+                {olimpiadas.map((o) => (
+                  <li key={o.id} className="flex justify-between items-center border-b py-2">
+                    <span className="truncate">{o.nombre}</span>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => cargarReportes(o)}
+                    >
+                      Ver Reporte
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
-          {/* Contenido de las pestañas */}
-          {tab === "reporte" && (
-            <>
-              {/* Buscador */}
-              <div className="mb-4">
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre, apellido o CI"
-                  value={busqueda}
-                  onChange={e => setBusqueda(e.target.value)}
-                  className="border px-2 py-1 rounded w-full"
-                />
+          {/* Detalle de reportes */}
+          {olimpiadaSeleccionada && (
+            <div className="mt-8">
+              <h3 className="text-lg font-bold mb-4 text-center">
+                Reportes de la olimpiada: <span className="text-blue-700">{olimpiadaSeleccionada.nombre}</span>
+              </h3>
+
+              {/* Tabs */}
+              <div className="flex justify-center mb-6 border-b">
+                <Button
+                  variant={tab === "reporte" ? "primary" : "outline"}
+                  size="md"
+                  className={`rounded-none border-b-2 ${tab === "reporte" ? "border-blue-600" : "border-transparent"} `}
+                  onClick={() => setTab("reporte")}
+                >
+                  Reporte
+                </Button>
+                <Button
+                  variant={tab === "estadisticas" ? "primary" : "outline"}
+                  size="md"
+                  className={`rounded-none border-b-2 ${tab === "estadisticas" ? "border-blue-600" : "border-transparent"} `}
+                  onClick={() => setTab("estadisticas")}
+                >
+                  Estadísticas
+                </Button>
               </div>
 
+              {/* Contenido de las pestañas */}
+              {tab === "reporte" && (
+                <>
+                  {/* Filtros */}
+                  <div className="flex flex-col md:flex-row gap-4 mb-4">
+                    <input
+                      type="text"
+                      placeholder="Buscar por nombre, apellido o CI"
+                      value={busqueda}
+                      onChange={e => setBusqueda(e.target.value)}
+                      className="border px-2 py-1 rounded w-full md:w-1/3"
+                    />
+                    {areas.length > 0 && (
+                      <select
+                        value={areaSeleccionada}
+                        onChange={handleAreaChange}
+                        className="border px-2 py-1 rounded w-full md:w-1/4"
+                      >
+                        <option value="">Todas las áreas</option>
+                        {areas.map(area => (
+                          <option key={area} value={area}>{area}</option>
+                        ))}
+                      </select>
+                    )}
+                    {categorias.length > 0 && (
+                      <select
+                        value={categoriaSeleccionada}
+                        onChange={handleCategoriaChange}
+                        className="border px-2 py-1 rounded w-full md:w-1/4"
+                      >
+                        <option value="">Todas las categorías</option>
+                        {categorias.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
 
-              {/* Formulario para filtrar por área */}
-              {areas.length > 0 && (
-                <form className="mb-4">
-                  <label className="mr-2 font-semibold">Filtrar por área:</label>
-                  <select
-                    value={areaSeleccionada}
-                    onChange={handleAreaChange}
-                    className="border px-2 py-1 rounded"
-                  >
-                    <option value="">Todas las áreas</option>
-                    {areas.map(area => (
-                      <option key={area} value={area}>{area}</option>
-                    ))}
-                  </select>
-                </form>
+                  {/* Tabla de reportes */}
+                  <div className="overflow-x-auto rounded border border-gray-200 bg-white">
+                    {loadingReportes ? (
+                      <div className="flex justify-center py-8">
+                        <LoadingSpinner size="lg" text="Cargando reportes..." />
+                      </div>
+                    ) : reportesFiltrados.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">No hay reportes para esta olimpiada.</div>
+                    ) : (
+                      <table className="min-w-full text-sm">
+                        <thead>
+                          <tr>
+                            <th className="border px-2 py-1 bg-slate-100">Nombres postulante</th>
+                            <th className="border px-2 py-1 bg-slate-100">CI</th>
+                            <th className="border px-2 py-1 bg-slate-100">Área</th>
+                            <th className="border px-2 py-1 bg-slate-100">Categoría</th>
+                            {camposAdicionales.map((campo) => (
+                              <th key={campo} className="border px-2 py-1 bg-slate-100">{campo}</th>
+                            ))}
+                            <th className="border px-2 py-1 bg-slate-100">Nombres Responsable</th>
+                            <th className="border px-2 py-1 bg-slate-100">CI Responsable</th>
+                            <th className="border px-2 py-1 bg-slate-100">Correo Responsable</th>
+                            {camposTutor.map((campo) => (
+                              <th key={campo} className="border px-2 py-1 bg-slate-100">Tutor: {campo}</th>
+                            ))}
+                            <th className="border px-2 py-1 bg-slate-100">Estado de Pago</th>
+                            <th className="border px-2 py-1 bg-slate-100">Validado</th>
+                            <th className="border px-2 py-1 bg-slate-100">Tipo de Inscripción</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportesFiltrados.map((r, idx) => (
+                            <tr key={idx} className="hover:bg-blue-50">
+                              <td className="border px-2 py-1">{r.postulante.nombres} {r.postulante.apellidos}</td>
+                              <td className="border px-2 py-1">{r.postulante.ci}</td>
+                              <td className="border px-2 py-1">{r.postulante.area_categoria.area}</td>
+                              <td className="border px-2 py-1">{r.postulante.area_categoria.categoria}</td>
+                              {camposAdicionales.map((campo) => {
+                                const dato = (r.postulante.datos_adicionales?.[0] || []).find(d => d.campo === campo);
+                                return (
+                                  <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
+                                );
+                              })}
+                              <td className="border px-2 py-1">{r.encargado?.nombres || ""} {r.encargado?.apellidos || ""}</td>
+                              <td className="border px-2 py-1">{r.encargado?.ci || ""}</td>
+                              <td className="border px-2 py-1">{r.encargado?.correo || ""}</td>
+                              {camposTutor.map((campo) => {
+                                const dato = (r.tutor?.datos_adicionales?.[0] || []).find(d => d.campo === campo);
+                                return (
+                                  <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
+                                );
+                              })}
+                              <td className="border px-2 py-1">
+                                <span
+                                  className={
+                                    r.estado_pago === "Pagado"
+                                      ? "bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold text-xs"
+                                      : "bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-semibold text-xs"
+                                  }
+                                >
+                                  {r.estado_pago}
+                                </span>
+                              </td>
+                              <td className="border px-2 py-1">
+                                <span
+                                  className={
+                                    r.validado === "Validado"
+                                      ? "bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold text-xs"
+                                      : "bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-semibold text-xs"
+                                  }
+                                >
+                                  {r.validado}
+                                </span>
+                              </td>
+                              <td className="border px-2 py-1">
+                                {r.tipo_inscripcion === "Individual" ? (
+                                  <span className="flex items-center gap-1">
+                                    <User size={16} /> {r.tipo_inscripcion}
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1">
+                                    <Users size={16} /> {r.tipo_inscripcion} <FileText size={16} />
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+
+                  {/* Exportar */}
+                  <div className="flex justify-end mt-6">
+                    <Suspense fallback={<LoadingSpinner size="md" text="Preparando exportación..." />}>
+                      <ExportarReportes
+                        reportesFiltrados={reportesFiltrados}
+                        camposAdicionales={camposAdicionales}
+                        camposTutor={camposTutor}
+                        nombreOlimpiada={olimpiadaSeleccionada?.nombre}
+                      />
+                    </Suspense>
+                  </div>
+                </>
               )}
 
-              {categorias.length > 0 && (
-                <form className="mb-4">
-                  <label className="mr-2 font-semibold">Filtrar por categoría:</label>
-                  <select
-                    value={categoriaSeleccionada}
-                    onChange={handleCategoriaChange}
-                    className="border px-2 py-1 rounded"
-                  >
-                    <option value="">Todas las categorías</option>
-                    {categorias.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </form>
-              )}
-
-
-              {loadingReportes ? (
-                <p>Cargando reportes...</p>
-              ) : reportes.length === 0 ? (
-                <p className="text-gray-500">No hay reportes para esta olimpiada.</p>
-              ) : (
-                <table className="min-w-full border">
-                  <thead>
-                    <tr>
-                      <th className="border px-2 py-1">Nombres postulante</th>
-
-                      <th className="border px-2 py-1">CI</th>
-                      <th className="border px-2 py-1">Área</th>
-                      <th className="border px-2 py-1">Categoría</th>
-                      {/* Campos adicionales del postulante */}
-                      {camposAdicionales.map((campo) => (
-                        <th key={campo} className="border px-2 py-1">{campo}</th>
-                      ))}
-
-                      <th className="border px-2 py-1">Nombres Responsablee</th>
-
-                      <th className="border px-2 py-1"> CI Responsable</th>
-                      <th className="border px-2 py-1"> Correo Responsable</th>
-
-
-
-                      {/* Si quieres mostrar datos del tutor, agrega aquí */}
-                      {camposTutor.map((campo) => (
-                        <th key={campo} className="border px-2 py-1">Tutor: {campo}</th>
-                      ))}
-
-                      <th className="border px-2 py-1">Estado de Pago</th>
-                      <th className="border px-2 py-1">Validado</th>
-                      <th className="border px-2 py-1">Tipo de Inscripcion</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportesFiltrados.map((r, idx) => (
-                      <tr key={idx}>
-                        <td className="border px-2 py-1">{r.postulante.nombres} {r.postulante.apellidos}</td>
-
-                        <td className="border px-2 py-1">{r.postulante.ci}</td>
-                        <td className="border px-2 py-1">{r.postulante.area_categoria.area}</td>
-                        <td className="border px-2 py-1">{r.postulante.area_categoria.categoria}</td>
-                        {/* Valores dinámicos de campos adicionales del postulante */}
-                        {camposAdicionales.map((campo) => {
-                          const dato = (r.postulante.datos_adicionales?.[0] || []).find(d => d.campo === campo);
-                          return (
-                            <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
-                          );
-                        })}
-
-                        {/* Datos principales del tutor */}
-                        <td className="border px-2 py-1">{r.encargado?.nombres || ""} {r.encargado?.apellidos || ""}</td>
-
-                        <td className="border px-2 py-1">{r.encargado?.ci || ""}</td>
-                        <td className="border px-2 py-1">{r.encargado?.correo || ""}</td>
-
-                        {/* ...campos adicionales del tutor... */}
-
-
-
-                        {/* Si quieres mostrar datos del tutor, agrega aquí */}
-                        {camposTutor.map((campo) => {
-                          const dato = (r.tutor?.datos_adicionales?.[0] || []).find(d => d.campo === campo);
-                          return (
-                            <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
-                          );
-                        })}
-
-
-                        <td className="border px-2 py-1">
-                          <span
-                            className={
-                              r.estado_pago === "Pagado"
-                                //BERTORO AQUI CAMBIAS LOS COLORES DE LOS ESTADOS DE PAGO
-                                ? "bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold text-sm"
-                                : "bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-semibold text-sm"
-                            }
-                          >
-                            {r.estado_pago}
-                          </span>
-                        </td>
-                        <td className="border px-2 py-1">
-                          <span
-                            className={
-                              r.validado === "Validado"
-                                // LO  PROPIO AQUI ES QUE CAMBIES LOS COLORES DE LOS ESTADOS DE VALIDACION
-                                ? "bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold text-sm"
-                                : "bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-semibold text-sm"
-                            }
-                          >
-                            {r.validado}
-                          </span>
-                        </td>
-
-
-                        <td className="border px-2 py-1">
-                          {r.tipo_inscripcion === "Individual" ? (
-                            <>
-                              <User size={18} /> {r.tipo_inscripcion}
-                            </>
-                          ) : (
-                            <>
-                              <Users size={18} /> {r.tipo_inscripcion} <FileText size={18} />
-                            </>
-                          )}
-                        </td>
-
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-
-            </>
-
-          )}
-          <div className="mt-6 my-8 px-10">
-
-            <ExportarReportes
-              reportesFiltrados={reportesFiltrados}
-              camposAdicionales={camposAdicionales}
-              camposTutor={camposTutor}
-              nombreOlimpiada={olimpiadaSeleccionada?.nombre}
-            />
-
-          </div>
-
-          {tab === "estadisticas" && (
-            <div>
-              {reportes.length > 0 ? (
-                <Estadisticas reportes={reportes} />
-              ) : (
-                <p className="text-gray-500">No hay datos para mostrar estadísticas.</p>
+              {/* Estadísticas */}
+              {tab === "estadisticas" && (
+                <div className="mt-8">
+                  <Suspense fallback={<LoadingSpinner size="lg" text="Cargando estadísticas..." />}>
+                    {reportes.length > 0 ? (
+                      <Estadisticas reportes={reportes} />
+                    ) : (
+                      <div className="text-center text-gray-500 py-8">No hay datos para mostrar estadísticas.</div>
+                    )}
+                  </Suspense>
+                </div>
               )}
             </div>
           )}
-
-
-        </div>
-
-
-      )}
-
+        </CardContent>
+      </Card>
     </div>
   )
 }
