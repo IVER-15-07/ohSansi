@@ -44,6 +44,7 @@ function App() {
           {/* Admin Layout */}
           <Route path="/AdminLayout" element={<AdminLayout />}>
             <Route path="Olimpiadas" element={<Olimpiadas />} />
+            <Route path="/AdminLayout/Reportes/:idOlimpiada" element={<Reportes />} />
             <Route path="Reportes" element={<Reportes />} />
             <Route path="Olimpiadas/CrearOlimpiada" element={<CrearOlimpiada />} />
             <Route path="Olimpiadas/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
