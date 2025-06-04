@@ -403,7 +403,6 @@ const CrearOlimpiada = () => {
               acceptedFormats={['pdf']}
               acceptedMimeTypes={['application/pdf']}
               acceptAttribute=".pdf,application/pdf"
-              maxFileSize={10 * 1024 * 1024} // 10MB
               allowEdit={true}
               hasExistingFile={false} // En crear olimpiada nunca hay archivo existente
               showFileStatus={true} // Mostrar mensajes de estado

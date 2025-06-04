@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { useNavigate, Outlet } from "react-router-dom"
 import {
@@ -21,7 +19,7 @@ import "swiper/css"
 import "swiper/css/autoplay"
 
 import { getOlimpiadasActivas } from "../../service/olimpiadas.api"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Alert , LoadingSpinner} from "../components/ui"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Alert, LoadingSpinner } from "../components/ui"
 import logo from "../assets/logo.png"
 
 const Home = () => {
@@ -34,7 +32,7 @@ const Home = () => {
     const fetchOlimpiadas = async () => {
       try {
         const response = await getOlimpiadasActivas()
-        setOlimpiadas(response.data)
+        setOlimpiadas(response.data || [])
       } catch (err) {
         setError("Error al cargar las olimpiadas activas.")
         console.error(err)
@@ -146,6 +144,8 @@ const Home = () => {
     )
   }
 
+  const hasOlimpiadas = olimpiadas && olimpiadas.length > 0
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Hero Section */}
@@ -155,9 +155,12 @@ const Home = () => {
             {/* Logo */}
             <div className="flex-shrink-0">
               <img
-                src={logo || "/placeholder.svg?height=200&width=200"}
+                src={logo}
                 alt="Logo Oh! SANSI"
                 className="w-48 h-48 object-contain"
+                onError={(e) => {
+                  e.target.src = "/placeholder.svg?height=200&width=200"
+                }}
               />
             </div>
 
@@ -167,7 +170,7 @@ const Home = () => {
                 <Typewriter
                   words={["Olimpiadas Científicas", "Oh! SANSI 2025"]}
                   loop={0}
-                  cursor
+                  cursor={true}
                   cursorStyle="_"
                   typeSpeed={70}
                   deleteSpeed={50}
@@ -221,9 +224,9 @@ const Home = () => {
             </p>
           </div>
 
-          {olimpiadas.length > 0 ? (
+          {hasOlimpiadas ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Featured Olimpiadas */}
+              {/* Featured Olimpiada */}
               <div className="lg:col-span-2">
                 <Card className="border-2 border-rose-200 bg-gradient-to-br from-rose-50 to-blue-50 hover:shadow-lg transition-all duration-300">
                   <CardHeader>
@@ -273,7 +276,10 @@ const Home = () => {
                       <CardTitle className="text-lg">{olimpiada.nombre}</CardTitle>
                       {olimpiada.descripcion && (
                         <CardDescription className="text-sm">
-                          {olimpiada.descripcion.substring(0, 100)}...
+                          {olimpiada.descripcion.length > 100 
+                            ? `${olimpiada.descripcion.substring(0, 100)}...`
+                            : olimpiada.descripcion
+                          }
                         </CardDescription>
                       )}
                     </CardHeader>
