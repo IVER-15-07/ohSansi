@@ -537,6 +537,11 @@ const RegistrarPostulante = () => {
 
   const buscarTutor = async (index) => {
     const tutor = tutores[index];
+    if(tutor.ci === postulante.ci) {
+      alert("El CI del tutor no puede ser el mismo que el del postulante.");
+      return;
+    }
+    
     if (!tutor.ci) {
       alert("Por favor, ingrese el CI del tutor antes de buscar.");
       return;
@@ -759,6 +764,8 @@ const RegistrarPostulante = () => {
       });
 
       tutoresGuardados.forEach(async (tutor) => {
+        console.log("AAAAAAH");
+        console.log(tutor);
         if(!tutor.idRegistroTutor) {
           if(!tutor.idTutor) {
             const nuevoTutor = {
@@ -767,7 +774,7 @@ const RegistrarPostulante = () => {
               apellidos: tutor.apellidos,
             }
             const tutorCreado = (await createTutor(nuevoTutor)).data;
-
+            console.log(tutorCreado);
             tutor.idTutor = tutorCreado.id;
           }
           const nuevoRegistroTutor = {
@@ -776,6 +783,7 @@ const RegistrarPostulante = () => {
             id_rol_tutor: tutor.idRol,
           }
           const registroTutorCreado = (await createRegistroTutor(nuevoRegistroTutor)).data;
+          console.log(registroTutorCreado);
           tutor.idRegistroTutor = registroTutorCreado.id;
         }
         const datosTutorGuardados = {
@@ -812,6 +820,8 @@ const RegistrarPostulante = () => {
   };
 
   console.log(postulante);
+  console.log(tutores);
+  console.log(opcionesSeleccionadas);
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md">
       <h1 className="text-3xl font-bold text-blue-900 mb-6">Registro de Postulante</h1>
@@ -1121,7 +1131,10 @@ const RegistrarPostulante = () => {
                 <select
                   value={opcionSeleccionada.idOpcionInscripcion}
                   onChange={e => actualizarOpcionSeleccionada(index, 'idOpcionInscripcion', e.target.value)}
-                  className="flex-1 px-3 py-2 border rounded-md"
+                  className={`flex-1 px-3 py-2 border rounded-md
+                    ${opcionSeleccionada.idInscripcion ? "bg-gray-200" : "bg-white"}
+                  `}
+                  disabled={opcionSeleccionada.idInscripcion}
                 >
                   <option value="">Seleccione área y categoría</option>
                   {opcionesInscripcion.flatMap(area =>
