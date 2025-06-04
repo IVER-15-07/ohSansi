@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate, Outlet } from "react-router-dom"
 import {
   Beaker,
@@ -45,6 +45,19 @@ const Home = () => {
 
     fetchOlimpiadas()
   }, [])
+
+  const formatDate = useCallback((dateString) => {
+          if (!dateString) return "No disponible";
+          try {
+              return new Date(dateString).toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+              });
+          } catch {
+              return dateString;
+          }
+      }, []);
 
   const handleSeleccionarOlimpiada = (olimpiada) => {
     navigate(`/olimpiadas/${olimpiada.id}`)
@@ -159,7 +172,7 @@ const Home = () => {
               <img
                 src={logo}
                 alt="Logo Oh! SANSI"
-                className="w-48 h-48 object-contain"
+                className="w-95 h-95 object-contain"
                 onError={(e) => {
                   e.target.src = "/placeholder.svg?height=200&width=200"
                 }}
@@ -272,18 +285,10 @@ const Home = () => {
                           <div className="flex flex-col">
                             <span className="text-sm font-medium text-slate-900">Periodo de Inscripción</span>
                             <span className="text-sm text-slate-600">
-                              Del {new Date(olimpiada.fechaInicio).toLocaleDateString('es-ES', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                              })}
+                              Del {formatDate(olimpiada?.inicio_inscripcion)}
                             </span>
                             <span className="text-sm text-slate-600">
-                              Al {new Date(olimpiada.fechaFin).toLocaleDateString('es-ES', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                              })}
+                              Al {formatDate(olimpiada?.fin_inscripcion)}
                             </span>
                           </div>
                         </div>
