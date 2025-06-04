@@ -183,7 +183,7 @@ const Home = () => {
                 participar en las <strong>Olimpiadas Oh! SANSI 2025</strong>.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              {/* <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Button size="lg" variant="secondary">
                   <Trophy className="h-5 w-5 mr-2" />
                   Ver Olimpiadas
@@ -196,7 +196,7 @@ const Home = () => {
                   <ExternalLink className="h-5 w-5 mr-2" />
                   Más Información
                 </Button>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

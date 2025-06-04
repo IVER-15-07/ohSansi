@@ -142,8 +142,10 @@ const ConfParamOlimpiada = () => {
     
     // Máximo inscripciones - solo validar si se está editando
     if (editando.max_areas) {
-      if (!valores.max_areas || isNaN(valores.max_areas) || Number(valores.max_areas) < 0) {
-        errs.max_areas = 'El máximo de inscripciones debe ser un número mayor o igual a 1.';
+      if (valores.max_areas === '' || isNaN(valores.max_areas)) {
+        errs.max_areas = 'El máximo de áreas debe ser un número.';
+      } else if (Number(valores.max_areas) < 0) {
+        errs.max_areas = 'El máximo de áreas no puede ser un número negativo.';
       }
     }
     
@@ -228,6 +230,11 @@ const ConfParamOlimpiada = () => {
     // Para campos de fecha, convertir el valor del input (YYYY-MM-DD) a DD/MM/YYYY para almacenar
     if (['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'].includes(name) && value) {
       processedValue = formatoDDMMAAAA(value);
+    }
+    
+    // Para max_areas, asegurar que no se ingresen valores negativos
+    if (name === 'max_areas' && processedValue < 0) {
+      processedValue = '0';
     }
     
     setForm(prev => ({ ...prev, [name]: processedValue }));
@@ -333,7 +340,7 @@ const ConfParamOlimpiada = () => {
   }
 
   // Helper para mostrar campo editable o no
-  const campoEditable = (label, name, type = 'text') => {
+  const campoEditable = (label, name, type = 'text', inputProps = {}) => {
     const getValorInput = (name, type) => {
       // Si el campo no tiene valor en el formulario, intentar obtenerlo del objeto olimpiada
       const valor = form[name] || olimpiada[name];
@@ -345,6 +352,13 @@ const ConfParamOlimpiada = () => {
       }
 
       return valor.toString();
+    };
+
+    const getValorOriginal = (name) => {
+      const valor = olimpiada[name];
+      if (valor === null || valor === undefined) return 'No asignado';
+      if (typeof valor === 'number') return valor.toString();
+      return valor;
     };
 
     const valor = getValorInput(name, type);
@@ -361,7 +375,8 @@ const ConfParamOlimpiada = () => {
               label={label}
               placeholder={placeholder}
               onChange={handleChange}
-              helperText={`Valor registrado: ${valor}`}
+              helperText={`Valor registrado: ${getValorOriginal(name)}`}
+              {...inputProps}
             />
           </div>
           <PencilIcon/>
@@ -399,7 +414,7 @@ const ConfParamOlimpiada = () => {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {campoEditable('Costo', 'costo', 'number')}
-                  {campoEditable('Máxima Cantidad de Áreas por Persona', 'max_areas', 'number')}
+                  {campoEditable('Máxima Cantidad de Áreas por Persona', 'max_areas', 'number', { min: 0 })}
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
