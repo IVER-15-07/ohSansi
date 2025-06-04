@@ -1,4 +1,9 @@
 import { useEffect, useState } from 'react'
+import dayjs from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 import { useNavigate, useParams } from "react-router-dom";
 import { getOlimpiada } from '../../../service/olimpiadas.api'; // Ajusta la ruta según tu estructura
 
@@ -8,11 +13,23 @@ const MenuOlimpiada = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const navigate = useNavigate();
+    const hoy = dayjs();
+    const inicioInscripcion = olimpiada?.inicio_inscripcion ? dayjs(olimpiada.inicio_inscripcion) : null;
+    const finInscripcion = olimpiada?.fin_inscripcion ? dayjs(olimpiada.fin_inscripcion) : null;
+
+    const inscripcionHabilitada =
+        inicioInscripcion &&
+        finInscripcion &&
+        hoy.isSameOrAfter(inicioInscripcion, 'day') &&
+        hoy.isSameOrBefore(finInscripcion, 'day');
+
+
 
     useEffect(() => {
         const detallesOlimpiada = async () => {
             try {
                 const data = await getOlimpiada(idOlimpiada);
+                console.log("Respuesta olimpiada:", data); // <-- Agrega esto
                 setOlimpiada(data);
             } catch (error) {
                 console.error(error);
@@ -36,6 +53,13 @@ const MenuOlimpiada = () => {
 
     if (loading) return <div className="pt-24 text-center">Cargando información...</div>;
     if (error) return <div className="pt-24 text-center text-red-600">{error}</div>;
+
+
+
+    console.log("Hoy:", hoy.format("YYYY-MM-DD"));
+    console.log("Inicio inscripción:", inicioInscripcion?.format("YYYY-MM-DD"));
+    console.log("Fin inscripción:", finInscripcion?.format("YYYY-MM-DD"));
+    console.log("¿Inscripción habilitada?:", inscripcionHabilitada);
 
     return (
 
@@ -73,10 +97,15 @@ const MenuOlimpiada = () => {
             <div className="flex justify-center">
                 <button
                     onClick={handleInscripcion}
-                    className="px-6 py-2 rounded-md text-white bg-black hover:bg-gray-800"
+                    className="px-6 py-2 rounded-md text-white bg-black hover:bg-gray-800 disabled:bg-gray-400"
+                    disabled={!inscripcionHabilitada}
                 >
-                    Inscribirse
+                    {inscripcionHabilitada
+                        ? "Inscribirse"
+                        : "La inscripción no está disponible en este momento."
+                    }
                 </button>
+
             </div>
         </div>
 
