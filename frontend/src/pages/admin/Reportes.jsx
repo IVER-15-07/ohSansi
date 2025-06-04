@@ -50,7 +50,10 @@ const Reportes = () => {
     setLoadingReportes(true);
     setOlimpiadaSeleccionada(olimpiada);
     getReportes(olimpiada.id, area, categoria)
+    
       .then(res => {
+          console.log("Respuesta de reportes:", res);
+  console.log("res.data:", res.data);
         setReportes(res.data);
         // Extraer áreas y categorías únicas
         const areasUnicas = Array.from(
@@ -114,6 +117,8 @@ const Reportes = () => {
       )
     )
   );
+
+
 
 
   return (

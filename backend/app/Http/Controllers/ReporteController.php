@@ -20,7 +20,7 @@ class ReporteController extends Controller
                     'registro.inscripciones.opcionInscripcion.nivel_categoria',
                     'registro.postulante.datos.olimpiadaCampoPostulante.campo_postulante',
                     'registro.tutores.persona',
-                    'registro.tutores.tutor.datos.olimpiadaCampoTutor.campo_tutor',
+                   'registro.tutores.datos.olimpiadaCampoTutor.campo_tutor',
                     'registro.encargado.persona',
                     'registro.inscripciones.pago',
                     'registro.inscripciones.lista',
