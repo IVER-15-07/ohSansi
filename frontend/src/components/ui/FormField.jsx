@@ -1,4 +1,3 @@
-import React from 'react';
 import { Input } from '.';
 
 const FormField = ({ 
@@ -11,6 +10,7 @@ const FormField = ({
   helperText = null,
   value,
   onChange,
+  onBlur,
   error,
   ...props 
 }) => {
@@ -24,6 +24,7 @@ const FormField = ({
         required={required}
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
         error={error}
         helperText={!required && !error ? (helperText || "Campo opcional") : undefined}
         {...props}

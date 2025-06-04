@@ -18,7 +18,6 @@ const RegistroTutor = () => {
     ci: CIinicial,
     fecha_nacimiento: "",
     correo: "",
-    nro_celular: "",
     termsAccepted: false,
   })
 
@@ -78,21 +77,6 @@ const RegistroTutor = () => {
       
       // Permitir solo letras sin tilde, números y espacios
       const regex = /^[a-zA-Z0-9 ]*$/;
-      if (!regex.test(value)) {
-        return;
-      }
-    }
-
-    // Para campos de nombre y apellido, validar en tiempo real
-    if (name === "nombre" || name === "apellido") {
-      // Validar caracteres especiales
-      const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
-      if (caracteresEspeciales.test(value)) {
-        return; // No permitir caracteres especiales
-      }
-      
-      // Permitir solo letras con y sin tilde y espacios (sin números)
-      const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$/;
       if (!regex.test(value)) {
         return;
       }
@@ -184,7 +168,7 @@ const RegistroTutor = () => {
         if (!value) {
           newErrors.correo = "El correo electrónico es obligatorio"
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          newErrors.correo = "Ingrese un correo electrónico válido"
+          newErrors.correo = "Ingrese un correo electrónico con el formato: usuario@dominio.com"
         } else {
           delete newErrors.correo
         }
@@ -206,22 +190,8 @@ const RegistroTutor = () => {
             if (birthDate > today) {
               newErrors.fecha_nacimiento = "La fecha de nacimiento no puede ser futura";
             } else {
-              // Calcular la edad
-              const age = today.getFullYear() - birthDate.getFullYear();
-              const monthDiff = today.getMonth() - birthDate.getMonth();
-              
-              let actualAge = age;
-              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                actualAge--;
-              }
-              
-              if (actualAge < 18) {
-                newErrors.fecha_nacimiento = "El encargado debe ser mayor de edad (18 años)";
-              } else if (actualAge > 120) {
-                newErrors.fecha_nacimiento = "Ingrese una fecha de nacimiento válida";
-              } else {
+             
                 delete newErrors.fecha_nacimiento;
-              }
             }
           }
         }
@@ -234,15 +204,7 @@ const RegistroTutor = () => {
           delete newErrors.termsAccepted
         }
         break
-      case "nro_celular":
-        if (!value) {
-          newErrors.nro_celular = "Debe ingresar un número de celular"
-        } else if (!/^\d{8,15}$/.test(value)) {
-          newErrors.nro_celular = "El número de celular debe tener entre 8 y 15 dígitos"
-        } else {
-          delete newErrors.nro_celular
-        }
-        break
+      
       default:
         break
     }
@@ -254,7 +216,7 @@ const RegistroTutor = () => {
   // Función para verificar si el formulario es completamente válido
   const isFormValid = () => {
     // Verificar que todos los campos obligatorios están llenos
-    const requiredFields = ['nombre', 'apellido', 'ci', 'correo', 'fecha_nacimiento', 'nro_celular'];
+    const requiredFields = ['nombre', 'apellido', 'ci', 'correo', 'fecha_nacimiento'];
     const allFieldsFilled = requiredFields.every(field => formData[field]?.toString().trim());
     
     // Verificar que no hay errores de validación
@@ -319,6 +281,8 @@ const RegistroTutor = () => {
       setTimeout(() => {
         setShowSuccessAlert(false);
       }, 5000);
+      // Redirigir al usuario a la página de identificación del encargado
+      navigate("/IdentificarEncargado", { state: { idEncargado } });
     } catch (error) {
       // Manejo de errores
       console.error("Error al enviar los datos del encargado:", error);
@@ -434,16 +398,6 @@ const RegistroTutor = () => {
                 required
                 error={errors.fecha_nacimiento}
               />
-              <FormField
-                label="Numero de Celular"
-                name="nro_celular"
-                type="number"
-                value={formData.nro_celular}
-                onChange={handleChange}
-                disabled={persona?.nro_celular}
-                required
-                error={errors.nro_celular}
-              />
             </div>
 
             {/* Términos y Condiciones */}
@@ -479,7 +433,7 @@ const RegistroTutor = () => {
                 variant="outline"
                 onClick={handleVolver}
               >
-                Identificarte
+                Volver a Identificar Encargado
               </Button>
 
               <Button
@@ -499,7 +453,7 @@ const RegistroTutor = () => {
             isOpen={showConfirmDialog}
             onClose={() => setShowConfirmDialog(false)}
             onConfirm={handleConfirm}
-            variant="info"
+            variant="warning"
             title="Confirmar registro"
             message="¿Está seguro que desea guardar los datos del responsable de inscripción?"
             confirmText="Confirmar"

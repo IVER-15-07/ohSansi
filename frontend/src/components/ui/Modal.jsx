@@ -1,5 +1,5 @@
 "use client"
-import React from "react"
+import React, { useEffect } from "react"
 import { X, AlertTriangle, CheckCircle, Info, AlertCircle } from "lucide-react"
 import { cn } from "../../utils/cn"
 import Button from "./Button"
@@ -26,6 +26,16 @@ const Modal = ({
   // NUEVO: controlar si se muestra el botón de cancelar
   showCancelButton = true,
 }) => {
+  // Handle body scroll lock when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = 'unset'
+      }
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   const sizes = {
@@ -88,6 +98,8 @@ const Modal = ({
 
   return (
     <div 
+      key={`modal-${variant}-${isConfirmationModal ? 'confirmation' : 'default'}`}
+      data-modal={`${variant}-modal`}
       className={cn(
         "fixed inset-0 z-50 overflow-y-auto",
         fullScreenSuccess && "bg-emerald-50"
@@ -120,7 +132,7 @@ const Modal = ({
                     className="text-slate-400 hover:text-slate-600 transition-colors"
                     disabled={isLoading}
                   >
-                    <X className="h-5 w-5" />
+                    <X key="modal-close-x" className="h-5 w-5" />
                   </button>
                 </div>
               )}
@@ -131,7 +143,7 @@ const Modal = ({
                   "mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4",
                   variantConfig.iconBg
                 )}>
-                  <IconComponent className={cn("h-6 w-6", variantConfig.iconColor)} />
+                  <IconComponent key={`modal-icon-${variant}`} className={cn("h-6 w-6", variantConfig.iconColor)} />
                 </div>
                 
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">
@@ -210,7 +222,7 @@ const Modal = ({
                       className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
                       aria-label="Cerrar modal"
                     >
-                      <X className="h-5 w-5" />
+                      <X key="default-modal-close-x" className="h-5 w-5" />
                     </button>
                   )}
                 </div>

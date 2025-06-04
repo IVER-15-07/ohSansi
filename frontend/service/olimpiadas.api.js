@@ -52,7 +52,12 @@ export const createOlimpiada = async (data) => {
 export const getOlimpiada = async (id) => {
     try {
         const response = await axiosInstance.get(`/olimpiadas/${id}`);
-        return response.data;
+        // Laravel returns { success: true, data: olimpiada }
+        if (response.data.success) {
+            return response.data.data;
+        } else {
+            throw new Error(response.data.message || 'Error al obtener olimpiada');
+        }
     } catch (error) {
         console.error("Error fetching olimpiada:", error);
         throw error;

@@ -5,7 +5,7 @@ import { getOlimpiadas, getOlimpiadasActivas, iniciarOlimpiada } from "../../../
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
 import ConfOlimpiada from './ConfOlimpiada'
 import { Plus, Settings, Play, Archive, ChartPie } from 'lucide-react'
-import { LoadingSpinner, Alert } from '../../components/ui';
+import { LoadingSpinner, Alert,Card } from '../../components/ui';
 import Error from '../Error';
 
 const Olimpiadas = () => {
@@ -108,7 +108,7 @@ const Olimpiadas = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2">
                 {olimpiadas.data.length > 0 ? (
                   olimpiadas.data.map((olimp) => (
-                    <div
+                    <Card
                       key={olimp.id}
                       className="border border-gray-300 rounded-xl p-4 bg-gray-50 shadow-sm hover:shadow-md transition"
                     >
@@ -136,7 +136,7 @@ const Olimpiadas = () => {
                           <Archive size={16} className="mr-1" /> Archivar
                         </button>
                       </div>
-                    </div>
+                    </Card>
                   ))
                 ) : (
                   <p className="text-gray-500">No hay olimpiadas creadas aún.</p>
