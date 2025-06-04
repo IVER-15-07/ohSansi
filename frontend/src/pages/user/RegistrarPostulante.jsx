@@ -759,6 +759,8 @@ const RegistrarPostulante = () => {
       });
 
       tutoresGuardados.forEach(async (tutor) => {
+        console.log("AAAAAAH");
+        console.log(tutor);
         if(!tutor.idRegistroTutor) {
           if(!tutor.idTutor) {
             const nuevoTutor = {
@@ -767,7 +769,7 @@ const RegistrarPostulante = () => {
               apellidos: tutor.apellidos,
             }
             const tutorCreado = (await createTutor(nuevoTutor)).data;
-
+            console.log(tutorCreado);
             tutor.idTutor = tutorCreado.id;
           }
           const nuevoRegistroTutor = {
@@ -776,6 +778,7 @@ const RegistrarPostulante = () => {
             id_rol_tutor: tutor.idRol,
           }
           const registroTutorCreado = (await createRegistroTutor(nuevoRegistroTutor)).data;
+          console.log(registroTutorCreado);
           tutor.idRegistroTutor = registroTutorCreado.id;
         }
         const datosTutorGuardados = {
@@ -812,6 +815,7 @@ const RegistrarPostulante = () => {
   };
 
   console.log(postulante);
+  console.log(tutores);
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md">
       <h1 className="text-3xl font-bold text-blue-900 mb-6">Registro de Postulante</h1>

@@ -11,8 +11,8 @@ class DatoPostulanteController extends Controller
     {
         $validatedData = $request->validate([
             'id_postulante' => 'required|integer|exists:postulante,id',
-            'datos' => 'required|array|min:1',
-            'datos.*.idOlimpiadaCampoPostulante' => 'required|integer|exists:olimpiada_campo_postulante,id',
+            'datos' => 'array',
+            'datos.*.idOlimpiadaCampoPostulante' => 'integer|exists:olimpiada_campo_postulante,id',
             'datos.*.valor' => 'nullable|string|max:255',
         ]);
 
