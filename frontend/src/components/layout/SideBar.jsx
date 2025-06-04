@@ -63,7 +63,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
                   >
                   </img>
                 </div>
-                <span className="text-lg font-bold text-slate-900">Admin</span>
+                <span className="text-lg font-bold text-slate-900">Organizador</span>
               </div>
             )}
 
@@ -124,8 +124,8 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
             </div>
             {!isCollapsed && (
               <div>
-                <p className="font-medium">Administrador</p>
-                <p className="text-xs text-slate-500">admin@osansi.edu.bo</p>
+                <p className="font-medium">Organizador</p>
+                <p className="text-xs text-slate-500">org@osansi.edu.bo</p>
               </div>
             )}
           </div>

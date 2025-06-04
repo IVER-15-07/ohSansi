@@ -166,6 +166,7 @@ const ValidarComprobante = () => {
   };
 
   return (
+<<<<<<< HEAD
     <div className="p-6">
       {/* Success Alert */}
       {showSuccessAlert && (
@@ -180,6 +181,21 @@ const ValidarComprobante = () => {
           {alertMessage}
         </Alert>
       )}
+=======
+   <div className="p-6">
+  <SubirArchivo
+    nombreArchivo={archivo ? archivo.name : "Subir Comprobante (JPG, PNG)"}
+    tipoArchivo="comprobante"
+    handleArchivo={handleArchivo}
+    inputRef={inputRef}
+    onFileValidationError={handleFileValidationError}
+    acceptedFormats={['jpg']}
+    acceptedMimeTypes={['image/jpeg', 'image/jpg', 'image/png']}
+    acceptAttribute=".jpg,.jpeg,.png,image/jpeg,image/png"
+    maxFileSize={15 * 1024 * 1024} // 15MB para imágenes
+    allowEdit={true}
+  />
+>>>>>>> origin/correccionEnding
 
       {/* Error Alert */}
       {showErrorAlert && (
