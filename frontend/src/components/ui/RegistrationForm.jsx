@@ -187,35 +187,35 @@ function RegistrationForm() {
     <div className="space-y-6">
       {/* Alerta de error */}
       {errorMessage && (
-        <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 relative">
+        <div className="bg-danger-50 border border-danger-200 text-danger-800 rounded-md p-4 relative">
           <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-red-600 mr-2 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-danger-600 mr-2 mt-0.5" />
             <div>
               <h3 className="font-medium">Error</h3>
-              <p className="text-sm text-red-700">{errorMessage}</p>
+              <p className="text-sm text-danger-700">{errorMessage}</p>
             </div>
           </div>
           <button className="absolute top-4 right-4" onClick={() => setErrorMessage(null)} aria-label="Cerrar">
-            <X className="h-4 w-4 text-red-600" />
+            <X className="h-4 w-4 text-danger-600" />
           </button>
         </div>
       )}
 
       {/* Alerta de éxito */}
       {showSuccessAlert && (
-        <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 relative">
+        <div className="bg-success-50 border border-success-200 text-success-800 rounded-md p-4 relative">
           <div className="flex items-start">
-            <CheckCircle className="h-5 w-5 text-green-600 mr-2 mt-0.5" />
+            <CheckCircle className="h-5 w-5 text-success-600 mr-2 mt-0.5" />
             <div>
               <h3 className="font-medium">Registro exitoso</h3>
-              <p className="text-sm text-green-700">
+              <p className="text-sm text-success-700">
                 Sus datos han sido registrados correctamente. Se ha enviado un correo de confirmación con los siguientes
                 pasos.
               </p>
             </div>
           </div>
           <button className="absolute top-4 right-4" onClick={() => setShowSuccessAlert(false)} aria-label="Cerrar">
-            <X className="h-4 w-4 text-green-600" />
+            <X className="h-4 w-4 text-success-600" />
           </button>
         </div>
       )}
@@ -225,7 +225,7 @@ function RegistrationForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Nombre Completo */}
           <div>
-            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="fullName" className="block text-sm font-medium text-secondary-700 mb-1">
               Nombre Completo *
             </label>
             <input
@@ -235,16 +235,16 @@ function RegistrationForm() {
               value={formData.fullName}
               onChange={handleChange}
               placeholder="Ingrese su nombre completo"
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.fullName ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                errors.fullName ? "border-danger-300 focus:ring-danger-200" : "border-secondary-300 focus:ring-primary-200"
               }`}
             />
-            {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
+            {errors.fullName && <p className="mt-1 text-sm text-danger-600">{errors.fullName}</p>}
           </div>
 
           {/* Número de Carnet */}
           <div>
-            <label htmlFor="idNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="idNumber" className="block text-sm font-medium text-secondary-700 mb-1">
               Número de Carnet de Identidad *
             </label>
             <input
@@ -254,16 +254,16 @@ function RegistrationForm() {
               value={formData.idNumber}
               onChange={handleChange}
               placeholder="Ingrese su número de carnet"
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.idNumber ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                errors.idNumber ? "border-danger-300 focus:ring-danger-200" : "border-secondary-300 focus:ring-primary-200"
               }`}
             />
-            {errors.idNumber && <p className="mt-1 text-sm text-red-600">{errors.idNumber}</p>}
+            {errors.idNumber && <p className="mt-1 text-sm text-danger-600">{errors.idNumber}</p>}
           </div>
 
           {/* Correo Electrónico */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-secondary-700 mb-1">
               Correo Electrónico *
             </label>
             <input
@@ -273,16 +273,16 @@ function RegistrationForm() {
               value={formData.email}
               onChange={handleChange}
               placeholder="ejemplo@correo.com"
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.email ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                errors.email ? "border-danger-300 focus:ring-danger-200" : "border-secondary-300 focus:ring-primary-200"
               }`}
             />
-            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+            {errors.email && <p className="mt-1 text-sm text-danger-600">{errors.email}</p>}
           </div>
 
           {/* Número de Celular */}
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-secondary-700 mb-1">
               Número de Celular *
             </label>
             <input
@@ -292,16 +292,16 @@ function RegistrationForm() {
               value={formData.phoneNumber}
               onChange={handleChange}
               placeholder="Ingrese su número de celular"
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.phoneNumber ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                errors.phoneNumber ? "border-danger-300 focus:ring-danger-200" : "border-secondary-300 focus:ring-primary-200"
               }`}
             />
-            {errors.phoneNumber && <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>}
+            {errors.phoneNumber && <p className="mt-1 text-sm text-danger-600">{errors.phoneNumber}</p>}
           </div>
 
           {/* Fecha de Nacimiento */}
           <div>
-            <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="birthDate" className="block text-sm font-medium text-secondary-700 mb-1">
               Fecha de Nacimiento *
             </label>
             <input
@@ -311,16 +311,16 @@ function RegistrationForm() {
               value={formData.birthDate}
               onChange={handleChange}
               placeholder="dd/mm/aaaa"
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.birthDate ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                errors.birthDate ? "border-danger-300 focus:ring-danger-200" : "border-secondary-300 focus:ring-primary-200"
               }`}
             />
-            {errors.birthDate && <p className="mt-1 text-sm text-red-600">{errors.birthDate}</p>}
+            {errors.birthDate && <p className="mt-1 text-sm text-danger-600">{errors.birthDate}</p>}
           </div>
 
           {/* Relación con el Competidor */}
           <div>
-            <label htmlFor="relationship" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="relationship" className="block text-sm font-medium text-secondary-700 mb-1">
               Relación con el Competidor *
             </label>
             <select
@@ -328,8 +328,8 @@ function RegistrationForm() {
               name="relationship"
               value={formData.relationship}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                errors.relationship ? "border-red-300 focus:ring-red-200" : "border-gray-300 focus:ring-black/10"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 transition-colors duration-200 ${
+                errors.relationship ? "border-danger-300 focus:ring-danger-200" : "border-secondary-300 focus:ring-primary-200"
               }`}
             >
               <option value="" disabled>
@@ -340,14 +340,14 @@ function RegistrationForm() {
               <option value="apoderado">Apoderado Legal</option>
               <option value="tutor">Tutor</option>
             </select>
-            {errors.relationship && <p className="mt-1 text-sm text-red-600">{errors.relationship}</p>}
+            {errors.relationship && <p className="mt-1 text-sm text-danger-600">{errors.relationship}</p>}
           </div>
         </div>
 
         {/* Términos y Condiciones */}
         <div
           className={`flex items-start space-x-3 rounded-md border p-4 ${
-            errors.termsAccepted ? "border-red-300" : "border-gray-200"
+            errors.termsAccepted ? "border-danger-300" : "border-secondary-200"
           }`}
         >
           <input
@@ -356,17 +356,17 @@ function RegistrationForm() {
             name="termsAccepted"
             checked={formData.termsAccepted}
             onChange={handleChange}
-            className="h-4 w-4 mt-1 rounded border-gray-300 text-black focus:ring-black"
+            className="h-4 w-4 mt-1 rounded border-secondary-300 text-primary-600 focus:ring-primary-500"
           />
           <div className="space-y-1 leading-none">
-            <label htmlFor="termsAccepted" className="font-medium text-gray-700">
+            <label htmlFor="termsAccepted" className="font-medium text-secondary-700">
               Acepto los términos y condiciones de la olimpiada *
             </label>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-secondary-500">
               Al marcar esta casilla, confirmo que he leído y acepto los términos y condiciones para la participación en
               la olimpiada.
             </p>
-            {errors.termsAccepted && <p className="text-sm text-red-600">{errors.termsAccepted}</p>}
+            {errors.termsAccepted && <p className="text-sm text-danger-600">{errors.termsAccepted}</p>}
           </div>
         </div>
 
@@ -375,8 +375,10 @@ function RegistrationForm() {
           <button
             type="submit"
             disabled={!formData.termsAccepted}
-            className={`px-4 py-2 rounded-md text-white ${
-              formData.termsAccepted ? "bg-black hover:bg-gray-800 cursor-pointer" : "bg-gray-400 cursor-not-allowed"
+            className={`px-4 py-2 rounded-md text-white transition-colors duration-200 ${
+              formData.termsAccepted 
+                ? "bg-primary-600 hover:bg-primary-700 cursor-pointer" 
+                : "bg-secondary-400 cursor-not-allowed"
             }`}
           >
             Guardar
@@ -389,17 +391,20 @@ function RegistrationForm() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-lg">
             <h3 className="text-lg font-medium mb-2">Confirmar registro</h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-secondary-600 mb-6">
               ¿Está seguro que desea guardar los datos del responsable de inscripción?
             </p>
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowConfirmDialog(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 border border-secondary-300 rounded-md hover:bg-secondary-50 transition-colors duration-200"
               >
                 Cancelar
               </button>
-              <button onClick={handleConfirm} className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800">
+              <button 
+                onClick={handleConfirm} 
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors duration-200"
+              >
                 Confirmar
               </button>
             </div>

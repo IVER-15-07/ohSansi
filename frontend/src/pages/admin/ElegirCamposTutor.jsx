@@ -1,5 +1,5 @@
 import { CheckCheck, X } from 'lucide-react';
-import Modal from '../../components/Modal';
+import Modal from '../../components/ui/Modal';
 import React, { useState } from 'react';
 import { deleteOlimpiadaCampoTutor } from '../../../service/olimpiada_campos_tutor.api';
 const ElegirCamposTutor = ({disponibles, seleccionadas, setSeleccionadas, idOlimpiada}) => {
@@ -61,6 +61,7 @@ const ElegirCamposTutor = ({disponibles, seleccionadas, setSeleccionadas, idOlim
             <div className="w-full md:w-1/2 border rounded-2xl p-4 shadow-sm bg-white">
             {modal.open && (
                 <Modal
+                    variant='info'
                     message={modal.nombre}
                     onClose={() => setModal({open: false, nombre: ''})}
                 />)};

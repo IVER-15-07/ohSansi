@@ -181,30 +181,6 @@ class OpcionInscripcionController extends Controller
     public function eliminarOpcionesIncripcionPorOlimpiada($idOlimpiada)
     {
         try {
-            // Verificar si hay opciones con inscripciones
-            $opcionesConInscripciones = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)
-                ->whereHas('inscripciones')
-                ->with(['area', 'nivel_categoria'])
-                ->get();
-                
-            if ($opcionesConInscripciones->count() > 0) {
-                $areasConProblemas = [];
-                $nivelesConProblemas = [];
-                
-                foreach ($opcionesConInscripciones as $opcion) {
-                    $areasConProblemas[] = $opcion->area->nombre;
-                    $nivelesConProblemas[] = $opcion->nivel_categoria->nombre;
-                }
-                
-                return response()->json([
-                    'success' => false,
-                    'status' => 'error',
-                    'message' => 'No se pueden eliminar opciones de inscripción que ya tienen postulantes registrados.',
-                    'areas_con_postulantes' => array_unique($areasConProblemas),
-                    'niveles_con_postulantes' => array_unique($nivelesConProblemas),
-                ], 400);
-            }
-            
             // Eliminar las configuraciones asociadas a la olimpiada
             $deleted = OpcionInscripcion::where('id_olimpiada', $idOlimpiada)->delete();
 

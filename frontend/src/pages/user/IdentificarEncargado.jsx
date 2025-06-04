@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { verificarEncargado } from "../../../service/encargados.api";
 import RegistroTutor from "./RegistroTutor";
-import { useParams } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { useParams,useLocation,useNavigate} from "react-router-dom";
+import { Button, FormField } from "../../components/ui";
+
 
 
 const IdentificarEncargado = () => {
@@ -11,6 +11,7 @@ const IdentificarEncargado = () => {
   const { idEncargado } = useParams();
   //const { idOlimpiada } = useParams(); // Obtener el id de la olimpiada desde los parámetros de la URL
   const [error, setError] = useState(null);
+  const [ciError, setCiError] = useState(""); // Estado para errores específicos del CI
   const [isLoading, setIsLoading] = useState(false);
   const [mostrarRegistroTutor, setMostrarRegistroTutor] = useState(false); // Estado para alternar contenido
   const navigate = useNavigate();
@@ -22,6 +23,18 @@ const IdentificarEncargado = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    
+    // Validar CI antes de enviar
+    if (ciError) {
+      setError("Por favor, corrija los errores en el carnet de identidad antes de continuar.");
+      return;
+    }
+    
+    if (!ci.trim()) {
+      setError("El carnet de identidad es obligatorio.");
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -30,12 +43,9 @@ const IdentificarEncargado = () => {
       if (response.data.existe) {
         // Si el carnet ya está registrado, redirigir a seleccionar olimpiada
         navigate(`/registros/${response.data.id}/${idOlimpiada}`);
-
-        //navigate(`/RegistrosPostulantes/${idEncargado}/${olimpiada.id}`); 
       } else {
-        setError("No se pudo verificar el carnet. Intente nuevamente.");
         // Si no está registrado, redirigir a registro tutor
-        navigate("/RegistroEncargado", { state: { ci } });
+        navigate("/RegistroEncargado", { state: { ci, idOlimpiada } });
       }
     } catch (error) {
       console.error("Error al verificar el carnet:", error);
@@ -49,9 +59,34 @@ const IdentificarEncargado = () => {
     navigate(`/olimpiadas/${idOlimpiada}`);
   };
 
-  const handleRegistro = () => {
-
-    setMostrarRegistroTutor(true);
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    
+    // Limpiar errores previos
+    setCiError("");
+    
+    // Validar caracteres especiales y letras con tilde en tiempo real
+    const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
+    const letrasConTilde = /[áéíóúÁÉÍÓÚñÑ]/;
+    
+    if (caracteresEspeciales.test(value)) {
+      setCiError("No se permiten caracteres especiales como !@#$%^&*(),.?\":{}|<>/\\`~_+=[];'-");
+      return; // No actualizar el valor del input
+    }
+    
+    if (letrasConTilde.test(value)) {
+      setCiError("No se permiten letras con tilde (á, é, í, ó, ú, ñ)");
+      return; // No actualizar el valor del input
+    }
+    
+    // Permitir solo letras sin tilde, espacios y números
+    const regex = /^[a-zA-Z0-9 ]*$/;
+    if (regex.test(value)) {
+      setCi(value);
+    } else {
+      // Si no pasa la validación, mostrar error genérico
+      setCiError("Solo se permiten letras sin tilde, números y espacios");
+    }
   };
 
   const handleVolver = () => {
@@ -76,46 +111,39 @@ const IdentificarEncargado = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="ci" className="block text-sm font-medium text-gray-700 mb-1">
-                Carnet de Identidad
-              </label>
-              <input
+              <FormField
                 type="text"
                 id="ci"
                 name="ci"
+                label="Carnet de Identidad"
                 value={ci}
-                onChange={(e) => setCi(e.target.value)}
+                onChange={handleInputChange}
+                required
                 placeholder="Ingrese su número de carnet"
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-black/10"
+                error={ciError}
               />
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={isLoading || !ci}
-              className={`w-full px-4 py-2 rounded-md text-white ${isLoading || !ci
+              disabled={isLoading || !ci.trim() || ciError}
+              className={`w-full px-4 py-2 rounded-md text-white ${
+                isLoading || !ci.trim() || ciError
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-black hover:bg-gray-800"
                 }`}
             >
               {isLoading ? "Verificando..." : "Continuar"}
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
-              onClick={handleRegistro} // Cambiar al componente RegistroTutor
-              className="w-full px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700"
-            >
-              Registrarse como encargado
-            </button>
-
-            <button
-              type="button"
+              variant="accent"
               onClick={volverAmenuolimpiadas} // Cambiar al componente RegistroTutor
               className="w-full px-4 py-2 rounded-md text-white bg-blue-800 hover:bg-blue-700"
             >
-              Cancelar
-            </button>
+              Volver a Olimpiadas
+            </Button>
           </form>
         </div>
       )}

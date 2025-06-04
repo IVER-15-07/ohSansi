@@ -1,32 +1,32 @@
 import { Routes, Route } from "react-router-dom"
 import Home from "./pages/Home"
 import AdminLayout from "./layouts/AdminLayout"
-import Olympiad from "./pages/admin/Olympiad"
-import RegistroTutor from "./pages/user/RegistroTutor"
 import UserLayout from "./layouts/UserLayout"
-import IdentificarEncargado from "./pages/user/IdentificarEncargado"
 
-
-
-
+// Admin pages
+import Olimpiadas from "./pages/admin/Olimpiadas"
 import Areas from "./pages/admin/Areas"
 import NivelCategoria from "./pages/admin/NivelCategoria"
 import ConfOlimpiada from "./pages/admin/ConfOlimpiada"
 import ConfParamOlimpiada from "./pages/admin/ConfParamOlimpiada"
 import ConfigurarCamposOlimpiada from "./pages/admin/ConfigurarCamposOlimpiada"
 import CrearOlimpiada from "./pages/admin/CrearOlimpiada"
-import Versiones from "./pages/Versiones"
+import Reportes from "./pages/admin/Reportes"
+
+// User pages
+import RegistroTutor from "./pages/user/RegistroTutor"
+import IdentificarEncargado from "./pages/user/IdentificarEncargado"
 import LayoutRegistro from "./pages/user/LayoutRegistro"
 import MenuOlimpiada from "./pages/user/MenuOlimpiada"
-import Reportes from "./pages/admin/Reportes"
+import Versiones from "./pages/Versiones"
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen bg-secondary-50">
       <Routes>
-
-        {/* Layout para público */}
+        {/* Public Layout */}
         <Route path="/" element={<UserLayout />}>
+          <Route index element={<Home />} />
           <Route index element={<Home />} />
           <Route path="versiones" element={<Versiones />} />
           <Route path="/olimpiadas/:idOlimpiada" element={<MenuOlimpiada />} />
@@ -35,28 +35,20 @@ function App() {
           <Route path="registros/:idEncargado/:idOlimpiada" element={<LayoutRegistro />} />
         </Route>
 
-
-        {/* Layout para el admin */}
+        {/* Admin Layout */}
         <Route path="/AdminLayout" element={<AdminLayout />}>
-          <Route path="Olympiad" element={<Olympiad />} />
-
-          <Route path="/AdminLayout/Reportes/:idOlimpiada" element={<Reportes />} />
-         <Route path="Reportes" element={<Reportes />} />
-
-
-          <Route path="Olympiad/CrearOlimpiada" element={<CrearOlimpiada />} />
-          <Route path="Olympiad/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
-
-          <Route path="Olympiad/:id/configurarParametros/:nombreOlimpiada" element={<ConfParamOlimpiada />} />
-          <Route path="Olympiad/:id/configurar-campos" element={<ConfigurarCamposOlimpiada />} />
+          <Route path="Olimpiadas" element={<Olimpiadas />} />
+          <Route path="Reportes" element={<Reportes />} />
+          <Route path="Olimpiadas/CrearOlimpiada" element={<CrearOlimpiada />} />
+          <Route path="Olimpiadas/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
+          <Route path="Olimpiadas/:id/configurar-campos" element={<ConfigurarCamposOlimpiada />} />
+          <Route path="Olimpiadas/:id/configurarParametros/:nombreOlimpiada" element={<ConfParamOlimpiada />} />
           <Route path="Areas" element={<Areas />} />
           <Route path="NivelCategoria" element={<NivelCategoria />} />
         </Route>
-
       </Routes>
     </div>
   )
 }
 
 export default App
-

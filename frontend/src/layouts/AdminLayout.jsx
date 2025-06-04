@@ -1,9 +1,9 @@
-import React from 'react'
-import { useState } from 'react'
-import  Sidebar from '../components/Sidebar'
-import {MenuIcon} from '../assets/Icons'
-import { Outlet } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
+"use client"
+
+import { useState } from "react"
+import { Menu, ChevronLeft, ChevronRight } from "lucide-react"
+import { Outlet ,  useLocation } from "react-router-dom"
+import Sidebar from "../components/layout/SideBar"
 
 const AdminLayout = () => {
 
@@ -13,46 +13,51 @@ const AdminLayout = () => {
   const esReporte = location.pathname.startsWith('/AdminLayout/Reportes');
 
   const handleMenuClick = () => {
-    // Verifica si el dispositivo es móvil
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const isMobile = window.matchMedia("(max-width: 768px)").matches
     if (isMobile) {
-      setIsMobileOpen(!isMobileOpen); // Alterna el estado móvil
+      setIsMobileOpen(!isMobileOpen)
     } else {
-      setIsCollapsed(!isCollapsed); // Alterna el estado colapsado en pantallas grandes
+      setIsCollapsed(!isCollapsed)
     }
-  };
+  }
 
-  
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed)
+  }
+
   return (
-    <div className="flex w-full">
+    <div className="flex h-screen bg-slate-50">
       {/* Sidebar */}
       <Sidebar
         isCollapsed={isCollapsed}
         isMobileOpen={isMobileOpen}
         toggleMobileSidebar={() => setIsMobileOpen(!isMobileOpen)}
-        className={`fixed z-50 top-0 left-0 h-full transition-transform duration-300 bg-white shadow-lg
-          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} 
-          md:translate-x-0 md:relative`}
+        onToggleCollapse={toggleCollapse}
+        className={`fixed z-50 top-0 left-0 h-full transition-transform duration-300 shadow-lg
+          ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} 
+          md:translate-x-0 md:relative md:shadow-none`}
       />
 
       {/* Main Content */}
-       <div
-        className={
-          esReporte
-            ? "flex-1 h-auto overflow-auto" // Scroll libre solo en reportes
-            : "flex-1 h-auto overflow-auto md:h-screen md:overflow-hidden"
-        }
+      <div
+        className={`flex-1 flex flex-col overflow-hidden ${
+          esReporte ? 'h-auto overflow-auto' : 'md:h-screen md:overflow-hidden h-auto overflow-auto'
+        }`}
       >
         <div className="pt-3 pl-4 pb-0">
-          <MenuIcon
+          <button
             onClick={handleMenuClick}
-            className="cursor-pointer md:hidden"
-          />
+            className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors duration-200"
+            aria-label="Abrir menú"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
         </div>
 
-        <div>
+        {/* Page Content */}
+        <main className="flex-1 overflow-auto">
           <Outlet />
-        </div>
+        </main>
       </div>
     </div>
   )

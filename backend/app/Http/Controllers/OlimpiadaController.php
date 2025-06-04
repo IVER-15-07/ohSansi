@@ -203,6 +203,27 @@ class OlimpiadaController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Capturar errores de validación
             $errors = $e->errors();
+    
+            if (isset($errors['nombre'])) {
+                // Comprobar si es un error de nombre duplicado
+                $nombreErrors = $errors['nombre'];
+                foreach ($nombreErrors as $error) {
+                    if (strpos($error, 'already been taken') !== false || strpos($error, 'unique') !== false) {
+                        return response()->json([
+                            'success' => false,
+                            'status' => 'validation_error',
+                            'message' => 'El nombre de la olimpiada ya existe. Por favor, elija otro nombre.',
+                            'field' => 'nombre'
+                        ], 422);
+                    }
+                }
+                return response()->json([
+                    'success' => false,
+                    'status' => 'validation_error',
+                    'message' => 'Error en el nombre: ' . implode(' ', $nombreErrors),
+                    'field' => 'nombre'
+                ], 422);
+            }
 
             if (isset($errors['convocatoria'])) {
                 return response()->json([
@@ -227,17 +248,29 @@ class OlimpiadaController extends Controller
         }
     }
 
-    public function obtenerOlimpiada($id)
-    {
+    public function obtenerOlimpiada($id){
+    try {
         $olimpiada = Olimpiada::find($id);
 
         if (!$olimpiada) {
-            return response()->json(['message' => 'Olimpiada no encontrada'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Olimpiada no encontrada'
+            ], 404);
         }
 
-        return response()->json($olimpiada);
+        return response()->json([
+            'success' => true,
+            'data' => $olimpiada
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'status' => 'error',
+            'message' => 'Error al obtener la olimpiada: ' . $e->getMessage(),
+        ], 500);
     }
-
+    }
     public function modificarOlimpiada(Request $request, $id)
     {
         $olimpiada = \App\Models\Olimpiada::find($id);
@@ -288,7 +321,23 @@ class OlimpiadaController extends Controller
             $rules['fin_inscripcion'] .= '|after_or_equal:' . $inicio_inscripcion . '|before_or_equal:' . $fecha_fin;
         }
 
-        $validated = $request->validate($rules);
+        try {
+            $validated = $request->validate($rules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $mensajes = [];
+            foreach ($errors as $campo => $mensajesCampo) {
+                foreach ($mensajesCampo as $mensaje) {
+                    $mensajes[] = "Error en el campo '$campo': $mensaje";
+                }
+            }
+            return response()->json([
+                'success' => false,
+                'status' => 'validation_error',
+                'message' => implode(' ', $mensajes),
+                'errors' => $errors,
+            ], 422);
+        }
 
         $campos = [
             'nombre',
