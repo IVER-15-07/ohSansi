@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react'
-import dayjs from "dayjs";
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
-dayjs.extend(isSameOrAfter);
-dayjs.extend(isSameOrBefore);
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate, useParams } from "react-router-dom";
 import { getOlimpiada } from '../../../service/olimpiadas.api';
 import { Button, Card, CardContent, CardHeader, CardTitle, Alert, LoadingSpinner } from '../../components/ui';
 import { useDeviceAgent } from '../../hooks/useDeviceAgent';
 import { ArrowLeft, Calendar, FileText, DollarSign, Users, Clock, ExternalLink } from 'lucide-react';
+
+
+import dayjs from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 const MenuOlimpiada = () => {
     const { idOlimpiada } = useParams();
@@ -17,6 +19,17 @@ const MenuOlimpiada = () => {
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const { isMobile, isTablet, screenSize } = useDeviceAgent();
+
+
+    const hoy = dayjs();
+    const inicioInscripcion = olimpiada?.inicio_inscripcion ? dayjs(olimpiada.inicio_inscripcion) : null;
+    const finInscripcion = olimpiada?.fin_inscripcion ? dayjs(olimpiada.fin_inscripcion) : null;
+
+    const inscripcionHabilitada =
+        inicioInscripcion &&
+        finInscripcion &&
+        hoy.isSameOrAfter(inicioInscripcion, 'day') &&
+        hoy.isSameOrBefore(finInscripcion, 'day');
 
     // Memoized handlers for better performance
     const handleVolver = useCallback(() => {
@@ -46,32 +59,6 @@ const MenuOlimpiada = () => {
         } finally {
             setLoading(false);
         }
-    const hoy = dayjs();
-    const inicioInscripcion = olimpiada?.inicio_inscripcion ? dayjs(olimpiada.inicio_inscripcion) : null;
-    const finInscripcion = olimpiada?.fin_inscripcion ? dayjs(olimpiada.fin_inscripcion) : null;
-
-    const inscripcionHabilitada =
-        inicioInscripcion &&
-        finInscripcion &&
-        hoy.isSameOrAfter(inicioInscripcion, 'day') &&
-        hoy.isSameOrBefore(finInscripcion, 'day');
-
-
-
-    useEffect(() => {
-        const detallesOlimpiada = async () => {
-            try {
-                const data = await getOlimpiada(idOlimpiada);
-                console.log("Respuesta olimpiada:", data); // <-- Agrega esto
-                setOlimpiada(data);
-            } catch (error) {
-                console.error(error);
-                setError("No se pudo cargar la información de la olimpiada.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        detallesOlimpiada();
     }, [idOlimpiada]);
 
     useEffect(() => {
@@ -81,7 +68,7 @@ const MenuOlimpiada = () => {
     // Memoized responsive classes
     const containerClasses = useMemo(() => {
         const baseClasses = "container mx-auto bg-white rounded-lg shadow-md";
-        
+
         if (isMobile) {
             return `${baseClasses} mx-4 p-4 max-w-full`;
         } else if (isTablet) {
@@ -114,7 +101,7 @@ const MenuOlimpiada = () => {
     // Render PDF link component
     const PDFLink = ({ url, text }) => {
         if (!url) return <span className="text-slate-500">No disponible</span>;
-        
+
         return (
             <a
                 href={`http://localhost:8000/storage/${url}`}
@@ -148,15 +135,15 @@ const MenuOlimpiada = () => {
                     <Alert variant="error" title="Error">
                         <p className="mb-4">{error}</p>
                         <div className="flex gap-2 justify-center">
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 size={buttonSizes}
                                 onClick={handleVolver}
                             >
                                 Volver al inicio
                             </Button>
-                            <Button 
-                                variant="primary" 
+                            <Button
+                                variant="primary"
                                 size={buttonSizes}
                                 onClick={fetchOlimpiadaData}
                             >
@@ -185,14 +172,14 @@ const MenuOlimpiada = () => {
                             <ArrowLeft className="h-4 w-4 mr-2" />
                             Volver atrás
                         </Button>
-                        
+
                         {/* Status badge */}
                         <div className="flex items-center gap-2">
                             <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
                             <span className="text-sm text-slate-600">Olimpiada activa</span>
                         </div>
                     </div>
-                    
+
                     <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-slate-900">
                         {olimpiada?.nombre || "Olimpiada"}
                     </CardTitle>
@@ -325,8 +312,12 @@ const MenuOlimpiada = () => {
                             size={isMobile ? "lg" : "xl"}
                             onClick={handleInscripcion}
                             className="w-full sm:w-auto min-w-48 font-semibold"
+                            disabled={!inscripcionHabilitada}
                         >
-                            Inscribirse en la Olimpiada
+                            {inscripcionHabilitada
+                                ? "Inscribirse en la Olimpiada"
+                                : "La inscripción no está disponible en este momento."
+                            }
                         </Button>
                     </div>
                 </CardContent>
@@ -334,6 +325,6 @@ const MenuOlimpiada = () => {
         </div>
     );
 }
-)}
+
 
 export default MenuOlimpiada;
