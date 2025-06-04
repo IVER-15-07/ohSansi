@@ -125,6 +125,11 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                 $caracter = $noPermitido[0] ?? '?';
                 $errores[] = "El campo 'ci' contiene el carácter no permitido: '$caracter'.";
             }
+
+            // Validar que nombres y apellidos no tengan caracteres especiales ni números
+            if (in_array($campo, ['nombres', 'apellidos']) && !empty($fila[$campo]) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u', $fila[$campo])) {
+                $errores[] = "El campo '$campo' solo debe contener letras y espacios, sin números ni caracteres especiales.";
+            }
         }
         // Validar campos obligatorios de postulante
         foreach ($this->olimpiadaCamposPostulante as $campo) {
@@ -148,6 +153,12 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                     preg_match('/[^a-zA-Z0-9\-]/', $fila[$campo], $noPermitido);
                     $caracter = $noPermitido[0] ?? '?';
                     $errores[] = "El campo 'ci_tutor' del tutor contiene el carácter no permitido: '$caracter'.";
+                }
+
+
+                // Validar que nombre_tutor y apellidos_tutor no tengan caracteres especiales ni números
+                if (in_array($campo, ['nombre_tutor', 'apellidos_tutor']) && !empty($fila[$campo]) && !preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u', $fila[$campo])) {
+                    $errores[] = "El campo '$campo' del tutor solo debe contener letras y espacios, sin números ni caracteres especiales.";
                 }
             }
         }
@@ -317,7 +328,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
         // Lanzar error si no hay datos para insertar
         if (empty($datosParaInsertar)) {
 
-            throw new \Exception("No se insertó ningún dato adicional para el postulante. Verifique que los campos adicionales estén habilitados y presentes en el Excel.");
+            throw new \Exception("No se insertó ningún dato para el postulante. Verifique que los campos adicionales estén habilitados y presentes en el Excel.");
         }
 
         if (!empty($errores)) {
