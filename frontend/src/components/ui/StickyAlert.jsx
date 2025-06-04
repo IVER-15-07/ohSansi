@@ -17,21 +17,27 @@ const StickyAlert = ({
   const [isVisible, setIsVisible] = useState(true)
   const [isAnimating, setIsAnimating] = useState(false)
   const [timeLeft, setTimeLeft] = useState(autoCloseDelay / 1000)
+  const [progressWidth, setProgressWidth] = useState(100)
 
   useEffect(() => {
     // Animación de entrada
     setTimeout(() => setIsAnimating(true), 10)
 
     if (autoClose && autoCloseDelay > 0) {
+      const startTime = Date.now()
+      
       const interval = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            handleClose()
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
+        const elapsed = Date.now() - startTime
+        const remaining = Math.max(0, autoCloseDelay - elapsed)
+        const progress = Math.max(0, (remaining / autoCloseDelay) * 100)
+        
+        setProgressWidth(progress)
+        setTimeLeft(Math.max(0, Math.ceil(remaining / 1000)))
+        
+        if (remaining <= 0) {
+          handleClose()
+        }
+      }, 100)
 
       return () => clearInterval(interval)
     }
@@ -120,9 +126,9 @@ const StickyAlert = ({
         {autoClose && (
           <div className="absolute top-0 left-0 h-1 bg-black bg-opacity-20 w-full">
             <div 
-              className={cn("h-full transition-all ease-linear", progressBar)}
+              className={cn("h-full transition-all ease-linear duration-100", progressBar)}
               style={{
-                animation: `shrink ${autoCloseDelay}ms linear forwards`,
+                width: `${progressWidth}%`,
               }}
             />
           </div>
@@ -154,13 +160,6 @@ const StickyAlert = ({
           </button>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
     </div>
   )
 }

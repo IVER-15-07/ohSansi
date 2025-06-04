@@ -203,9 +203,8 @@ const ConfigurarCamposOlimpiada = () => {
   if (successMessage) return (
     <div className={containerClasses}>
       <Alert 
-        type="success" 
-        message={successMessage} 
-        className="max-w-md mx-auto mt-8"
+        variant="success" 
+        title = "Configuración guardada"
       />
       <div className="flex justify-center mt-4">
         <LoadingSpinner size="sm" text="Redirigiendo..." />

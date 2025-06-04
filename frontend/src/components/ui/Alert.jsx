@@ -165,12 +165,14 @@ const Alert = ({
         )}
       </div>
 
-      <style jsx>{`
-        @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
+      <style>
+        {`
+          @keyframes shrink {
+            from { width: 100%; }
+            to { width: 0%; }
+          }
+        `}
+      </style>
     </div>
   )
 }

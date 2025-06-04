@@ -12,7 +12,7 @@ const Navbar = () => {
 
   const navigation = [
     { name: "Inicio", href: "/", icon: Home },
-    { name: "Olimpiadas", href: "/AdminLayout/Olimpiadas", icon: Trophy },
+    { name: "Iniciar Sesion", href: "/AdminLayout/Olimpiadas", icon: Trophy },
     { name: "Versiones", href: "/versiones", icon: FileText },
   ]
 
