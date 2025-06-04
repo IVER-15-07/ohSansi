@@ -18,7 +18,6 @@ const RegistroTutor = () => {
     ci: CIinicial,
     fecha_nacimiento: "",
     correo: "",
-    nro_celular: "",
     termsAccepted: false,
   })
 
@@ -205,15 +204,7 @@ const RegistroTutor = () => {
           delete newErrors.termsAccepted
         }
         break
-      case "nro_celular":
-        if (!value) {
-          newErrors.nro_celular = "Debe ingresar un número de celular"
-        } else if (!/^\d{8}$/.test(value)) {
-          newErrors.nro_celular = "El número de celular debe ser igual a 8 dígitos"
-        } else {
-          delete newErrors.nro_celular
-        }
-        break
+      
       default:
         break
     }
@@ -225,7 +216,7 @@ const RegistroTutor = () => {
   // Función para verificar si el formulario es completamente válido
   const isFormValid = () => {
     // Verificar que todos los campos obligatorios están llenos
-    const requiredFields = ['nombre', 'apellido', 'ci', 'correo', 'fecha_nacimiento', 'nro_celular'];
+    const requiredFields = ['nombre', 'apellido', 'ci', 'correo', 'fecha_nacimiento'];
     const allFieldsFilled = requiredFields.every(field => formData[field]?.toString().trim());
     
     // Verificar que no hay errores de validación
@@ -406,16 +397,6 @@ const RegistroTutor = () => {
                 disabled={persona?.fecha_nacimiento}
                 required
                 error={errors.fecha_nacimiento}
-              />
-              <FormField
-                label="Numero de Celular"
-                name="nro_celular"
-                type="number"
-                value={formData.nro_celular}
-                onChange={handleChange}
-                disabled={persona?.nro_celular}
-                required
-                error={errors.nro_celular}
               />
             </div>
 
