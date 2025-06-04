@@ -385,7 +385,7 @@ if (verDetallesLista) {
               }`}
               disabled={registrosSeleccionados.length === 0}
               type="button"
-            >
+          > 
               Generar Orden de Pago
             </button>
           </div>

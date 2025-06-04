@@ -294,37 +294,76 @@ const ConfParamOlimpiada = () => {
     setGuardando(true);
     setMensaje('');
     const formData = new FormData();
-    Object.entries(form).forEach(([k, v]) => {
-      if (k !== 'convocatoria') formData.append(k, v ?? '');
-    });
-    if (archivo) formData.append('convocatoria', archivo);
+    
+    // Helper to convert date to YYYY-MM-DD format
+    const formatDateToYYYYMMDD = (dateStr) => {
+      if (!dateStr) return '';
+      if (dateStr.includes('/')) {
+        const [dia, mes, ano] = dateStr.split('/');
+        return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+      } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return dateStr; // Already in YYYY-MM-DD format
+      }
+      return '';
+    };
+
+    // Handle form fields
+    // Add _method parameter to tell Laravel this is a PUT request
     formData.append('_method', 'PUT');
+    
+    Object.entries(form).forEach(([k, v]) => {
+      // Skip empty fields but allow zero values for numeric fields
+      if (v === '' || v === null || v === undefined) return;
+      
+      // Skip convocatoria as it's handled separately
+      if (k === 'convocatoria') return;
+      
+      // Handle dates
+      if (['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'].includes(k)) {
+        const formattedDate = formatDateToYYYYMMDD(v);
+        if (formattedDate) {
+          formData.append(k, formattedDate);
+        }
+      } 
+      // Handle numeric fields
+      else if (['costo', 'max_areas'].includes(k)) {
+        formData.append(k, v === '' ? '0' : v.toString());
+      }
+      // Handle other fields
+      else {
+        formData.append(k, v.toString());
+      }
+    });
+
+    // Handle file upload
+    if (archivo) {
+      formData.append('convocatoria', archivo);
+    }
     
     try {
       const response = await updateOlimpiada(id, formData);
       setMensaje('Cambios guardados correctamente.');
       
-      // Actualizar el estado después de guardar exitosamente
+      // Update file states after successful save
       if (archivo) {
-        // Si se subió un nuevo archivo, actualizar el estado
         setTieneArchivoExistente(true);
         setArchivoActualNombre(archivo.name);
-        setArchivo(null); // Limpiar el archivo seleccionado
-        // Actualizar el formulario con el nuevo archivo
+        setArchivo(null);
         setForm(prev => ({ ...prev, convocatoria: archivo.name }));
       }
       
-      setEditando({});
-      setModal(false);
+      setEditando({}); // Clear edit states
+      setModal(false); // Close modal
     } catch (error) {
       const errorMsg = error.response?.status === 429 
         ? 'Demasiadas solicitudes. Por favor, espere un momento e inténtelo nuevamente.'
-        : 'Error al guardar cambios. Por favor, inténtelo nuevamente.';
+        : `Error al guardar cambios: ${error.response?.data?.message || 'Por favor, intente nuevamente.'}`;
       setMensaje(errorMsg);
       console.error('Error al guardar:', error);
+    } finally {
+      setGuardando(false);
     }
-    setGuardando(false);
-  }, [form, archivo, id]);
+  }, [form, archivo, id, updateOlimpiada]);
 
   const cancelarGuardar = useCallback(() => {
     setModal(false);
@@ -493,7 +532,6 @@ const ConfParamOlimpiada = () => {
                 <Button
                   type="submit"
                   variant="primary"
-                  disabled={hayErrores || guardando}
                   loading={guardando}
                   className="px-6"
                 >
