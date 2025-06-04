@@ -118,7 +118,7 @@ const Reportes = () => {
 
   return (
     <div className="flex flex-col   px-2">
-      <h1 className=" text-2xl text-center font-bold mb-4">Reportes de Inscritos</h1>
+      <h1 className=" text-2xl text-center font-bold mb-4">Reporte de Inscripciones</h1>
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="w-full px-10">

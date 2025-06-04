@@ -45,31 +45,31 @@ class OlimpiadaController extends Controller
      */
     public function obtenerOlimpiadasActivas(Request $request)
     {
-         try {
-        // Primero, actualiza el estado de las olimpiadas vencidas
-        Olimpiada::where('activo', true)
-            ->whereDate('fecha_fin', '<', now())
-            ->update(['activo' => false]);
+        try {
+            // Primero, actualiza el estado de las olimpiadas vencidas
+            Olimpiada::where('activo', true)
+                ->whereDate('fecha_fin', '<', now())
+                ->update(['activo' => false]);
 
-        // Limpia la caché antes de guardar el nuevo resultado
-        Cache::forget('olimpiadasActivas');
+            // Limpia la caché antes de guardar el nuevo resultado
+            Cache::forget('olimpiadasActivas');
 
-        // Guarda en caché las olimpiadas activas actualizadas
-        $olimpiadasActivas = Cache::remember('olimpiadasActivas', 3600, function () {
-            return Olimpiada::where('activo', true)->get();
-        });
+            // Guarda en caché las olimpiadas activas actualizadas
+            $olimpiadasActivas = Cache::remember('olimpiadasActivas', 3600, function () {
+                return Olimpiada::where('activo', true)->get();
+            });
 
-        return response()->json([
-            'success' => true,
-            'data' => $olimpiadasActivas,
-        ], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'status' => 'error',
-            'message' => 'Error al obtener las olimpiadas activas: ' . $e->getMessage(),
-        ], 500);
-    }
+            return response()->json([
+                'success' => true,
+                'data' => $olimpiadasActivas,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al obtener las olimpiadas activas: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
 
@@ -89,25 +89,25 @@ class OlimpiadaController extends Controller
             $hoy = now()->toDateString();
 
             // Verifica si la fecha actual está en el rango permitido
-            if ($olimpiada->fecha_inicio <= $hoy && $olimpiada->fecha_fin >= $hoy) {
-                $olimpiada->activo = true;
-                $olimpiada->save();
-
-                // Limpiar caché
-                Cache::forget('olimpiadas');
-                Cache::forget('olimpiadasActivas');
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Olimpiada activada correctamente',
-                    'data' => $olimpiada,
-                ], 200);
-            } else {
+            if ($hoy > $olimpiada->fecha_fin) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No se puede activar la olimpiada fuera del rango de fechas',
+                    'message' => 'La olimpiada ya terminó. No se puede activar.',
                 ], 400);
             }
+
+            $olimpiada->activo = true;
+            $olimpiada->save();
+
+            // Limpiar caché
+            Cache::forget('olimpiadas');
+            Cache::forget('olimpiadasActivas');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Olimpiada activada correctamente',
+                'data' => $olimpiada,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -203,7 +203,7 @@ class OlimpiadaController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Capturar errores de validación
             $errors = $e->errors();
-    
+
             if (isset($errors['nombre'])) {
                 // Comprobar si es un error de nombre duplicado
                 $nombreErrors = $errors['nombre'];
@@ -248,28 +248,29 @@ class OlimpiadaController extends Controller
         }
     }
 
-    public function obtenerOlimpiada($id){
-    try {
-        $olimpiada = Olimpiada::find($id);
+    public function obtenerOlimpiada($id)
+    {
+        try {
+            $olimpiada = Olimpiada::find($id);
 
-        if (!$olimpiada) {
+            if (!$olimpiada) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Olimpiada no encontrada'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $olimpiada
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Olimpiada no encontrada'
-            ], 404);
+                'status' => 'error',
+                'message' => 'Error al obtener la olimpiada: ' . $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'data' => $olimpiada
-        ], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'status' => 'error',
-            'message' => 'Error al obtener la olimpiada: ' . $e->getMessage(),
-        ], 500);
-    }
     }
     public function modificarOlimpiada(Request $request, $id)
     {

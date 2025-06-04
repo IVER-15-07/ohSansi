@@ -44,6 +44,10 @@ const Olimpiadas = () => {
     fetchOlimpiadasActivas();
   }, []);
 
+
+
+  
+
   const handleIniciar = async (id) => {
     try {
       const result = await iniciarOlimpiada(id);
