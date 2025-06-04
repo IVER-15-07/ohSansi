@@ -397,6 +397,34 @@ const ConfParamOlimpiada = () => {
     // Handle form fields
     // Add _method parameter to tell Laravel this is a PUT request
     formData.append('_method', 'PUT');
+    Object.entries(form).forEach(([k, v]) => {
+      // Skip empty fields but allow zero values for numeric fields
+      if (v === '' || v === null || v === undefined) return;
+      
+      // Skip convocatoria as it's handled separately
+      if (k === 'convocatoria') return;
+      
+      // Handle dates
+      if (['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'].includes(k)) {
+        const formattedDate = formatDateToYYYYMMDD(v);
+        if (formattedDate) {
+          formData.append(k, formattedDate);
+        }
+      } 
+      // Handle numeric fields
+      else if (['costo', 'max_areas'].includes(k)) {
+        formData.append(k, v === '' ? '0' : v.toString());
+      }
+      // Handle other fields
+      else {
+        formData.append(k, v.toString());
+      }
+    });
+
+    // Handle file upload
+    if (archivo) {
+      formData.append('convocatoria', archivo);
+    }
     
     Object.entries(form).forEach(([k, v]) => {
       // Skip empty fields but allow zero values for numeric fields
