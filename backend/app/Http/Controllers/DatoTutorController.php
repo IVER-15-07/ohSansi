@@ -11,8 +11,8 @@ class DatoTutorController extends Controller
     {
         $validatedData = $request->validate([
             'id_tutor' => 'required|integer|exists:tutor,id',
-            'datos' => 'required|array|min:1',
-            'datos.*.idOlimpiadaCampoTutor' => 'required|integer|exists:olimpiada_campo_tutor,id',
+            'datos' => 'array',
+            'datos.*.idOlimpiadaCampoTutor' => 'integer|exists:olimpiada_campo_tutor,id',
             'datos.*.valor' => 'nullable|string|max:255',
         ]);
 

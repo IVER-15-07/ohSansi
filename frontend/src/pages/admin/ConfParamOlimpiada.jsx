@@ -25,6 +25,27 @@ const ConfParamOlimpiada = () => {
   const [camposTocados, setCamposTocados] = useState({}); // Nuevo estado para rastrear campos tocados
   const inputArchivoRef = useRef();
 
+  // Función para verificar si la inscripción ya comenzó (fecha de inicio de inscripción ya pasó o es hoy)
+  const inscripcionYaComenzo = useMemo(() => {
+    if (!olimpiada || !olimpiada.inicio_inscripcion) return false;
+    
+    const hoy = new Date();
+    const hoyFecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    
+    // Parsear la fecha de inicio de inscripción
+    let fechaInicioInscripcion;
+    if (olimpiada.inicio_inscripcion.includes('/')) {
+      // Formato DD/MM/YYYY
+      const [dia, mes, ano] = olimpiada.inicio_inscripcion.split('/');
+      fechaInicioInscripcion = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+    } else {
+      // Formato YYYY-MM-DD
+      fechaInicioInscripcion = new Date(olimpiada.inicio_inscripcion);
+    }
+    
+    return fechaInicioInscripcion <= hoyFecha;
+  }, [olimpiada]);
+
   // Convierte fecha de formato YYYY-MM-DD a DD/MM/YYYY para mostrar
   const formatoDDMMAAAA = useCallback((fecha) => {
     if (!fecha) return '';
@@ -80,7 +101,7 @@ const ConfParamOlimpiada = () => {
           nombre: data.nombre || '',
           descripcion: data.descripcion || '',
           costo: data.costo?.toString() || '',
-          max_areas: data.max_areas?.toString() || '0',
+          max_areas: data.max_areas ? data.max_areas.toString() : null,
           fecha_inicio: data.fecha_inicio || '',
           fecha_fin: data.fecha_fin || '',
           inicio_inscripcion: data.inicio_inscripcion || '',
@@ -165,10 +186,8 @@ const ConfParamOlimpiada = () => {
     
     // Máximo inscripciones - solo validar si se está editando y ha sido tocado
     if (editando.max_areas && camposTocados.max_areas) {
-      if (valores.max_areas === '' || isNaN(valores.max_areas)) {
-        errs.max_areas = 'El máximo de áreas debe ser un número.';
-      } else if (Number(valores.max_areas) < 0) {
-        errs.max_areas = 'El máximo de áreas no puede ser un número negativo.';
+      if (valores.max_areas !== null && valores.max_areas !== '' && (isNaN(valores.max_areas) || Number(valores.max_areas) < 1)) {
+        errs.max_areas = 'El máximo de áreas debe ser un número mayor o igual a 1, o puede dejarse vacío.';
       }
     }
     
@@ -203,8 +222,8 @@ const ConfParamOlimpiada = () => {
       
       // Validaciones cruzadas solo si los campos están siendo editados y han sido tocados
       if ((editando.fecha_inicio && camposTocados.fecha_inicio) || (editando.fecha_fin && camposTocados.fecha_fin)) {
-        if (fecha_inicio && fecha_fin && fecha_fin < fecha_inicio) {
-          errs.fecha_fin = 'La fecha de fin debe ser igual o posterior a la fecha de inicio.';
+        if (fecha_inicio && fecha_fin && fecha_fin <= fecha_inicio) {
+          errs.fecha_fin = 'La fecha de fin debe ser posterior a la fecha de inicio.';
         }
       }
       
@@ -280,9 +299,13 @@ const ConfParamOlimpiada = () => {
       processedValue = formatoDDMMAAAA(value);
     }
     
-    // Para max_areas, asegurar que no se ingresen valores negativos
-    if (name === 'max_areas' && processedValue < 0) {
-      processedValue = '0';
+    // Para max_areas, permitir valores vacíos y solo números positivos
+    if (name === 'max_areas') {
+      if (value === '') {
+        processedValue = null; // Permitir valor vacío
+      } else if (isNaN(value) || Number(value) < 1) {
+        return; // No actualizar si no es un número válido >= 1
+      }
     }
     
     // Marcar el campo como tocado y en edición
@@ -394,65 +417,75 @@ const ConfParamOlimpiada = () => {
       return '';
     };
 
-    // Handle form fields
     // Add _method parameter to tell Laravel this is a PUT request
     formData.append('_method', 'PUT');
+    
+    // Handle form fields
     Object.entries(form).forEach(([k, v]) => {
-      // Skip empty fields but allow zero values for numeric fields
-      if (v === '' || v === null || v === undefined) return;
-      
       // Skip convocatoria as it's handled separately
-      if (k === 'convocatoria') return;
+      if (k === 'convocatoria') {
+        console.log(`Skipping convocatoria field: ${k} = ${v}`);
+        return;
+      }
+      
+      // Si la inscripción ya comenzó, solo permitir fin_inscripcion
+      if (inscripcionYaComenzo && k !== 'fin_inscripcion') {
+        console.log(`Skipping field due to inscription already started: ${k} = ${v}`);
+        return;
+      }
       
       // Handle dates
       if (['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'].includes(k)) {
         const formattedDate = formatDateToYYYYMMDD(v);
         if (formattedDate) {
+          console.log(`Adding date field: ${k} = ${formattedDate} (original: ${v})`);
           formData.append(k, formattedDate);
+        } else if (v === '' || v === null || v === undefined) {
+          // Send empty string for empty dates
+          console.log(`Adding empty date field: ${k} = ""`);
+          formData.append(k, '');
+        } else {
+          console.log(`Skipping invalid date: ${k} = ${v}`);
         }
       } 
       // Handle numeric fields
-      else if (['costo', 'max_areas'].includes(k)) {
-        formData.append(k, v === '' ? '0' : v.toString());
+      else if (k === 'costo') {
+        const costoValue = v === '' || v === null || v === undefined ? '0' : v.toString();
+        console.log(`Adding costo field: ${k} = ${costoValue}`);
+        formData.append(k, costoValue);
       }
-      // Handle other fields
+      else if (k === 'max_areas') {
+        // Si está vacío o es null, no enviamos el campo (será null en el backend)
+        if (v === '' || v === null || v === undefined) {
+          console.log(`Skipping max_areas field (empty/null): ${k} = ${v}`);
+          return; // No agregar el campo al FormData
+        }
+        // Si tiene un valor, debe ser un número válido >= 1
+        const valor = parseInt(v);
+        if (!isNaN(valor) && valor >= 1) {
+          console.log(`Adding max_areas field: ${k} = ${valor} (original: ${v})`);
+          formData.append(k, valor.toString());
+        } else {
+          console.log(`Skipping invalid max_areas: ${k} = ${v}`);
+        }
+      }
+      // Handle other fields (allow empty values)
       else {
-        formData.append(k, v.toString());
+        const fieldValue = v === null || v === undefined ? '' : v.toString();
+        console.log(`Adding other field: ${k} = ${fieldValue}`);
+        formData.append(k, fieldValue);
       }
     });
 
-    // Handle file upload
-    if (archivo) {
+    // Handle file upload - only if inscription hasn't started
+    if (archivo && !inscripcionYaComenzo) {
       formData.append('convocatoria', archivo);
     }
     
-    Object.entries(form).forEach(([k, v]) => {
-      // Skip empty fields but allow zero values for numeric fields
-      if (v === '' || v === null || v === undefined) return;
-      
-      // Skip convocatoria as it's handled separately
-      if (k === 'convocatoria') return;
-      
-      // Handle dates
-      if (['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'].includes(k)) {
-        const formattedDate = formatDateToYYYYMMDD(v);
-        if (formattedDate) {
-          formData.append(k, formattedDate);
-        }
-      } 
-      // Handle numeric fields
-      else if (['costo', 'max_areas'].includes(k)) {
-        formData.append(k, v === '' ? '0' : v.toString());
-      }
-      // Handle other fields
-      else {
-        formData.append(k, v.toString());
-      }
-    });
-
-    // Handle file upload
-    if (archivo) {
-      formData.append('convocatoria', archivo);
+    // Debug: log FormData contents
+    console.log('FormData contents:');
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
     }
     
     try {
@@ -460,7 +493,7 @@ const ConfParamOlimpiada = () => {
       setMensaje('Cambios guardados correctamente.');
       
       // Update file states after successful save
-      if (archivo) {
+      if (archivo && !inscripcionYaComenzo) {
         setTieneArchivoExistente(true);
         setArchivoActualNombre(archivo.name);
         setArchivo(null);
@@ -469,16 +502,41 @@ const ConfParamOlimpiada = () => {
       
       setEditando({}); // Clear edit states
       setModal(false); // Close modal
+      
+      // Update initial data to reflect changes
+      setDatosIniciales({ ...form });
+      setCamposTocados({});
+      
     } catch (error) {
-      const errorMsg = error.response?.status === 429 
-        ? 'Demasiadas solicitudes. Por favor, espere un momento e inténtelo nuevamente.'
-        : `Error al guardar cambios: ${error.response?.data?.message || 'Por favor, intente nuevamente.'}`;
-      setMensaje(errorMsg);
       console.error('Error al guardar:', error);
+      console.error('Error response:', error.response?.data);
+      
+      let errorMsg = 'Error al guardar cambios: ';
+      
+      if (error.response?.status === 422) {
+        // Error de validación - mostrar detalles específicos
+        const validationErrors = error.response?.data?.errors;
+        if (validationErrors && typeof validationErrors === 'object') {
+          const errorMessages = Object.entries(validationErrors)
+            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+            .join('; ');
+          errorMsg += `Errores de validación: ${errorMessages}`;
+        } else if (error.response?.data?.message) {
+          errorMsg += error.response.data.message;
+        } else {
+          errorMsg += 'Los datos enviados no son válidos.';
+        }
+      } else if (error.response?.status === 429) {
+        errorMsg = 'Demasiadas solicitudes. Por favor, espere un momento e inténtelo nuevamente.';
+      } else {
+        errorMsg += error.response?.data?.message || 'Por favor, intente nuevamente.';
+      }
+      
+      setMensaje(errorMsg);
     } finally {
       setGuardando(false);
     }
-  }, [form, archivo, id, updateOlimpiada]);
+  }, [form, archivo, id, inscripcionYaComenzo]);
 
   const cancelarGuardar = useCallback(() => {
     setModal(false);
@@ -528,6 +586,10 @@ const ConfParamOlimpiada = () => {
     const valorActual = type === 'date' ? formatoInputDate(valor) : valor;
     const hasChanged = valorActual !== valorOriginal;
     
+    // Determinar si el campo debe estar deshabilitado
+    // Si la inscripción ya comenzó, solo se puede editar la fecha de fin de inscripción
+    const estaDeshabilitado = inscripcionYaComenzo && name !== 'fin_inscripcion';
+    
     return (
       <div className="mb-6 w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -540,13 +602,22 @@ const ConfParamOlimpiada = () => {
               placeholder={placeholder}
               onChange={handleChange}
               onBlur={handleBlur}
-              helperText={`Valor registrado: ${getValorOriginal(name)}`}
+              helperText={
+                estaDeshabilitado 
+                  ? `Campo deshabilitado - La inscripción ya comenzó. Valor registrado: ${getValorOriginal(name)}`
+                  : `Valor registrado: ${getValorOriginal(name)}`
+              }
               error={errorToShow}
               className={hasChanged ? "border-primary-300" : ""}
+              disabled={estaDeshabilitado}
               {...inputProps}
             />
           </div>
-          <PencilIcon className={hasChanged ? "text-primary-500" : ""}/>
+          <PencilIcon className={
+            estaDeshabilitado 
+              ? "text-gray-400" 
+              : (hasChanged ? "text-primary-500" : "")
+          }/>
         </div>
       </div>
     );
@@ -565,6 +636,26 @@ const ConfParamOlimpiada = () => {
             <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">
               Configuración de {olimpiada.nombre}
             </h1>
+            
+            {inscripcionYaComenzo && (
+              <div className="mb-6 p-4 rounded-md bg-orange-50 border border-orange-200">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-orange-700 font-medium">
+                      ⚠️ Edición Limitada - La inscripción ya comenzó
+                    </p>
+                    <p className="text-orange-600 text-sm mt-1">
+                      Solo se puede modificar la fecha de fin de inscripción para ampliar el período de inscripción. Los demás campos están deshabilitados.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {mensaje && (
               <div className={`mb-6 p-4 rounded-md ${mensaje.includes('error') || mensaje.includes('corrija')
@@ -602,6 +693,12 @@ const ConfParamOlimpiada = () => {
                 <div className="w-full p-4 bg-gray-50 rounded-lg">
                   <div className="flex flex-col space-y-4">
                     <label className="text-sm font-semibold text-gray-700">Convocatoria:</label>
+                    
+                    {inscripcionYaComenzo && (
+                      <div className="text-sm text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-200">
+                        <strong>Nota:</strong> La subida de archivos está deshabilitada porque la inscripción ya comenzó.
+                      </div>
+                    )}
 
                     {/* Componente para subir archivo */}
                     <div className="flex justify-center">
@@ -627,16 +724,17 @@ const ConfParamOlimpiada = () => {
                           (tieneArchivoExistente ? archivoActualNombre : 'Subir archivo PDF')
                         }
                         tipoArchivo="PDF"
-                        handleArchivo={handleArchivo}
+                        handleArchivo={inscripcionYaComenzo ? () => {} : handleArchivo}
                         inputRef={inputArchivoRef}
                         id="input-convocatoria"
                         hasExistingFile={tieneArchivoExistente && !archivo}
                         showFileStatus={true}
                         currentFileName={archivoActualNombre}
                         newFile={archivo}
-                        onCancelFile={limpiarArchivoSeleccionado}
+                        onCancelFile={inscripcionYaComenzo ? () => {} : limpiarArchivoSeleccionado}
                         baseUrl="http://127.0.0.1:8000/storage"
                         fileTypeMessage="convocatoria"
+                        disabled={inscripcionYaComenzo}
                         onFileValidationError={(error) => {
                           setErrores(prev => ({ ...prev, convocatoria: error }));
                         }}

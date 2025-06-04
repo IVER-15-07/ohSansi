@@ -132,9 +132,6 @@ const Olimpiadas = () => {
                         <button onClick={() => handleIniciar(olimp.id)} className="flex items-center text-blue-600 hover:underline">
                           <Play size={16} className="mr-1" /> Publicar
                         </button>
-                        <button className="flex items-center text-gray-300 hover:underline">
-                          <Archive size={16} className="mr-1" /> Archivar
-                        </button>
                       </div>
                     </Card>
                   ))

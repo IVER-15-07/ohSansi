@@ -12,12 +12,12 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
   const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   const navigation = [
-    { name: "Dashboard", href: "/AdminLayout", icon: Home },
+    // { name: "Dashboard", href: "/AdminLayout", icon: Home },
     { name: "Olimpiadas", href: "/AdminLayout/Olimpiadas", icon: Trophy },
     { name: "Áreas", href: "/AdminLayout/Areas", icon: BookOpen },
-    { name: "Niveles y Categorías", href: "/AdminLayout/NivelCategoria", icon: BarChart3 },
+    { name: "Niveles y Categorías", href: "/AdminLayout/NivelCategoria", icon: Settings },
     { name: "Reportes", href: "/AdminLayout/Reportes", icon: BarChart3 },
-    { name: "Configuración", href: "/AdminLayout/config", icon: Settings },
+    // { name: "Configuración", href: "/AdminLayout/config", icon: Settings },
   ]
 
   const isActive = (href) => location.pathname === href

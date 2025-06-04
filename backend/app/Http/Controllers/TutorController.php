@@ -63,7 +63,7 @@ class TutorController extends Controller
             $validated = $request->validate([
                 'nombres' => 'required|string|max:50',
                 'apellidos' => 'required|string|max:50',
-                'ci' => 'required||string||max:50||unique:tutor,ci',
+                'ci' => 'required||string||max:50',
             ]);
 
             $persona = Persona::firstOrCreate(
