@@ -14,7 +14,9 @@ const Alert = ({
   showCloseButton = true,
   showTimer = false,
   size = "md",
-  priority = "normal" // low, normal, high, critical
+  priority = "normal", // low, normal, high, critical
+  sticky = false, // Nueva prop para posicionamiento sticky
+  position = "top" // top, bottom - posición del sticky
 }) => {
   const [isVisible, setIsVisible] = useState(true)
   const [timeLeft, setTimeLeft] = useState(autoCloseDelay / 1000)
@@ -101,6 +103,9 @@ const Alert = ({
         "border rounded-lg relative transition-all duration-300 ease-out transform scale-95 opacity-0",
         container, 
         sizes[size],
+        sticky && "fixed z-50 left-4 right-4 max-w-md mx-auto",
+        sticky && position === "top" && "top-4",
+        sticky && position === "bottom" && "bottom-4",
         className
       )}>
         {/* Content placeholder to maintain layout during animation */}
@@ -108,13 +113,18 @@ const Alert = ({
     )
   }
 
+  const alertClasses = cn(
+    "border rounded-lg relative transition-all duration-300 ease-in transform scale-100 opacity-100",
+    container, 
+    sizes[size],
+    sticky && "fixed z-50 left-4 right-4 max-w-md mx-auto shadow-xl",
+    sticky && position === "top" && "top-4",
+    sticky && position === "bottom" && "bottom-4",
+    className
+  )
+
   return (
-    <div className={cn(
-      "border rounded-lg relative transition-all duration-300 ease-in transform scale-100 opacity-100",
-      container, 
-      sizes[size],
-      className
-    )}>
+    <div className={alertClasses}>
       {/* Auto-close progress bar */}
       {autoClose && (
         <div className="absolute top-0 left-0 h-1 bg-black bg-opacity-10 rounded-t-lg overflow-hidden">
@@ -155,12 +165,14 @@ const Alert = ({
         )}
       </div>
 
-      <style jsx>{`
-        @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
+      <style>
+        {`
+          @keyframes shrink {
+            from { width: 100%; }
+            to { width: 0%; }
+          }
+        `}
+      </style>
     </div>
   )
 }

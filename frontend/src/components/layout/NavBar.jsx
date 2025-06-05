@@ -12,8 +12,7 @@ const Navbar = () => {
 
   const navigation = [
     { name: "Inicio", href: "/", icon: Home },
-    { name: "Olimpiadas", href: "/AdminLayout/Olimpiadas", icon: Trophy },
-    { name: "Versiones", href: "/versiones", icon: FileText },
+    { name: "Iniciar Sesion", href: "/AdminLayout/Olimpiadas", icon: Users },
   ]
 
   const isActive = (href) => location.pathname === href
@@ -24,11 +23,11 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
-            <div className="h-12 w-12 rounded-lg flex items-center justify-center">
+            <div className="h-25 w-25 rounded-lg flex items-center justify-center">
                             <img
                               src={logo || "/placeholder.svg?height=200&width=200"}
                               alt="Logo Oh! SANSI"
-                              className="w-48 h-48 object-contain"
+                              className="w-50 h-50 object-contain"
                             />
             </div>
             <span className="text-xl font-bold text-secondary-900">Olimpiadas de Ciencia y Tecnologia</span>

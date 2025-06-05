@@ -28,6 +28,6 @@ export {
 // Feedback Components
 export { default as Modal } from './Modal'
 export { default as Alert } from './Alert'
-export {default as LoadingSpinner} from './LoadingSpinner'
-// Future components (when ready)
-// export { default as LoadingSpinner } from './LoadingSpinner'
+export { default as LoadingSpinner } from './LoadingSpinner'
+export { default as StickyAlert } from './StickyAlert'
+export { default as StickyAlertContainer } from './StickyAlertContainer'

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAreas, createArea } from '../../../service/areas.api';
 import Error from '../Error';
-import { Modal, Button, Input, LoadingSpinner, Alert } from '../../components/ui';
+import { Modal, Button, Input, LoadingSpinner , Card, Alert } from '../../components/ui';
 
 const Areas = () => {
   const queryClient = useQueryClient();
@@ -134,13 +134,12 @@ const Areas = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto max-h-[300px] pr-1">
           {areas.data.map((area, index) => (
-            <div
+            <Card
               key={index}
-              className={`flex justify-between items-center gap-4 p-4 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01]
-            ${index % 2 === 0 ? 'bg-gradient-to-r from-blue-50 to-blue-100' : 'bg-gradient-to-r from-red-50 to-red-100'}`}
+              className={`flex justify-between items-center gap-4 p-4 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01] hover:shadow hover:border-blue-300 hover:bg-blue-50`}
             >
               <span className="text-[#20335C] font-medium">{area.nombre}</span>
-            </div>
+            </Card>
           ))}
         </div>
       </div>
