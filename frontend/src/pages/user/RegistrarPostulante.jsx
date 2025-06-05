@@ -20,6 +20,7 @@ import { getOpcionesInscripcion } from "../../../service/opciones_inscripcion.ap
 import { getPersonaByCI } from "../../../service/personas.api";
 import { getOpcionesCampoPostulante } from "../../../service/opciones_campo_postulante.api";
 
+import Modal from '../../components/ui/Modal';
 
 const initialPostulanteState = {
   idPersona: null,
@@ -37,8 +38,9 @@ const initialPostulanteState = {
 const RegistrarPostulante = () => {
   const { idOlimpiada, idEncargado } = useParams();
   const deviceInfo = useDeviceAgent();
-  
-  // Estados principales
+
+  const [modal, setModal] = useState({open: false, nombre: ''});
+  const {idOlimpiada, idEncargado } = useParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formErrors, setFormErrors] = useState({});
@@ -326,7 +328,7 @@ const RegistrarPostulante = () => {
     setOpcionesInscripcion(opcionesFiltradas);
     setOpcionesSeleccionadas([]);
   };
-
+  
   // Función mejorada para manejar cambios en postulante
   const handlePostulanteChange = useCallback((field, value) => {
     // Para el campo CI, aplicar validación en tiempo real
@@ -352,6 +354,7 @@ const RegistrarPostulante = () => {
       
       if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$/.test(value)) {
         return; // No actualizar si no cumple el patrón
+
       }
     }
 
@@ -654,6 +657,17 @@ const RegistrarPostulante = () => {
         // Si cambia el CI, resetea buscado
         if (field === "ci") {
           return { ...tutor, [field]: value, buscado: false };
+        }
+
+
+        if (field === "nombres" || field === "apellidos") {
+          if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
+            setModal({
+              open: true,
+              nombre: "Solo se permiten letras y espacios en este campo."
+            });
+            return { ...tutor, [field]: tutor[field] }; // No actualiza el campo
+          }
         }
         return { ...tutor, [field]: value };
       }
@@ -1009,6 +1023,7 @@ const RegistrarPostulante = () => {
                 placeholder="Ingrese el CI del postulante"
                 required
                 error={formErrors.ci}
+
               />
 
               {postulante.buscado && (

@@ -113,6 +113,28 @@ const ElegirCamposTutor = ({ disponibles, seleccionadas, setSeleccionadas, idOli
                         Campos Disponibles para Tutor
                     </h3>
                     <Badge variant="secondary" size="sm">{disponibles.length}</Badge>
+
+
+                <h3 className="font-semibold text-gray-700 text-lg mb-2">Campos para el Tutor Disponibles</h3>
+                <div className="overflow-y-auto max-h-[360px] px-1 sm:px-2 md:px-1">
+                    <ul className="flex flex-col gap-3">
+                        {disponibles.map((campoTutor) => (
+                            <li
+                                key={campoTutor.id}
+                                className={`flex justify-between items-center gap-4 p-4 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01]`}
+                            >
+                            <span className="text-gray-800 font-medium">{campoTutor.nombre}</span>
+                            <button
+                                onClick={() => handleAdd(campoTutor)}
+                                className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                                <CheckCheck size={18} />
+                                Añadir
+                            </button>
+                            </li>
+                        ))}
+                    </ul>
+
                 </div>
                 
                 <div className={listContainerClasses}>

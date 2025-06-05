@@ -106,6 +106,7 @@ const ElegirCamposPostulante = ({ disponibles, seleccionadas, setSeleccionadas, 
                 onClose={closeModal}
             />
 
+
             {/* Available Fields Card */}
             <Card className={cardClasses}>
                 <div className="flex items-center gap-2 mb-4">
