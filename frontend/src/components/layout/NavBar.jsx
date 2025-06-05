@@ -27,7 +27,7 @@ const Navbar = () => {
                             <img
                               src={logo || "/placeholder.svg?height=200&width=200"}
                               alt="Logo Oh! SANSI"
-                              className="w-50 h-50 object-contain"
+                              className="w-50 h-15 object-contain"
                             />
             </div>
             <span className="text-xl font-bold text-secondary-900">Olimpiadas de Ciencia y Tecnologia</span>
