@@ -26,8 +26,10 @@ import { getOpcionesInscripcion } from "../../../service/opciones_inscripcion.ap
 import { getPersonaByCI } from "../../../service/personas.api";
 import { getOpcionesCampoPostulante } from "../../../service/opciones_campo_postulante.api";
 
+import Modal from '../../components/ui/Modal';
 
 const RegistrarPostulante = () => {
+  const [modal, setModal] = useState({open: false, nombre: ''});
   const {idOlimpiada, idEncargado } = useParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -228,12 +230,15 @@ const RegistrarPostulante = () => {
     setOpcionesInscripcion(opcionesFiltradas);
     setOpcionesSeleccionadas([]);
   };
-
+  console.log(modal);
   {/*FUNCIONES RELACIONADAS A POSTULANTE*/}
   const handlePostulanteChange = (field, value) => {
     if (field === "nombres" || field === "apellidos") {
       if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
-        alert("Solo se permiten letras y espacios en este campo.");
+        setModal({
+          open: true,
+          nombre: "Solo se permiten letras y espacios en este campo."
+        });
         return;
       }
     }
@@ -499,7 +504,10 @@ const RegistrarPostulante = () => {
 
         if (field === "nombres" || field === "apellidos") {
           if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
-            alert("Solo se permiten letras y espacios en este campo.");
+            setModal({
+              open: true,
+              nombre: "Solo se permiten letras y espacios en este campo."
+            });
             return { ...tutor, [field]: tutor[field] }; // No actualiza el campo
           }
         }
@@ -823,10 +831,24 @@ const RegistrarPostulante = () => {
   console.log(tutores);
   console.log(opcionesSeleccionadas);
   return (
+    
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md">
+      {modal.open && 
+      (<Modal
+          variant='warning'
+          message={modal.nombre}
+          onConfirm={() => setModal({open: false, nombre: ''})}
+          title="Información"
+          isOpen={modal.open}
+          showCancelButton={false}
+       />
+      )}
+      
       <h1 className="text-3xl font-bold text-blue-900 mb-6">Registro de Postulante</h1>
+      
+      <h3 className="text-lg font-semibold text-gray-800">Datos del Postulante</h3>
+      
       <div className="flex flex-col md:flex-row gap-4 items-center">
-
         <div>
           <label className="text-sm font-medium text-gray-700">Carnet de Identidad <span className="text-red-500">*</span> </label>
           <input type="text" disabled={postulante.idPersona} value={postulante.ci} onChange={(e) => handlePostulanteChange("ci", e.target.value)} 
@@ -919,7 +941,6 @@ const RegistrarPostulante = () => {
         <div>
           {/**ESTA PARTE CONSISTIRA DE LOS DATOS QUE SE LE PIDE AL POSTULANTE PARA INSCRIBIRSE A UNA OLIMPIADA**/}
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">Datos del Postulante</h3>
             {postulante.datos.map((campo, index) => {
               switch (campo.tipo_campo) {
                 case "text":

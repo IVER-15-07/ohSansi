@@ -61,10 +61,11 @@ const ElegirCamposTutor = ({disponibles, seleccionadas, setSeleccionadas, idOlim
             <div className="w-full md:w-1/2 border rounded-2xl p-4 shadow-sm bg-white">
             {modal.open && (
                 <Modal
-                    variant='info'
+                    variant='warning'
+                    isOpen={modal.open}
                     message={modal.nombre}
-                    onClose={() => setModal({open: false, nombre: ''})}
-                />)};
+                    onConfirm={() => setModal({open: false, nombre: ''})}
+                />)}
 
                 <h3 className="font-semibold text-gray-700 text-lg mb-2">Campos para el Tutor Disponibles</h3>
                 <div className="overflow-y-auto max-h-[360px] px-1 sm:px-2 md:px-1">

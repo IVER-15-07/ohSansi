@@ -132,7 +132,10 @@ const ConfigurarCamposOlimpiada = () => {
             {/* Ejemplo de uso de los arrays filtrados: */}
             {step == 1 &&(
               <div>
-                <h3 className="font-semibold">Campos disponibles para Postulante:</h3>
+                <h3 className="font-semibold">
+                  *Los nombres, los apellidos, la fecha de nacmiento y el grado de un postulante son campos obligatorios y esscenciales para el registro. 
+                  Estos se pedirán automáticamente y no es necesario configurarlos.
+                </h3>
                 <ElegirCamposPostulante 
                   disponibles={catalogoCamposPostulanteFiltrado}
                   seleccionadas={olimpiadaCamposPostulante}
@@ -144,7 +147,10 @@ const ConfigurarCamposOlimpiada = () => {
 
             {step == 2 &&(
               <div>
-                <h3 className='font-semibold'>Campos disponibles para Tutor</h3>
+                <h3 className="font-semibold">
+                  *Los nombres, los apellidos, su relación con el postualnte de un tutor son campos obligatorios y esscenciales para el registro. 
+                  Estos se pedirán automáticamente y no es necesario configurarlos.
+                </h3>
                 <ElegirCamposTutor
                 disponibles={catalogoCamposTutorFiltrado}
                 seleccionadas={olimpiadaCamposTutor}
