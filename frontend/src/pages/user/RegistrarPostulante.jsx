@@ -19,9 +19,6 @@ import { getGrados } from "../../../service/grados.api";
 import { getOpcionesInscripcion } from "../../../service/opciones_inscripcion.api";
 import { getPersonaByCI } from "../../../service/personas.api";
 import { getOpcionesCampoPostulante } from "../../../service/opciones_campo_postulante.api";
-
-import Modal from '../../components/ui/Modal';
-
 const initialPostulanteState = {
   idPersona: null,
   ci: "",
@@ -40,7 +37,6 @@ const RegistrarPostulante = () => {
   const deviceInfo = useDeviceAgent();
 
   const [modal, setModal] = useState({open: false, nombre: ''});
-  const {idOlimpiada, idEncargado } = useParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formErrors, setFormErrors] = useState({});
@@ -993,12 +989,34 @@ const RegistrarPostulante = () => {
   
   const handleOpcionSeleccionPostulanteChange = (index, valor, opciones) => {
     const idValor = opciones.find(opcion => opcion.valor === valor)?.id || null;
-    setPostulante(prev => ({
-      ...prev,
-      datos: prev.datos.map((dato, i) =>
+    setPostulante(prev => {
+      // Actualiza el campo actual
+      let nuevosDatos = prev.datos.map((dato, i) =>
         i === index ? { ...dato, valor, idValor } : dato
-      ),
-    }));
+      );
+
+      // Si el valor seleccionado es vacío, limpiar todos los hijos dependientes recursivamente
+      if (!valor) {
+        const limpiarHijos = (padreId) => {
+          nuevosDatos = nuevosDatos.map((dato) => {
+            if (dato.idDependencia === padreId) {
+              // Limpiar valor e idValor
+              const datoLimpio = { ...dato, valor: '', idValor: null };
+              // Recursivamente limpiar los hijos de este campo
+              return limpiarHijos(dato.idCampoPostulante), datoLimpio;
+            }
+            return dato;
+          });
+        };
+        const campoActual = prev.datos[index];
+        limpiarHijos(campoActual.idCampoPostulante);
+      }
+
+      return {
+        ...prev,
+        datos: nuevosDatos,
+      };
+    });
   };
 
   return (
@@ -1116,20 +1134,57 @@ const RegistrarPostulante = () => {
                     <h3 className="text-lg font-semibold text-gray-800">Datos Adicionales</h3>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {postulante.datos.map((campo, index) => (
-                      <FormField
-                        key={index}
-                        label={campo.nombre_campo}
-                        name={`datos_${index}`}
-                        type={campo.tipo_campo}
-                        value={campo.valor}
-                        onChange={(e) =>
-                          handlePostulanteChange(`datos[${index}].valor`, e.target.value)
+                    {postulante.datos.map((campo, index) => {
+                      if (["select", "lista", "checkbox"].includes(campo.tipo_campo)) {
+                        if (campo.idDependencia !== null && campo.idDependencia !== undefined) {
+                          const campoPadre = postulante.datos.find(c => c.idCampoPostulante === campo.idDependencia);
+                          const padreSinSeleccion = !campoPadre || !campoPadre.idValor;
+                          const opcionesValidas = padreSinSeleccion ? [] : (campo.opciones[campoPadre.idValor] || []);
+                          return (
+                            <FormField
+                              key={index}
+                              label={campo.nombre_campo}
+                              name={`datos_${index}`}
+                              type="select"
+                              value={campo.valor}
+                              onChange={e => handleOpcionSeleccionPostulanteChange(index, e.target.value, opcionesValidas)}
+                              required={campo.esObligatorio}
+                              error={formErrors[`datos.${index}`]}
+                              options={opcionesValidas.map(opt => ({ value: opt.valor, label: opt.valor }))}
+                              disabled={padreSinSeleccion}
+                              helperText={padreSinSeleccion ? `Primero seleccione ${campoPadre ? campoPadre.nombre_campo : 'la opción anterior'}` : undefined}
+                            />
+                          );
+                        } else {
+                          return (
+                            <FormField
+                              key={index}
+                              label={campo.nombre_campo}
+                              name={`datos_${index}`}
+                              type="select"
+                              value={campo.valor}
+                              onChange={e => handleOpcionSeleccionPostulanteChange(index, e.target.value, campo.opciones)}
+                              required={campo.esObligatorio}
+                              error={formErrors[`datos.${index}`]}
+                              options={campo.opciones.map(opt => ({ value: opt.valor, label: opt.valor }))}
+                            />
+                          );
                         }
-                        required={campo.esObligatorio}
-                        error={formErrors[`datos.${index}`]}
-                      />
-                    ))}
+                      }
+                      // Otros tipos de campo
+                      return (
+                        <FormField
+                          key={index}
+                          label={campo.nombre_campo}
+                          name={`datos_${index}`}
+                          type={campo.tipo_campo}
+                          value={campo.valor}
+                          onChange={e => handlePostulanteChange(`datos[${index}].valor`, e.target.value)}
+                          required={campo.esObligatorio}
+                          error={formErrors[`datos.${index}`]}
+                        />
+                      );
+                    })}
                   </CardContent>
                 </Card>
               )}

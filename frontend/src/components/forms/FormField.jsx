@@ -12,6 +12,7 @@ const FormField = ({
   placeholder,
   className = "",
   labelClassName = "",
+  options = [], // NUEVO: para selects
   ...props 
 }) => {
   return (
@@ -28,6 +29,7 @@ const FormField = ({
         disabled={disabled}
         className={`w-full ${disabled ? "bg-gray-100" : ""} ${error ? "border-red-500" : ""} ${className}`}
         placeholder={placeholder}
+        options={options} // NUEVO: solo se usa si type === 'select'
         {...props}
       />
       {error && <span className="text-sm text-red-500">{error}</span>}
