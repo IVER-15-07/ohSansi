@@ -63,9 +63,10 @@ const ElegirCamposPostulante = ({disponibles, seleccionadas, setSeleccionadas, i
             <div className="w-full md:w-1/2 border rounded-2xl p-4 shadow-sm bg-white">
             {modal.open && (
                 <Modal
-                    variant='info'
+                    variant='warning'
                     message={modal.nombre}
-                    onClose={() => setModal({open: false, nombre: ''})}
+                    onConfirm={() => setModal({open: false, nombre: ''})}
+                    isOpen={modal.open}
                 />)}
 
                 <h3 className="font-semibold text-gray-700 text-lg mb-2">Campos para el Postulante Disponibles</h3>
