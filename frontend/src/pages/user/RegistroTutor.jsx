@@ -10,6 +10,7 @@ const RegistroTutor = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const CIinicial = location.state?.ci || ""; // Obtener el CI inicial del estado de la ubicación
+  const idOlimpiada = location.state?.idOlimpiada; // Obtener el id de la olimpiada desde el estado de la ubicación
   // Estado del formulario
   const [formData, setFormData] = useState({
     idPersona: "",
@@ -282,7 +283,7 @@ const RegistroTutor = () => {
         setShowSuccessAlert(false);
       }, 5000);
       // Redirigir al usuario a la página de identificación del encargado
-      navigate("/IdentificarEncargado", { state: { idEncargado } });
+      navigate("/IdentificarEncargado", { state: { idEncargado, idOlimpiada } });
     } catch (error) {
       // Manejo de errores
       console.error("Error al enviar los datos del encargado:", error);

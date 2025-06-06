@@ -21,7 +21,7 @@ class OpcionCampoPostulanteSeeder extends Seeder
         ];
         $departamentoCampo = CampoPostulante::where('nombre', 'Departamento')->first();
         $provinciaCampo = CampoPostulante::where('nombre', 'Provincia')->first();
-        $ciudadCampo = CampoPostulante::where('nombre', 'Ciudad')->first();
+        
         $opcionesDepartamento = [];
         foreach ($departamentos as $dep) {
             $opcionesDepartamento[$dep] = OpcionCampoPostulante::create([
@@ -161,24 +161,5 @@ class OpcionCampoPostulanteSeeder extends Seeder
             ]);
         }
 
-        // 3. Crear ciudades (dependen de provincia)
-        $ciudades = [
-            ['nombre' => 'Trinidad', 'provincia' => 'Cercado', 'departamento' => 'Beni'],
-            ['nombre' => 'Sucre', 'provincia' => 'Oropeza', 'departamento' => 'Chuquisaca'],
-            ['nombre' => 'La Paz', 'provincia' => 'Murillo', 'departamento' => 'La Paz'],
-            ['nombre' => 'Cochabamba', 'provincia' => 'Cercado', 'departamento' => 'Cochabamba'],
-            ['nombre' => 'Santa Cruz de la Sierra', 'provincia' => 'Andrés Ibáñez', 'departamento' => 'Santa Cruz'],
-            ['nombre' => 'Tarija', 'provincia' => 'Cercado', 'departamento' => 'Tarija'],
-            // ...
-        ];
-        foreach ($ciudades as $ciu) {
-            $provKey = $ciu['provincia'].'|'.$ciu['departamento'];
-            $provOpcion = $opcionesProvincia[$provKey] ?? null;
-            OpcionCampoPostulante::create([
-                'id_campo_postulante' => $ciudadCampo->id,
-                'valor' => $ciu['nombre'],
-                'id_dependencia' => $provOpcion ? $provOpcion->id : null,
-            ]);
-        }
     }
 }
