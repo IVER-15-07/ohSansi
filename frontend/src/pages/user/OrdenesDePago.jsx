@@ -5,6 +5,7 @@ import autoTable from "jspdf-autotable";
 import { obtenerInscripciones } from "../../../service/inscripcion.api";
 import { generarDatosDeOrden, guardarOrdenPago, obtenerOrdenesDePago } from "../../../service/pagos.api";
 import { getOlimpiada } from "../../../service/olimpiadas.api";
+import useDeviceAgent from "../../hooks/useDeviceAgent";
 
 const OrdenesDePago = () => {
   const { idEncargado, idOlimpiada } = useParams();
@@ -16,6 +17,9 @@ const OrdenesDePago = () => {
   const [cargando, setCargando] = useState(true);
   const [nombreOlimpiada, setNombreOlimpiada] = useState("");
   const [verDetallesLista, setVerDetallesLista] = useState(null);
+
+  const device = useDeviceAgent();
+  const isMobile = device.isMobile;
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -193,22 +197,23 @@ const OrdenesDePago = () => {
     }
   };
 
-if (verDetallesLista) {
+  // Pantalla de detalles de lista
+  if (verDetallesLista) {
     const listaRegistros = registrosPorLista.find(([id]) => id === verDetallesLista)?.[1] || [];
     return (
-      <div className="p-4 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold text-center mb-6 text-blue-900">
+      <div className={`p-2 md:p-4 max-w-4xl mx-auto`}>
+        <h2 className="text-xl md:text-2xl font-bold text-center mb-4 md:mb-6 text-blue-900">
           Detalles de la lista #{verDetallesLista}
         </h2>
-        <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
+        <div className="bg-white p-2 md:p-6 rounded-xl shadow border border-gray-200 mb-6">
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-sm">
+            <table className="min-w-full border-collapse text-xs md:text-sm">
               <thead className="bg-blue-800 text-white">
                 <tr>
                   <th className="border border-black p-2">Nombres</th>
-                  <th className="border border-black p-2">Apellidos</th>
+                  {!isMobile && <th className="border border-black p-2">Apellidos</th>}
                   <th className="border border-black p-2">Área</th>
-                  <th className="border border-black p-2">Grado</th>
+                  {!isMobile && <th className="border border-black p-2">Grado</th>}
                   <th className="border border-black p-2">Nivel/Categoria</th>
                 </tr>
               </thead>
@@ -216,9 +221,9 @@ if (verDetallesLista) {
                 {listaRegistros.map((registro) => (
                   <tr key={registro.id_inscripcion} className="hover:bg-gray-50">
                     <td className="border border-black p-2">{registro.nombres}</td>
-                    <td className="border border-black p-2">{registro.apellidos}</td>
+                    {!isMobile && <td className="border border-black p-2">{registro.apellidos}</td>}
                     <td className="border border-black p-2">{registro.nombre_area}</td>
-                    <td className="border border-black p-2">{registro.grado}</td>
+                    {!isMobile && <td className="border border-black p-2">{registro.grado}</td>}
                     <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
                   </tr>
                 ))}
@@ -228,7 +233,7 @@ if (verDetallesLista) {
         </div>
         <div className="flex justify-center">
           <button
-            className="px-6 py-3 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition"
+            className="px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition text-sm md:text-base"
             onClick={() => setVerDetallesLista(null)}
           >
             Volver
@@ -239,9 +244,8 @@ if (verDetallesLista) {
   }
 
   return (
-    
-    <div className="p-4 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-6 text-blue-900">
+    <div className={`p-2 md:p-4 max-w-6xl mx-auto`}>
+      <h2 className="text-xl md:text-2xl font-bold text-center mb-4 md:mb-6 text-blue-900">
         {"Órdenes de Pago"}
       </h2>
       {cargando ? (
@@ -251,22 +255,22 @@ if (verDetallesLista) {
       ) : (
         <>
           {/* Registros individuales */}
-          <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
-            <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+          <div className="bg-white p-2 md:p-6 rounded-xl shadow border border-gray-200 mb-6">
+            <h2 className="text-lg md:text-xl font-semibold text-blue-800 mb-2 md:mb-4 text-center">
               Registros Individuales
             </h2>
             {mensajeRegistros ? (
               <p className="text-center text-gray-700">{mensajeRegistros}</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse text-sm">
+                <table className="min-w-full border-collapse text-xs md:text-sm">
                   <thead className="bg-blue-800 text-white">
                     <tr>
                       <th className="border border-black p-2">Seleccionar</th>
                       <th className="border border-black p-2">Nombres</th>
-                      <th className="border border-black p-2">Apellidos</th>
+                      {!isMobile && <th className="border border-black p-2">Apellidos</th>}
                       <th className="border border-black p-2">Área</th>
-                      <th className="border border-black p-2">Grado</th>
+                      {!isMobile && <th className="border border-black p-2">Grado</th>}
                       <th className="border border-black p-2">Nivel/Categoria</th>
                     </tr>
                   </thead>
@@ -281,9 +285,9 @@ if (verDetallesLista) {
                           />
                         </td>
                         <td className="border border-black p-2">{registro.nombres}</td>
-                        <td className="border border-black p-2">{registro.apellidos}</td>
+                        {!isMobile && <td className="border border-black p-2">{registro.apellidos}</td>}
                         <td className="border border-black p-2">{registro.nombre_area}</td>
-                        <td className="border border-black p-2">{registro.grado}</td>
+                        {!isMobile && <td className="border border-black p-2">{registro.grado}</td>}
                         <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
                       </tr>
                     ))}
@@ -295,12 +299,12 @@ if (verDetallesLista) {
 
           {/* Registros por lista */}
           {registrosPorLista.length > 0 ? (
-            <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
-              <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+            <div className="bg-white p-2 md:p-6 rounded-xl shadow border border-gray-200 mb-6">
+              <h2 className="text-lg md:text-xl font-semibold text-blue-800 mb-2 md:mb-4 text-center">
                 Registros por lista
               </h2>
               <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse text-sm">
+                <table className="min-w-full border-collapse text-xs md:text-sm">
                   <thead className="bg-blue-800 text-white">
                     <tr>
                       <th className="border border-black p-2">Seleccionar</th>
@@ -330,7 +334,7 @@ if (verDetallesLista) {
                           <td className="border border-black p-2">{idLista}</td>
                           <td className="border border-black p-2 text-center">
                             <button
-                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                              className="px-3 md:px-4 py-1 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs md:text-base"
                               onClick={() => setVerDetallesLista(idLista)}
                             >
                               Ver detalles
@@ -344,8 +348,8 @@ if (verDetallesLista) {
               </div>
             </div>
           ) : (
-            <div className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-8">
-              <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+            <div className="bg-white p-2 md:p-6 rounded-xl shadow border border-gray-200 mb-6">
+              <h2 className="text-lg md:text-xl font-semibold text-blue-800 mb-2 md:mb-4 text-center">
                 Registros por lista
               </h2>
               <p className="text-center text-gray-700">
@@ -354,10 +358,10 @@ if (verDetallesLista) {
             </div>
           )}
 
-          <div className="text-center mt-2 mb-8 flex flex-wrap gap-4 justify-center">
+          <div className="text-center mt-2 mb-6 flex flex-wrap gap-2 md:gap-4 justify-center">
             <button
               onClick={handleSeleccionarTodosIndividuales}
-              className="px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition"
+              className="px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition text-xs md:text-base"
               type="button"
             >
               {registrosIndividuales.every((r) => registrosSeleccionados.includes(r.id_inscripcion)) && registrosIndividuales.length > 0
@@ -366,7 +370,7 @@ if (verDetallesLista) {
             </button>
             <button
               onClick={handleSeleccionarTodosListas}
-              className="px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition"
+              className="px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition text-xs md:text-base"
               type="button"
             >
               {registrosPorLista.length > 0 &&
@@ -378,33 +382,33 @@ if (verDetallesLista) {
             </button>
             <button
               onClick={generarOrdenDePago}
-              className={`px-6 py-3 rounded-lg font-medium transition ${
+              className={`px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition ${
                 registrosSeleccionados.length > 0
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : "bg-gray-400 text-gray-700 cursor-not-allowed"
-              }`}
+              } text-xs md:text-base`}
               disabled={registrosSeleccionados.length === 0}
               type="button"
-          > 
+            >
               Generar Orden de Pago
             </button>
           </div>
 
           {/* Órdenes de Pago */}
-          <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
-            <h2 className="text-xl font-semibold text-blue-800 mb-4 text-center">
+          <div className="bg-white p-2 md:p-6 rounded-xl shadow border border-gray-200">
+            <h2 className="text-lg md:text-xl font-semibold text-blue-800 mb-2 md:mb-4 text-center">
               Órdenes de Pago
             </h2>
             {mensajeOrdenes ? (
               <p className="text-center text-gray-700">{mensajeOrdenes}</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse text-sm">
+                <table className="min-w-full border-collapse text-xs md:text-sm">
                   <thead className="bg-blue-800 text-white">
                     <tr>
                       <th className="border p-2 text-left">Monto</th>
                       <th className="border p-2 text-left">Fecha Generado</th>
-                      <th className="border p-2 text-left">Concepto</th>
+                      {!isMobile && <th className="border p-2 text-left">Concepto</th>}
                       <th className="border p-2 text-center">Orden</th>
                     </tr>
                   </thead>
@@ -413,13 +417,13 @@ if (verDetallesLista) {
                       <tr key={orden.id_pago} className="hover:bg-gray-50">
                         <td className="border p-2">{orden.monto} Bs.</td>
                         <td className="border p-2">{orden.fecha_generado}</td>
-                        <td className="border p-2">{orden.concepto}</td>
-                        <td className="border p-2 text-center min-w-[130px]">
+                        {!isMobile && <td className="border p-2">{orden.concepto}</td>}
+                        <td className="border p-2 text-center min-w-[90px] md:min-w-[130px]">
                           <a
                             href={orden.orden}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                            className="inline-block px-3 md:px-4 py-1 md:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs md:text-base"
                           >
                             Ver Orden
                           </a>

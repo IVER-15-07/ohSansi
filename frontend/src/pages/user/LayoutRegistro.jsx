@@ -57,7 +57,7 @@ const LayoutRegistro = () => {
       </aside>
 
       {/* Contenido desplazable a la derecha */}
-      <main className="ml-80 flex-1 overflow-y-auto p-6 bg-white rounded-md shadow-inner">
+      <main className="ml-20 md:ml-80 flex-1 overflow-y-auto p-2 md:p-6 bg-white rounded-md shadow-inner">
         {currentStep === 1 && (
           <RegistrarPostulante idEncargado={idEncargado} idOlimpiada={idOlimpiada} />
         )}
