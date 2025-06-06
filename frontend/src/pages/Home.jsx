@@ -269,23 +269,29 @@ const Home = () => {
           {hasOlimpiadas ? (
             <Swiper
               modules={[Autoplay]}
-  spaceBetween={30}
-  slidesPerView={Math.min(olimpiadas.length, 3)}
-  centeredSlides={true}
-  breakpoints={{
-    640: {
-      slidesPerView: Math.min(olimpiadas.length, 2),
-    },
-    1024: {
-      slidesPerView: Math.min(olimpiadas.length, 3),
-    },
-  }}
-  autoplay={{
-    delay: 3000,
-    disableOnInteraction: true,
-    pauseOnMouseEnter: true,
-  }}
-  className="w-full"
+              spaceBetween={30}
+              slidesPerView={olimpiadas.length >= 3 ? 3 : olimpiadas.length}
+              centeredSlides={olimpiadas.length > 3}
+              autoplay={
+                olimpiadas.length > 3
+                  ? {
+                    delay: 3000,
+                    disableOnInteraction: true,
+                    pauseOnMouseEnter: true,
+                  }
+                  : false
+              }
+              breakpoints={{
+                640: {
+                  slidesPerView: olimpiadas.length >= 2 ? 2 : olimpiadas.length,
+                  centeredSlides: olimpiadas.length > 2,
+                },
+                1024: {
+                  slidesPerView: olimpiadas.length >= 3 ? 3 : olimpiadas.length,
+                  centeredSlides: olimpiadas.length > 3,
+                },
+              }}
+              className="w-full"
             >
               {olimpiadas.map((olimpiada) => (
                 <SwiperSlide key={olimpiada.id}>
