@@ -207,13 +207,13 @@ const OrdenesDePago = () => {
         </h2>
         <div className="bg-white p-2 md:p-6 rounded-xl shadow border border-gray-200 mb-6">
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-xs md:text-sm">
+            <table className="min-w-[810px] border-collapse text-xs md:text-sm">
               <thead className="bg-blue-800 text-white">
                 <tr>
                   <th className="border border-black p-2">Nombres</th>
-                  {!isMobile && <th className="border border-black p-2">Apellidos</th>}
+                  <th className="border border-black p-2">Apellidos</th>
                   <th className="border border-black p-2">Área</th>
-                  {!isMobile && <th className="border border-black p-2">Grado</th>}
+                  <th className="border border-black p-2">Grado</th>
                   <th className="border border-black p-2">Nivel/Categoria</th>
                 </tr>
               </thead>
@@ -221,9 +221,9 @@ const OrdenesDePago = () => {
                 {listaRegistros.map((registro) => (
                   <tr key={registro.id_inscripcion} className="hover:bg-gray-50">
                     <td className="border border-black p-2">{registro.nombres}</td>
-                    {!isMobile && <td className="border border-black p-2">{registro.apellidos}</td>}
+                    <td className="border border-black p-2">{registro.apellidos}</td>
                     <td className="border border-black p-2">{registro.nombre_area}</td>
-                    {!isMobile && <td className="border border-black p-2">{registro.grado}</td>}
+                    <td className="border border-black p-2">{registro.grado}</td>
                     <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
                   </tr>
                 ))}
@@ -263,14 +263,14 @@ const OrdenesDePago = () => {
               <p className="text-center text-gray-700">{mensajeRegistros}</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse text-xs md:text-sm">
+                <table className="min-w-[1030px] border-collapse text-xs md:text-sm">
                   <thead className="bg-blue-800 text-white">
                     <tr>
                       <th className="border border-black p-2">Seleccionar</th>
                       <th className="border border-black p-2">Nombres</th>
-                      {!isMobile && <th className="border border-black p-2">Apellidos</th>}
+                      <th className="border border-black p-2">Apellidos</th>
                       <th className="border border-black p-2">Área</th>
-                      {!isMobile && <th className="border border-black p-2">Grado</th>}
+                      <th className="border border-black p-2">Grado</th>
                       <th className="border border-black p-2">Nivel/Categoria</th>
                     </tr>
                   </thead>
@@ -285,9 +285,9 @@ const OrdenesDePago = () => {
                           />
                         </td>
                         <td className="border border-black p-2">{registro.nombres}</td>
-                        {!isMobile && <td className="border border-black p-2">{registro.apellidos}</td>}
+                        <td className="border border-black p-2">{registro.apellidos}</td>
                         <td className="border border-black p-2">{registro.nombre_area}</td>
-                        {!isMobile && <td className="border border-black p-2">{registro.grado}</td>}
+                        <td className="border border-black p-2">{registro.grado}</td>
                         <td className="border border-black p-2">{registro.nombre_nivel_categoria}</td>
                       </tr>
                     ))}
