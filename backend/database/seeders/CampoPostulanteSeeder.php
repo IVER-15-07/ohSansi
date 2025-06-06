@@ -33,15 +33,13 @@ class CampoPostulanteSeeder extends Seeder
                 'id_dependencia' => 2,
             ],
             [
-                'nombre' => "Ciudad",
-                'id_tipo_campo' => 6,
-                'id_dependencia' => 3,
-                
-            ],
-            [
                 'nombre' => "Correo Electronico",
                 'id_tipo_campo' => 2,
             ],
+            [
+                'nombre' => "Telefono",
+                'id_tipo_campo' => 4,
+            ]
         ];
         foreach ($campos as $campo) {
             CampoPostulante::create($campo);

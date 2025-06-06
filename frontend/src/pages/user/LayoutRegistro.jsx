@@ -33,7 +33,7 @@ const LayoutRegistro = () => {
   ];
 
   return (
-    <div className="pt-20 flex h-screen overflow-hidden bg-gray-100">
+    <div className=" flex h-screen overflow-hidden bg-gray-100">
       {/* Sidebar fija a la izquierda */}
       <aside className="pt-24 w-20 md:w-80 h-full fixed top-0 left-0 bg-white shadow-md p-2 md:p-5 border-r border-gray-200 z-10">
         <h2 className="text-xl font-bold mb-6 text-blue-800 hidden md:block">Apartado de Inscripciones</h2>

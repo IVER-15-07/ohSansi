@@ -74,7 +74,7 @@ const MenuOlimpiada = () => {
         } else if (isTablet) {
             return `${baseClasses} mx-8 p-6 max-w-4xl`;
         } else {
-            return `${baseClasses} p-8 max-w-2xl`;
+            return `${baseClasses} p-8 max-w-5xl`;
         }
     }, [isMobile, isTablet]);
 

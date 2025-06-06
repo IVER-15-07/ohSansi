@@ -47,17 +47,17 @@ const Home = () => {
   }, [])
 
   const formatDate = useCallback((dateString) => {
-          if (!dateString) return "No disponible";
-          try {
-              return new Date(dateString).toLocaleDateString('es-ES', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-              });
-          } catch {
-              return dateString;
-          }
-      }, []);
+    if (!dateString) return "No disponible";
+    try {
+      return new Date(dateString).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  }, []);
 
   const handleSeleccionarOlimpiada = (olimpiada) => {
     navigate(`/olimpiadas/${olimpiada.id}`)
@@ -217,15 +217,42 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Important Notice */}
+      {/* Aviso Importante con datos de la olimpiada destacada */}
       <section className="py-8 bg-amber-50 border-b border-amber-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Alert variant="warning" title="ATENCIÓN - Fechas Importantes">
-            <ul className="list-disc list-inside space-y-1 mt-2">
-              <li>El formulario de pre-inscripción estará abierto el miércoles 14 de mayo de 9:00 a 12:00.</li>
-              <li>El sistema de pagos estará disponible hasta medio día (12:00) del 19 de mayo.</li>
-            </ul>
-          </Alert>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-amber-900 mb-2">Avisos importantes</h2>
+            <p className="text-lg text-amber-800">Mantente atento a las fechas y requisitos clave de la olimpiada.</p>
+          </div>
+          {hasOlimpiadas ? (
+            <Alert variant="warning" title={`ATENCIÓN - ${olimpiadas[0].nombre}`}>
+              <ul className="list-disc list-inside space-y-1 mt-2">
+                <li>
+                  <span className="font-semibold">Periodo de inscripción:</span>{" "}
+                  {formatDate(olimpiadas[0]?.inicio_inscripcion)} al {formatDate(olimpiadas[0]?.fin_inscripcion)}
+                </li>
+                <li>
+                  <span className="font-semibold">Fecha de cierre de la olimpiada:</span>{" "}
+                  {formatDate(olimpiadas[0]?.fecha_fin)}
+                </li>
+                <li>
+                  <span className="font-semibold">Costo:</span>{" "}
+                  {olimpiadas[0]?.costo ? `Bs. ${olimpiadas[0].costo}` : "Gratuito"}
+                </li>
+                {olimpiadas[0]?.descripcion && (
+                  <li>
+                    <span className="font-semibold">Descripción:</span> {olimpiadas[0].descripcion}
+                  </li>
+                )}
+              </ul>
+            </Alert>
+          ) : (
+            <Alert variant="warning" title="ATENCIÓN">
+              <ul className="list-disc list-inside space-y-1 mt-2">
+                <li>No hay olimpiadas activas en este momento.</li>
+              </ul>
+            </Alert>
+          )}
         </div>
       </section>
 
@@ -243,19 +270,26 @@ const Home = () => {
             <Swiper
               modules={[Autoplay]}
               spaceBetween={30}
-              slidesPerView={1}
+              slidesPerView={olimpiadas.length >= 3 ? 3 : olimpiadas.length}
+              centeredSlides={olimpiadas.length > 3}
+              autoplay={
+                olimpiadas.length > 3
+                  ? {
+                    delay: 3000,
+                    disableOnInteraction: true,
+                    pauseOnMouseEnter: true,
+                  }
+                  : false
+              }
               breakpoints={{
                 640: {
-                  slidesPerView: 2,
+                  slidesPerView: olimpiadas.length >= 2 ? 2 : olimpiadas.length,
+                  centeredSlides: olimpiadas.length > 2,
                 },
                 1024: {
-                  slidesPerView: 3,
+                  slidesPerView: olimpiadas.length >= 3 ? 3 : olimpiadas.length,
+                  centeredSlides: olimpiadas.length > 3,
                 },
-              }}
-              autoplay={{
-                delay: 3000,
-                disableOnInteraction: true,
-                pauseOnMouseEnter: true,
               }}
               className="w-full"
             >

@@ -134,7 +134,8 @@ const NivelCategoria = () => {
                   <Card
                     title={nivel.nombre}
                     subtitle={`Grados: ${obtenerGradosAsociados(nivel.grados)}`}
-                    color="from-blue-50 to-blue-100 border-blue-200"
+                    color="from-blue- to-blue-100 border-blue-200"
+                    
                   />
                 </li>
               ))}
@@ -150,7 +151,7 @@ const NivelCategoria = () => {
                   <Card
                     title={categoria.nombre}
                     subtitle={`Grados: ${obtenerGradosAsociados(categoria.grados)}`}
-                    color="from-red-50 to-red-100 border-red-200"
+                    color="from-red- to-red-100 border-red-200"
                   />
                 </li>
               ))}

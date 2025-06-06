@@ -15,10 +15,10 @@ const Card = React.forwardRef(({ className, children, title, subtitle, color, ..
         {...props}
       >
         {title && (
-          <h4 className="font-semibold text-gray-800 text-sm">{title}</h4>
+          <h4 className="font-semibold text-blue-800 text-sm">{title}</h4>
         )}
         {subtitle && (
-          <p className="text-gray-600 text-xs mt-1">{subtitle}</p>
+          <p className="text-blue-700 text-xs mt-1">{subtitle}</p>
         )}
         {children}
       </div>

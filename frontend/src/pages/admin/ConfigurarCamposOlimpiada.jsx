@@ -8,23 +8,23 @@ import { useDeviceAgent } from '../../hooks/useDeviceAgent';
 
 import { getCatalogoCamposPostulante } from '../../../service/campos_postulante.api';
 import { getCatalogoCamposTutor } from '../../../service/campos_tutor.api';
-import { 
-  getOlimpiadaCamposPostulante, 
+import {
+  getOlimpiadaCamposPostulante,
   postOlimpiadaCampoPostulante
 } from '../../../service/olimpiada_campos_postulante.api';
-import { 
-  getOlimpiadaCamposTutor, 
-  postOlimpiadaCampoTutor 
+import {
+  getOlimpiadaCamposTutor,
+  postOlimpiadaCampoTutor
 } from '../../../service/olimpiada_campos_tutor.api';
 
 const ConfigurarCamposOlimpiada = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isMobile, isTablet } = useDeviceAgent();
-  
+
   // Step management
   const [step, setStep] = useState(1);
-  
+
   // Loading and error states
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,13 +39,13 @@ const ConfigurarCamposOlimpiada = () => {
   const [olimpiadaCamposTutor, setOlimpiadaCamposTutor] = useState([]);
 
   // Memoized filtered catalogs for performance
-  const catalogoCamposPostulanteFiltrado = useMemo(() => 
+  const catalogoCamposPostulanteFiltrado = useMemo(() =>
     catalogoCamposPostulante.filter(campo =>
       !olimpiadaCamposPostulante.some(ocp => ocp.campo_postulante.id === campo.id)
     ), [catalogoCamposPostulante, olimpiadaCamposPostulante]
   );
 
-  const catalogoCamposTutorFiltrado = useMemo(() => 
+  const catalogoCamposTutorFiltrado = useMemo(() =>
     catalogoCamposTutor.filter(campo =>
       !olimpiadaCamposTutor.some(oct => oct.campo_tutor.id === campo.id)
     ), [catalogoCamposTutor, olimpiadaCamposTutor]
@@ -78,7 +78,7 @@ const ConfigurarCamposOlimpiada = () => {
         getCatalogoCamposPostulante(),
         getCatalogoCamposTutor()
       ]);
-      
+
       setCatalogoCamposPostulante(catalogoPostulanteRes.data);
       setCatalogoCamposTutor(catalogoTutorRes.data);
     } catch (error) {
@@ -93,7 +93,7 @@ const ConfigurarCamposOlimpiada = () => {
         getOlimpiadaCamposPostulante(id),
         getOlimpiadaCamposTutor(id)
       ]);
-      
+
       setOlimpiadaCamposPostulante(olimpiadaPostulanteRes.data);
       setOlimpiadaCamposTutor(olimpiadaTutorRes.data);
     } catch (error) {
@@ -127,7 +127,7 @@ const ConfigurarCamposOlimpiada = () => {
     try {
       setIsAdding(true);
       setError(null); // Limpiar errores previos
-      
+
       await Promise.all([
         ...olimpiadaCamposPostulante
           .filter(campo => campo.id === null)
@@ -137,7 +137,7 @@ const ConfigurarCamposOlimpiada = () => {
               const updatedCampos = [...prev];
               const realIndex = prev.findIndex(c => c.tempId === campo.tempId);
               if (realIndex !== -1) {
-                updatedCampos[realIndex] = {...updatedCampos[realIndex], id: olimpiadaCampoPostulanteNuevo.id};
+                updatedCampos[realIndex] = { ...updatedCampos[realIndex], id: olimpiadaCampoPostulanteNuevo.id };
               }
               return updatedCampos;
             });
@@ -150,21 +150,21 @@ const ConfigurarCamposOlimpiada = () => {
               const updatedCampos = [...prev];
               const realIndex = prev.findIndex(c => c.tempId === campo.tempId);
               if (realIndex !== -1) {
-                updatedCampos[realIndex] = {...updatedCampos[realIndex], id: olimpiadaCampoTutorNuevo.id};
+                updatedCampos[realIndex] = { ...updatedCampos[realIndex], id: olimpiadaCampoTutorNuevo.id };
               }
               return updatedCampos;
             });
           })
       ]);
-      
+
       setShowConfirmModal(false);
       setSuccessMessage('¡Configuración guardada exitosamente!');
-      
+
       // Redirigir después de 2 segundos para mostrar el mensaje de éxito
       setTimeout(() => {
         navigate('/AdminLayout/Olimpiadas');
       }, 2000);
-      
+
     } catch (error) {
       console.error('Error al guardar la configuración:', error);
       setError('Error al guardar la configuración de campos');
@@ -190,9 +190,9 @@ const ConfigurarCamposOlimpiada = () => {
   // Error state with Alert component
   if (error) return (
     <div className={containerClasses}>
-      <Alert 
-        type="error" 
-        message={error} 
+      <Alert
+        type="error"
+        message={error}
         onClose={() => setError(null)}
         className="max-w-md mx-auto mt-8"
       />
@@ -202,9 +202,9 @@ const ConfigurarCamposOlimpiada = () => {
   // Success state with Alert component
   if (successMessage) return (
     <div className={containerClasses}>
-      <Alert 
-        variant="success" 
-        title = "Configuración guardada"
+      <Alert
+        variant="success"
+        title="Configuración guardada"
       />
       <div className="flex justify-center mt-4">
         <LoadingSpinner size="sm" text="Redirigiendo..." />
@@ -215,112 +215,116 @@ const ConfigurarCamposOlimpiada = () => {
   const currentStepConfig = stepTitles[step];
   const StepIcon = currentStepConfig.icon;
   return (
-    <div className="flex flex-col p-6 gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
-      <div className="flex flex-col gap-4 h-full">   
-        {/* Botón para volver a la vista de Olimpiada */}
-        <div className="flex flex-col items-center mb-2">
-          <button 
-            onClick={handleBackToOlimpiadas}
-            className="flex items-center text-blue-600 hover:underline"
-          >
-            <ArrowLeft size={16} className="mr-1" /> Volver a Olimpiadas
-          </button>
+    <div className="flex flex-col items-center w-full min-h-screen bg-[#F9FAFB] py-8 px-2">
+      {/* Botón volver alineado a la izquierda */}
 
-          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col gap-6 min-h-[460px] max-h-[540px] overflow-y-auto">
-            <h2 className="text-xl font-bold text-gray-800">
-              Configuración de Campos del Formulario de la Olimpiada 
-            </h2>
-            {/* Ejemplo de uso de los arrays filtrados: */}
-            {step == 1 &&(
-              <div>
-                <h3 className="font-semibold">
-                  *Los nombres, los apellidos, la fecha de nacmiento y el grado de un postulante son campos obligatorios y esscenciales para el registro. 
-                  Estos se pedirán automáticamente y no es necesario configurarlos.
-                </h3>
 
-                <ElegirCamposPostulante 
-                  disponibles={catalogoCamposPostulanteFiltrado}
-                  seleccionadas={olimpiadaCamposPostulante}
-                  setSeleccionadas={setOlimpiadaCamposPostulante}
-                  idOlimpiada={id}
-                />
-              </div>
-            )}
+      {/* Card principal */}
+      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md border border-gray-200 px-8 py-8 flex flex-col gap-8">
+        <h2 className="text-2xl font-bold text-center text-blue-900 mb-2">
+          Configuración de Campos del Formulario de la Olimpiada
+        </h2>
 
-            {step == 2 &&(
-              <div>
-                <h3 className="font-semibold">
-                  *Los nombres, los apellidos, su relación con el postualnte de un tutor son campos obligatorios y esscenciales para el registro. 
-                  Estos se pedirán automáticamente y no es necesario configurarlos.
-                </h3>
-
-                <ElegirCamposTutor
-                disponibles={catalogoCamposTutorFiltrado}
-                seleccionadas={olimpiadaCamposTutor}
-                setSeleccionadas={setOlimpiadaCamposTutor}
-                idOlimpiada={id}
-                />
-              </div>
-            )}
+        {/* Paso 1 */}
+        {step === 1 && (
+          <div>
+            <h3 className="font-semibold text-gray-700 mb-3 text-base">
+              *Los nombres, los apellidos, la fecha de nacimiento y el grado de un postulante son campos obligatorios y esenciales para el registro.
+              Estos se pedirán automáticamente y no es necesario configurarlos.
+            </h3>
+            <ElegirCamposPostulante
+              disponibles={catalogoCamposPostulanteFiltrado}
+              seleccionadas={olimpiadaCamposPostulante}
+              setSeleccionadas={setOlimpiadaCamposPostulante}
+              idOlimpiada={id}
+            />
           </div>
-          {/* Modal de confirmación */}
-          <Modal
-            variant="warning"
-            isOpen={showConfirmModal}
-            onClose={() => setShowConfirmModal(false)}
-            onConfirm={handleGuardarConfiguracionCampos}
-            title="Confirmar acción"
-            message="¿Está seguro que desea guardar la configuración de los campos del formulario? Esta acción establecerá los datos que se pedirán en el formulario."
-            confirmText="Confirmar"
-            cancelText="Cancelar"
-            isLoading={isAdding}
-          />
+        )}
 
-          {/* Botones de navegación */}
-          <div className="flex justify-between items-center p-4 bg-white rounded-2xl shadow-md border border-gray-200">
-            <div className="flex gap-3">
-              {step > 1 && (
-                <Button
-                  key="back-button"
-                  onClick={handlePrevStep}
-                  className="px-5 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
-                >
-                  Atrás
-                </Button>
-              )}
-            </div>
+        {/* Paso 2 */}
+        {step === 2 && (
+          <div>
+            <h3 className="font-semibold text-gray-700 mb-3 text-base">
+              *Los nombres, los apellidos y su relación con el postulante de un tutor son campos obligatorios y esenciales para el registro.
+              Estos se pedirán automáticamente y no es necesario configurarlos.
+            </h3>
+            <ElegirCamposTutor
+              disponibles={catalogoCamposTutorFiltrado}
+              seleccionadas={olimpiadaCamposTutor}
+              setSeleccionadas={setOlimpiadaCamposTutor}
+              idOlimpiada={id}
+            />
+          </div>
+        )}
 
-            <div className="flex gap-3">
-              {step === 1 && (
-                <Button
-                  key="next-button"
-                  variant="secondary"
-                  onClick={handleNextStep}
-                  className="px-5 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Siguiente
-                </Button>
-              )}
-        
-              {step === 2 && (
-                <Button
-                  variant="success"
-                  key="save-button"
-                  onClick={handleSaveClick}
-                  disabled={isAdding}
-                  className={`px-5 py-2 rounded-md text-white ${
-                    isAdding
-                      ? "bg-gray-400"
-                      : "bg-blue-900 hover:bg-blue-800"
+        {/* Botones de navegación */}
+        <div className="flex justify-between items-center gap-3 mt-6">
+          {/* Botón Volver a Olimpiadas a la izquierda */}
+          <Button
+            onClick={handleBackToOlimpiadas}
+            className="flex items-center px-6 py-2 rounded-md bg-white border border-blue-700 text-blue-700 hover:bg-blue-50 font-semibold shadow-none"
+            variant="outline"
+          >
+            <ArrowLeft size={20} className="mr-2" /> Volver a Olimpiadas
+          </Button>
+
+          {/* Botones de navegación a la derecha */}
+          <div className="flex gap-3">
+            {step > 1 && (
+              <Button
+                key="back-button"
+                onClick={handlePrevStep}
+                className="px-6 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold"
+              >
+                Atrás
+              </Button>
+            )}
+            {step === 1 && (
+              <Button
+                key="next-button"
+                variant="secondary"
+                onClick={handleNextStep}
+                className="px-6 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              >
+                Siguiente
+              </Button>
+            )}
+            {step === 2 && (
+              <Button
+                variant="success"
+                key="save-button"
+                onClick={handleSaveClick}
+                disabled={isAdding}
+                className={`px-6 py-2 rounded-md text-white font-semibold ${isAdding
+                  ? "bg-gray-400"
+                  : "bg-blue-900 hover:bg-blue-800"
                   }`}
-                >
-                  {isAdding ? "Guardando..." : "Guardar Configuración"}
-                </Button>
-              )}
-            </div>
+              >
+                {isAdding ? "Guardando..." : "Guardar Configuración"}
+              </Button>
+            )}
           </div>
         </div>
       </div>
+
+
+
+
+
+
+
+      {/* Modal de confirmación */}
+      <Modal
+        variant="warning"
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleGuardarConfiguracionCampos}
+        title="Confirmar acción"
+        message="¿Está seguro que desea guardar la configuración de los campos del formulario? Esta acción establecerá los datos que se pedirán en el formulario."
+        confirmText="Confirmar"
+        cancelText="Cancelar"
+        isLoading={isAdding}
+      />
     </div>
   );
 }

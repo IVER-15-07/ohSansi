@@ -40,6 +40,7 @@ const IdentificarEncargado = () => {
     try {
       // Verificar si el carnet ya está registrado
       const response = await verificarEncargado(ci);
+      console.log(response.data);
       if (response.data.existe) {
         // Si el carnet ya está registrado, redirigir a seleccionar olimpiada
         navigate(`/registros/${response.data.id}/${idOlimpiada}`);

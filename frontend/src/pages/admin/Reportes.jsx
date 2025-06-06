@@ -115,7 +115,7 @@ const Reportes = () => {
 
 
   return (
-   <div className="flex flex-col px-2 py-4 min-h-screen bg-slate-50">
+    <div className="flex flex-col px-6 py-4 min-h-screen bg-slate-50">
       <Card className="max-w-7xl mx-auto w-full">
         <CardHeader>
           <CardTitle className="text-2xl text-center font-bold mb-2">Reporte de Inscripciones</CardTitle>
@@ -127,43 +127,67 @@ const Reportes = () => {
             </Alert>
           )}
 
-          {/* Listado de olimpiadas */}
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-8 mb-8">
+          {/* Listado de olimpiadas en una sola columna */}
+          <div className="flex flex-col gap-8 mb-8 max-w-4xl mx-auto w-full">
+            {/* Activas */}
             <div>
-              <h2 className="text-xl font-semibold mb-2 text-green-700">Olimpiadas Activas</h2>
-              <ul className="mb-4">
-                {olimpiadasActivas.length === 0 && <li className="text-gray-500">No hay olimpiadas activas.</li>}
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-green-700">
+                <Users className="text-green-600" size={22} /> Olimpiadas Activas
+              </h2>
+              <div className="flex flex-col gap-4">
+                {olimpiadasActivas.length === 0 && (
+                  <div className="text-gray-500 text-center bg-gray-50 rounded-lg py-6 border">No hay olimpiadas activas.</div>
+                )}
                 {olimpiadasActivas.map((o) => (
-                  <li key={o.id} className="flex justify-between items-center border-b py-2">
-                    <span className="truncate">{o.nombre}</span>
+                  <div
+                    key={o.id}
+                    className="flex justify-between items-center bg-green-50 border border-green-200 rounded-lg px-4 py-3 shadow-sm hover:shadow transition"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-green-900">{o.nombre}</span>
+                      <span className="text-xs text-green-700">Activa</span>
+                    </div>
                     <Button
                       variant="success"
                       size="sm"
                       onClick={() => cargarReportes(o)}
+                      className="font-semibold"
                     >
                       Ver Reporte
                     </Button>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
+            {/* Históricas */}
             <div>
-              <h2 className="text-xl font-semibold mb-2 text-blue-700">Todas las Olimpiadas</h2>
-              <ul>
-                {olimpiadas.length === 0 && <li className="text-gray-500">No hay olimpiadas registradas.</li>}
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-blue-700">
+                <FileText className="text-blue-600" size={22} /> Todas las Olimpiadas
+              </h2>
+              <div className="flex flex-col gap-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                {olimpiadas.length === 0 && (
+                  <div className="text-gray-500 text-center bg-gray-50 rounded-lg py-6 border">No hay olimpiadas registradas.</div>
+                )}
                 {olimpiadas.map((o) => (
-                  <li key={o.id} className="flex justify-between items-center border-b py-2">
-                    <span className="truncate">{o.nombre}</span>
+                  <div
+                    key={o.id}
+                    className="flex justify-between items-center bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 shadow-sm hover:shadow transition"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-blue-900">{o.nombre}</span>
+                      <span className="text-xs text-blue-700">Histórica</span>
+                    </div>
                     <Button
                       variant="primary"
                       size="sm"
                       onClick={() => cargarReportes(o)}
+                      className="font-semibold"
                     >
                       Ver Reporte
                     </Button>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
 
@@ -174,43 +198,53 @@ const Reportes = () => {
                 Reportes de la olimpiada: <span className="text-blue-700">{olimpiadaSeleccionada.nombre}</span>
               </h3>
 
-              {/* Tabs */}
-              <div className="flex justify-center mb-6 border-b">
-                <Button
-                  variant={tab === "reporte" ? "primary" : "outline"}
-                  size="md"
-                  className={`rounded-none border-b-2 ${tab === "reporte" ? "border-blue-600" : "border-transparent"} `}
-                  onClick={() => setTab("reporte")}
-                >
-                  Reporte
-                </Button>
-                <Button
-                  variant={tab === "estadisticas" ? "primary" : "outline"}
-                  size="md"
-                  className={`rounded-none border-b-2 ${tab === "estadisticas" ? "border-blue-600" : "border-transparent"} `}
-                  onClick={() => setTab("estadisticas")}
-                >
-                  Estadísticas
-                </Button>
+              <div className="flex justify-center mb-8">
+                <div className="inline-flex gap-6 bg-blue-50 rounded-full shadow border border-blue-200 p-3">
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    className={`rounded-full px-10 py-1 font-semibold transition-all duration-200
+        ${tab === "reporte"
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "text-blue-700 hover:bg-blue-100"}
+      `}
+                    onClick={() => setTab("reporte")}
+                  >
+                    Reporte
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="md"
+                    className={`rounded-full px-10 py-1 font-semibold transition-all duration-200
+        ${tab === "estadisticas"
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "text-blue-700 hover:bg-blue-100"}
+      `}
+                    onClick={() => setTab("estadisticas")}
+                  >
+                    Estadísticas
+                  </Button>
+                </div>
               </div>
 
               {/* Contenido de las pestañas */}
               {tab === "reporte" && (
                 <>
+
                   {/* Filtros */}
-                  <div className="flex flex-col md:flex-row gap-4 mb-4">
+                  <div className="flex flex-col md:flex-row gap-4 mb-6 px-4 py-3 bg-blue-50 rounded-xl border border-blue-200 shadow-sm items-center">
                     <input
                       type="text"
                       placeholder="Buscar por nombre, apellido o CI"
                       value={busqueda}
                       onChange={e => setBusqueda(e.target.value)}
-                      className="border px-2 py-1 rounded w-full md:w-1/3"
+                      className="border border-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 px-3 py-2 rounded-lg w-full md:w-1/3 transition"
                     />
                     {areas.length > 0 && (
                       <select
                         value={areaSeleccionada}
                         onChange={handleAreaChange}
-                        className="border px-2 py-1 rounded w-full md:w-1/4"
+                        className="border border-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 px-3 py-2 rounded-lg w-full md:w-1/4 transition"
                       >
                         <option value="">Todas las áreas</option>
                         {areas.map(area => (
@@ -222,7 +256,7 @@ const Reportes = () => {
                       <select
                         value={categoriaSeleccionada}
                         onChange={handleCategoriaChange}
-                        className="border px-2 py-1 rounded w-full md:w-1/4"
+                        className="border border-blue-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-500 px-3 py-2 rounded-lg w-full md:w-1/4 transition"
                       >
                         <option value="">Todas las categorías</option>
                         {categorias.map(cat => (
@@ -233,7 +267,7 @@ const Reportes = () => {
                   </div>
 
                   {/* Tabla de reportes */}
-                  <div className="overflow-x-auto rounded border border-gray-200 bg-white">
+                  <div className="overflow-x-auto rounded-xl border border-blue-200 bg-white shadow-md mt-2">
                     {loadingReportes ? (
                       <div className="flex justify-center py-8">
                         <LoadingSpinner size="lg" text="Cargando reportes..." />
@@ -241,50 +275,56 @@ const Reportes = () => {
                     ) : reportesFiltrados.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">No hay reportes para esta olimpiada.</div>
                     ) : (
-                      <table className="min-w-full text-sm">
+                      <table className="min-w-full text-sm rounded-xl overflow-hidden">
                         <thead>
                           <tr>
-                            <th className="border px-2 py-1 bg-slate-100">Nombres postulante</th>
-                            <th className="border px-2 py-1 bg-slate-100">CI</th>
-                            <th className="border px-2 py-1 bg-slate-100">Área</th>
-                            <th className="border px-2 py-1 bg-slate-100">Categoría</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Nombres postulante</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">CI</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Área</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Categoría</th>
                             {camposAdicionales.map((campo) => (
-                              <th key={campo} className="border px-2 py-1 bg-slate-100">{campo}</th>
+                              <th key={campo} className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">{campo}</th>
                             ))}
-                            <th className="border px-2 py-1 bg-slate-100">Nombres Responsable</th>
-                            <th className="border px-2 py-1 bg-slate-100">CI Responsable</th>
-                            <th className="border px-2 py-1 bg-slate-100">Correo Responsable</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Nombres Responsable</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">CI Responsable</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Correo Responsable</th>
                             {camposTutor.map((campo) => (
-                              <th key={campo} className="border px-2 py-1 bg-slate-100">Tutor: {campo}</th>
+                              <th key={campo} className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Tutor: {campo}</th>
                             ))}
-                            <th className="border px-2 py-1 bg-slate-100">Estado de Pago</th>
-                            <th className="border px-2 py-1 bg-slate-100">Validado</th>
-                            <th className="border px-2 py-1 bg-slate-100">Tipo de Inscripción</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Estado de Pago</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Validado</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Tipo de Inscripción</th>
                           </tr>
                         </thead>
                         <tbody>
                           {reportesFiltrados.map((r, idx) => (
-                            <tr key={idx} className="hover:bg-blue-50">
-                              <td className="border px-2 py-1">{r.postulante.nombres} {r.postulante.apellidos}</td>
-                              <td className="border px-2 py-1">{r.postulante.ci}</td>
-                              <td className="border px-2 py-1">{r.postulante.area_categoria.area}</td>
-                              <td className="border px-2 py-1">{r.postulante.area_categoria.categoria}</td>
+                            <tr
+                              key={idx}
+                              className={`
+                               ${idx % 2 === 0 ? "bg-blue-50" : "bg-white"}
+                               hover:bg-blue-200 transition
+                               `}
+                            >
+                              <td className="border px-3 py-2">{r.postulante.nombres} {r.postulante.apellidos}</td>
+                              <td className="border px-3 py-2">{r.postulante.ci}</td>
+                              <td className="border px-3 py-2">{r.postulante.area_categoria.area}</td>
+                              <td className="border px-3 py-2">{r.postulante.area_categoria.categoria}</td>
                               {camposAdicionales.map((campo) => {
                                 const dato = (r.postulante.datos_adicionales?.[0] || []).find(d => d.campo === campo);
                                 return (
-                                  <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
+                                  <td key={campo} className="border px-3 py-2">{dato ? dato.valor : ""}</td>
                                 );
                               })}
-                              <td className="border px-2 py-1">{r.encargado?.nombres || ""} {r.encargado?.apellidos || ""}</td>
-                              <td className="border px-2 py-1">{r.encargado?.ci || ""}</td>
-                              <td className="border px-2 py-1">{r.encargado?.correo || ""}</td>
+                              <td className="border px-3 py-2">{r.encargado?.nombres || ""} {r.encargado?.apellidos || ""}</td>
+                              <td className="border px-3 py-2">{r.encargado?.ci || ""}</td>
+                              <td className="border px-3 py-2">{r.encargado?.correo || ""}</td>
                               {camposTutor.map((campo) => {
                                 const dato = (r.tutor?.datos_adicionales?.[0] || []).find(d => d.campo === campo);
                                 return (
-                                  <td key={campo} className="border px-2 py-1">{dato ? dato.valor : ""}</td>
+                                  <td key={campo} className="border px-3 py-2">{dato ? dato.valor : ""}</td>
                                 );
                               })}
-                              <td className="border px-2 py-1">
+                              <td className="border px-3 py-2 text-center">
                                 <span
                                   className={
                                     r.estado_pago === "Pagado"
@@ -295,7 +335,7 @@ const Reportes = () => {
                                   {r.estado_pago}
                                 </span>
                               </td>
-                              <td className="border px-2 py-1">
+                              <td className="border px-3 py-2 text-center">
                                 <span
                                   className={
                                     r.validado === "Validado"
@@ -306,13 +346,13 @@ const Reportes = () => {
                                   {r.validado}
                                 </span>
                               </td>
-                              <td className="border px-2 py-1">
+                              <td className="border px-3 py-2 text-center">
                                 {r.tipo_inscripcion === "Individual" ? (
-                                  <span className="flex items-center gap-1">
+                                  <span className="flex items-center gap-1 justify-center">
                                     <User size={16} /> {r.tipo_inscripcion}
                                   </span>
                                 ) : (
-                                  <span className="flex items-center gap-1">
+                                  <span className="flex items-center gap-1 justify-center">
                                     <Users size={16} /> {r.tipo_inscripcion} <FileText size={16} />
                                   </span>
                                 )}
