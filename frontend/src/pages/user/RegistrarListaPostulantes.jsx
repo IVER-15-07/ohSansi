@@ -1,10 +1,10 @@
 
 import * as XLSX from "@e965/xlsx";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileUp, FileCheck2, FileX2 } from "lucide-react";
 import { enviarRegistrosLote } from '../../../service/registros.api';
 import { useParams } from "react-router-dom";
-
+import SubirArchivo from "../../components/ui/SubirArchivo";
 
 
 const RegistrarListaPostulantes = () => {
@@ -18,6 +18,7 @@ const RegistrarListaPostulantes = () => {
   const [enviar, setEnviar] = useState(false);
   const [archivo, setArchivo] = useState(null);
   const [erroresPorCelda, setErroresPorCelda] = useState({});
+  const inputRef = useRef();
 
   // Restaurar datos desde localStorage al montar el componente
   useEffect(() => {
@@ -31,7 +32,8 @@ const RegistrarListaPostulantes = () => {
     }
   }, []);
 
-  const handleFileUpload = (e) => {
+  // Nuevo handler usando SubirArchivo
+  const handleArchivo = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -156,18 +158,15 @@ const RegistrarListaPostulantes = () => {
 
         {/* Selector de archivo */}
         <div className="flex flex-col items-center space-y-3">
-          <label
-            htmlFor="file-upload"
-            className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition"
-          >
-            <FileUp className="w-5 h-5" /> Seleccionar Archivo Excel
-          </label>
-          <input
+
+          <SubirArchivo
+            nombreArchivo={fileName || "Subir solo archivo Excel"}
+            handleArchivo={handleArchivo}
+            inputRef={inputRef}
             id="file-upload"
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileUpload}
-            className="hidden"
+            acceptedFormats={['xlsx', 'xls']}
+            acceptAttribute=".xlsx,.xls"
+            fileTypeMessage="archivo Excel"
           />
 
           {fileName && (
@@ -231,28 +230,28 @@ const RegistrarListaPostulantes = () => {
                     ))}
                   </tr>
                 </thead>
-                  <tbody>
-                    {data.map((row, rowIndex) => (
-                      <tr key={rowIndex} className="hover:bg-gray-50 even:bg-gray-50">
-                        <td className="px-4 py-2 border font-bold text-blue-700 text-center">{rowIndex + 2}</td>
-                        {row.map((cell, colIndex) => {
-                          const header = headers[colIndex]?.toLowerCase();
-                          let displayValue = cell;
+                <tbody>
+                  {data.map((row, rowIndex) => (
+                    <tr key={rowIndex} className="hover:bg-gray-50 even:bg-gray-50">
+                      <td className="px-4 py-2 border font-bold text-blue-700 text-center">{rowIndex + 2}</td>
+                      {row.map((cell, colIndex) => {
+                        const header = headers[colIndex]?.toLowerCase();
+                        let displayValue = cell;
 
-                          if (header === "fecha_nacimiento" && cell !== "" && !isNaN(cell)) {
-                            const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-                            const date = new Date(excelEpoch.getTime() + (Number(cell) * 86400000));
-                            displayValue = date.toISOString().slice(0, 10);
-                          }
+                        if (header === "fecha_nacimiento" && cell !== "" && !isNaN(cell)) {
+                          const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+                          const date = new Date(excelEpoch.getTime() + (Number(cell) * 86400000));
+                          displayValue = date.toISOString().slice(0, 10);
+                        }
 
-                          return (
-                            <td key={colIndex} className="px-4 py-2 border">
-                              {displayValue}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
+                        return (
+                          <td key={colIndex} className="px-4 py-2 border">
+                            {displayValue}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

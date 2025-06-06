@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { getOlimpiada, updateOlimpiada } from '../../../service/olimpiadas.api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PencilIcon } from '../../../src/assets/Icons';
-import { LoadingSpinner , Modal, Button, SubirArchivo, FormField} from '../../components/ui';
+import { LoadingSpinner, Modal, Button, SubirArchivo, FormField } from '../../components/ui';
+import { ArrowLeft } from 'lucide-react';
 
 const ConfParamOlimpiada = () => {
   const { id } = useParams();
@@ -11,7 +12,7 @@ const ConfParamOlimpiada = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [editando, setEditando] = useState({});
   const [form, setForm] = useState({});
-  
+
   // Estados para manejo de archivos
   const [archivo, setArchivo] = useState(null); // Archivo seleccionado para subir (nuevo)
   const [tieneArchivoExistente, setTieneArchivoExistente] = useState(false); // Si hay archivo en el servidor
@@ -28,10 +29,10 @@ const ConfParamOlimpiada = () => {
   // Función para verificar si la inscripción ya comenzó (fecha de inicio de inscripción ya pasó o es hoy)
   const inscripcionYaComenzo = useMemo(() => {
     if (!olimpiada || !olimpiada.inicio_inscripcion) return false;
-    
+
     const hoy = new Date();
     const hoyFecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-    
+
     // Parsear la fecha de inicio de inscripción
     let fechaInicioInscripcion;
     if (olimpiada.inicio_inscripcion.includes('/')) {
@@ -42,7 +43,7 @@ const ConfParamOlimpiada = () => {
       // Formato YYYY-MM-DD
       fechaInicioInscripcion = new Date(olimpiada.inicio_inscripcion);
     }
-    
+
     return fechaInicioInscripcion <= hoyFecha;
   }, [olimpiada]);
 
@@ -67,20 +68,20 @@ const ConfParamOlimpiada = () => {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadOlimpiada = async () => {
       try {
         setIsLoading(true);
         const response = await getOlimpiada(id);
-        
+
         if (!isMounted) return;
-        
+
         console.log('Datos obtenidos de la API:', response);
         const data = response; // Los datos ya vienen procesados del servicio
         console.log('Datos procesados:', data);
         setOlimpiada(data);
         console.log('Estado olimpiada actualizado');
-        
+
         // Verificar si hay un archivo existente
         if (data.convocatoria) {
           setTieneArchivoExistente(true);
@@ -108,7 +109,7 @@ const ConfParamOlimpiada = () => {
           fin_inscripcion: data.fin_inscripcion || '',
           convocatoria: data.convocatoria || '',
         };
-        
+
         setForm(formData);
         setDatosIniciales(formData);
 
@@ -124,7 +125,7 @@ const ConfParamOlimpiada = () => {
           fin_inscripcion: false,
           convocatoria: false,
         });
-        
+
         // Inicializar todos los campos como no tocados
         setCamposTocados({
           nombre: false,
@@ -149,11 +150,11 @@ const ConfParamOlimpiada = () => {
         }
       }
     };
-    
+
     if (id) {
       loadOlimpiada();
     }
-    
+
     return () => {
       isMounted = false;
     };
@@ -162,7 +163,7 @@ const ConfParamOlimpiada = () => {
   // Solo validar cuando se esté editando un campo específico y haya sido tocado
   const validarCampos = useCallback((valores) => {
     const errs = {};
-    
+
     // Validar el nombre si está siendo editado y ha sido tocado
     if (editando.nombre && camposTocados.nombre) {
       if (!valores.nombre || valores.nombre.trim() === '') {
@@ -171,26 +172,26 @@ const ConfParamOlimpiada = () => {
         errs.nombre = 'El nombre no debe contener caracteres especiales como !"#$%&/{}[]*';
       }
     }
-    
+
     // Solo validar campos que están siendo editados y han sido tocados
     if (editando.descripcion && camposTocados.descripcion && valores.descripcion && valores.descripcion.length > 500) {
       errs.descripcion = 'La descripción debe tener máximo 500 caracteres.';
     }
-    
+
     // Costo - solo validar si se está editando y ha sido tocado
     if (editando.costo && camposTocados.costo) {
       if (!valores.costo || isNaN(valores.costo) || Number(valores.costo) < 1) {
         errs.costo = 'El costo debe ser un número mayor o igual a 1.';
       }
     }
-    
+
     // Máximo inscripciones - solo validar si se está editando y ha sido tocado
     if (editando.max_areas && camposTocados.max_areas) {
       if (valores.max_areas !== null && valores.max_areas !== '' && (isNaN(valores.max_areas) || Number(valores.max_areas) < 1)) {
         errs.max_areas = 'El máximo de áreas debe ser un número mayor o igual a 1, o puede dejarse vacío.';
       }
     }
-    
+
     // Validaciones de fechas - solo validar si se están editando los campos respectivos y han sido tocados
     if (Object.keys(editando).some(key => ['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'].includes(key) && editando[key])) {
       // Obtener hoy en GMT-4 y dejar solo la fecha
@@ -210,7 +211,7 @@ const ConfParamOlimpiada = () => {
           errs.fecha_inicio = 'La fecha de inicio debe ser hoy o una fecha futura.';
         }
       }
-      
+
       // Validar fecha_fin solo si se está editando y ha sido tocado
       if (editando.fecha_fin && camposTocados.fecha_fin) {
         if (!fecha_fin) {
@@ -219,14 +220,14 @@ const ConfParamOlimpiada = () => {
           errs.fecha_fin = 'La fecha de fin debe ser hoy o una fecha futura.';
         }
       }
-      
+
       // Validaciones cruzadas solo si los campos están siendo editados y han sido tocados
       if ((editando.fecha_inicio && camposTocados.fecha_inicio) || (editando.fecha_fin && camposTocados.fecha_fin)) {
         if (fecha_inicio && fecha_fin && fecha_fin <= fecha_inicio) {
           errs.fecha_fin = 'La fecha de fin debe ser posterior a la fecha de inicio.';
         }
       }
-      
+
       if (editando.inicio_inscripcion && camposTocados.inicio_inscripcion) {
         if (inicio_inscripcion && fecha_inicio && inicio_inscripcion < fecha_inicio) {
           errs.inicio_inscripcion = 'El inicio de inscripción debe ser igual o posterior a la fecha de inicio.';
@@ -235,7 +236,7 @@ const ConfParamOlimpiada = () => {
           errs.inicio_inscripcion = 'El inicio de inscripción debe ser igual o anterior a la fecha de fin.';
         }
       }
-      
+
       if (editando.fin_inscripcion && camposTocados.fin_inscripcion) {
         if (fin_inscripcion && inicio_inscripcion && fin_inscripcion < inicio_inscripcion) {
           errs.fin_inscripcion = 'El fin de inscripción debe ser igual o posterior al inicio de inscripción.';
@@ -251,19 +252,19 @@ const ConfParamOlimpiada = () => {
   // Función para verificar si algún campo ha sido modificado
   const hayModificaciones = useMemo(() => {
     if (!datosIniciales || Object.keys(datosIniciales).length === 0) return false;
-    
+
     // Comprobar si algún valor ha cambiado
     return Object.keys(form).some(key => {
       return form[key] !== datosIniciales[key];
     }) || archivo !== null; // Incluir cambios en el archivo
   }, [form, datosIniciales, archivo]);
-  
+
   useEffect(() => {
     // Solo validar si hay campos siendo editados
     if (Object.keys(editando).some(key => editando[key])) {
       validarCampos(form);
     }
-    
+
     // Limpiar mensaje cuando se hacen cambios
     if (hayModificaciones && mensaje === 'No hay cambios para guardar.') {
       setMensaje('');
@@ -289,16 +290,16 @@ const ConfParamOlimpiada = () => {
     }
     return null;
   }, []);
-  
+
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     let processedValue = value;
-    
+
     // Para campos de fecha, convertir el valor del input (YYYY-MM-DD) a DD/MM/YYYY para almacenar
     if (['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'].includes(name) && value) {
       processedValue = formatoDDMMAAAA(value);
     }
-    
+
     // Para max_areas, permitir valores vacíos y solo números positivos
     if (name === 'max_areas') {
       if (value === '') {
@@ -307,14 +308,14 @@ const ConfParamOlimpiada = () => {
         return; // No actualizar si no es un número válido >= 1
       }
     }
-    
+
     // Marcar el campo como tocado y en edición
     setCamposTocados(prev => ({ ...prev, [name]: true }));
     setEditando(prev => ({ ...prev, [name]: true }));
-    
+
     setForm(prev => ({ ...prev, [name]: processedValue }));
   }, [formatoDDMMAAAA]);
-  
+
   // Función para manejar cuando un campo pierde el foco
   const handleBlur = useCallback((e) => {
     const { name } = e.target;
@@ -323,11 +324,11 @@ const ConfParamOlimpiada = () => {
 
   const handleArchivo = useCallback((e) => {
     const file = e.target.files[0];
-    
+
     // Marcar el campo como tocado y en edición
     setCamposTocados(prev => ({ ...prev, convocatoria: true }));
     setEditando(prev => ({ ...prev, convocatoria: true }));
-    
+
     if (!file) {
       // Resetear archivo seleccionado si no hay archivo
       setArchivo(null);
@@ -336,9 +337,9 @@ const ConfParamOlimpiada = () => {
     }
 
     if (file.type !== "application/pdf") {
-      setErrores(prev => ({ 
-        ...prev, 
-        convocatoria: "Solo se permiten archivos PDF." 
+      setErrores(prev => ({
+        ...prev,
+        convocatoria: "Solo se permiten archivos PDF."
       }));
       setArchivo(null);
       return;
@@ -347,9 +348,9 @@ const ConfParamOlimpiada = () => {
     // Validar tamaño del archivo (máximo 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB en bytes
     if (file.size > maxSize) {
-      setErrores(prev => ({ 
-        ...prev, 
-        convocatoria: "El archivo no debe superar los 10MB." 
+      setErrores(prev => ({
+        ...prev,
+        convocatoria: "El archivo no debe superar los 10MB."
       }));
       setArchivo(null);
       return;
@@ -373,7 +374,7 @@ const ConfParamOlimpiada = () => {
 
   const handleGuardar = useCallback(async (e) => {
     e.preventDefault();
-    
+
     // Marcar todos los campos editados como tocados para validación completa
     const camposEditados = Object.keys(editando).filter(key => editando[key]);
     const nuevosCamposTocados = { ...camposTocados };
@@ -381,22 +382,22 @@ const ConfParamOlimpiada = () => {
       nuevosCamposTocados[campo] = true;
     });
     setCamposTocados(nuevosCamposTocados);
-    
+
     // Validar nuevamente antes de guardar
     validarCampos(form);
-    
+
     // Verificar si hay errores de validación
     if (Object.keys(errores).length > 0) {
       setMensaje('Por favor, corrija los errores antes de guardar.');
       return;
     }
-    
+
     // Verificar si hay cambios
     if (!hayModificaciones) {
       setMensaje('No hay cambios para guardar.');
       return;
     }
-    
+
     setModal(true);
   }, [editando, camposTocados, form, errores, hayModificaciones, validarCampos]);
 
@@ -404,7 +405,7 @@ const ConfParamOlimpiada = () => {
     setGuardando(true);
     setMensaje('');
     const formData = new FormData();
-    
+
     // Helper to convert date to YYYY-MM-DD format
     const formatDateToYYYYMMDD = (dateStr) => {
       if (!dateStr) return '';
@@ -419,7 +420,7 @@ const ConfParamOlimpiada = () => {
 
     // Add _method parameter to tell Laravel this is a PUT request
     formData.append('_method', 'PUT');
-    
+
     // Handle form fields
     Object.entries(form).forEach(([k, v]) => {
       // Skip convocatoria as it's handled separately
@@ -427,13 +428,13 @@ const ConfParamOlimpiada = () => {
         console.log(`Skipping convocatoria field: ${k} = ${v}`);
         return;
       }
-      
+
       // Si la inscripción ya comenzó, solo permitir fin_inscripcion
       if (inscripcionYaComenzo && k !== 'fin_inscripcion') {
         console.log(`Skipping field due to inscription already started: ${k} = ${v}`);
         return;
       }
-      
+
       // Handle dates
       if (['fecha_inicio', 'fecha_fin', 'inicio_inscripcion', 'fin_inscripcion'].includes(k)) {
         const formattedDate = formatDateToYYYYMMDD(v);
@@ -447,7 +448,7 @@ const ConfParamOlimpiada = () => {
         } else {
           console.log(`Skipping invalid date: ${k} = ${v}`);
         }
-      } 
+      }
       // Handle numeric fields
       else if (k === 'costo') {
         const costoValue = v === '' || v === null || v === undefined ? '0' : v.toString();
@@ -481,17 +482,17 @@ const ConfParamOlimpiada = () => {
     if (archivo && !inscripcionYaComenzo) {
       formData.append('convocatoria', archivo);
     }
-    
+
     // Debug: log FormData contents
     console.log('FormData contents:');
     for (let [key, value] of formData.entries()) {
       console.log(key, value);
     }
-    
+
     try {
       const response = await updateOlimpiada(id, formData);
       setMensaje('Cambios guardados correctamente.');
-      
+
       // Update file states after successful save
       if (archivo && !inscripcionYaComenzo) {
         setTieneArchivoExistente(true);
@@ -499,20 +500,20 @@ const ConfParamOlimpiada = () => {
         setArchivo(null);
         setForm(prev => ({ ...prev, convocatoria: archivo.name }));
       }
-      
+
       setEditando({}); // Clear edit states
       setModal(false); // Close modal
-      
+
       // Update initial data to reflect changes
       setDatosIniciales({ ...form });
       setCamposTocados({});
-      
+
     } catch (error) {
       console.error('Error al guardar:', error);
       console.error('Error response:', error.response?.data);
-      
+
       let errorMsg = 'Error al guardar cambios: ';
-      
+
       if (error.response?.status === 422) {
         // Error de validación - mostrar detalles específicos
         const validationErrors = error.response?.data?.errors;
@@ -531,7 +532,7 @@ const ConfParamOlimpiada = () => {
       } else {
         errorMsg += error.response?.data?.message || 'Por favor, intente nuevamente.';
       }
-      
+
       setMensaje(errorMsg);
     } finally {
       setGuardando(false);
@@ -556,7 +557,7 @@ const ConfParamOlimpiada = () => {
     const getValorInput = (name, type) => {
       // Si el campo no tiene valor en el formulario, intentar obtenerlo del objeto olimpiada
       const valor = form[name] || olimpiada[name];
-      
+
       if (valor === null || valor === undefined) return '';
 
       if (type === 'date') {
@@ -575,21 +576,21 @@ const ConfParamOlimpiada = () => {
 
     const valor = getValorInput(name, type);
     const placeholder = `Ingrese ${label.toLowerCase()}`;
-    
+
     // Mostrar error solo si el campo ha sido tocado
     const errorToShow = camposTocados[name] ? errores[name] : undefined;
-    
+
     // Comprobar si el valor ha cambiado respecto al original
-    const valorOriginal = type === 'date' 
-      ? formatoInputDate(olimpiada[name] || '') 
+    const valorOriginal = type === 'date'
+      ? formatoInputDate(olimpiada[name] || '')
       : (olimpiada[name]?.toString() || '');
     const valorActual = type === 'date' ? formatoInputDate(valor) : valor;
     const hasChanged = valorActual !== valorOriginal;
-    
+
     // Determinar si el campo debe estar deshabilitado
     // Si la inscripción ya comenzó, solo se puede editar la fecha de fin de inscripción
     const estaDeshabilitado = inscripcionYaComenzo && name !== 'fin_inscripcion';
-    
+
     return (
       <div className="mb-6 w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -603,7 +604,7 @@ const ConfParamOlimpiada = () => {
               onChange={handleChange}
               onBlur={handleBlur}
               helperText={
-                estaDeshabilitado 
+                estaDeshabilitado
                   ? `Campo deshabilitado - La inscripción ya comenzó. Valor registrado: ${getValorOriginal(name)}`
                   : `Valor registrado: ${getValorOriginal(name)}`
               }
@@ -614,29 +615,29 @@ const ConfParamOlimpiada = () => {
             />
           </div>
           <PencilIcon className={
-            estaDeshabilitado 
-              ? "text-gray-400" 
+            estaDeshabilitado
+              ? "text-gray-400"
               : (hasChanged ? "text-primary-500" : "")
-          }/>
+          } />
         </div>
       </div>
     );
   };
 
   const hayErrores = Object.keys(errores).length > 0;
-  
+
   // Deshabilitar botón si hay errores o no hay cambios
   const botonDeshabilitado = hayErrores || !hayModificaciones;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="px-4 py-5 sm:p-6">
             <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">
               Configuración de {olimpiada.nombre}
             </h1>
-            
+
             {inscripcionYaComenzo && (
               <div className="mb-6 p-4 rounded-md bg-orange-50 border border-orange-200">
                 <div className="flex items-center">
@@ -656,13 +657,13 @@ const ConfParamOlimpiada = () => {
                 </div>
               </div>
             )}
-            
+
             {mensaje && (
               <div className={`mb-6 p-4 rounded-md ${mensaje.includes('error') || mensaje.includes('corrija')
-                ? 'bg-red-50 border border-red-200' 
+                ? 'bg-red-50 border border-red-200'
                 : 'bg-green-50 border border-green-200'}`}>
-                <p className={`${mensaje.includes('error') || mensaje.includes('corrija')  
-                  ? 'text-red-700' 
+                <p className={`${mensaje.includes('error') || mensaje.includes('corrija')
+                  ? 'text-red-700'
                   : 'text-green-700'} font-medium text-center`}>
                   {mensaje}
                 </p>
@@ -673,17 +674,17 @@ const ConfParamOlimpiada = () => {
               <div className="grid grid-cols-1 gap-6">
                 {campoEditable('Nombre', 'nombre')}
                 {campoEditable('Descripción', 'descripcion')}
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {campoEditable('Costo', 'costo', 'number')}
                   {campoEditable('Máxima Cantidad de Áreas por Persona', 'max_areas', 'number', { min: 0 })}
                 </div>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {campoEditable('Fecha de Inicio', 'fecha_inicio', 'date')}
                   {campoEditable('Fecha de Fin', 'fecha_fin', 'date')}
                 </div>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {campoEditable('Inicio Inscripción', 'inicio_inscripcion', 'date')}
                   {campoEditable('Fin Inscripción', 'fin_inscripcion', 'date')}
@@ -693,7 +694,7 @@ const ConfParamOlimpiada = () => {
                 <div className="w-full p-4 bg-gray-50 rounded-lg">
                   <div className="flex flex-col space-y-4">
                     <label className="text-sm font-semibold text-gray-700">Convocatoria:</label>
-                    
+
                     {inscripcionYaComenzo && (
                       <div className="text-sm text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-200">
                         <strong>Nota:</strong> La subida de archivos está deshabilitada porque la inscripción ya comenzó.
@@ -714,24 +715,24 @@ const ConfParamOlimpiada = () => {
                          *   (true solo si hay archivo en servidor Y no hay archivo nuevo seleccionado)
                          * - nombreArchivo = archivo nuevo seleccionado OR archivo existente OR mensaje por defecto
                          */}
-                        <SubirArchivo
+                      <SubirArchivo
                         acceptedFormats={['pdf']}
                         acceptedMimeTypes={['application/pdf']}
                         acceptAttribute=".pdf,application/pdf"
                         maxFileSize={10 * 1024 * 1024}
                         nombreArchivo={
-                          archivo ? archivo.name : 
-                          (tieneArchivoExistente ? archivoActualNombre : 'Subir archivo PDF')
+                          archivo ? archivo.name :
+                            (tieneArchivoExistente ? archivoActualNombre : 'Subir archivo PDF')
                         }
                         tipoArchivo="PDF"
-                        handleArchivo={inscripcionYaComenzo ? () => {} : handleArchivo}
+                        handleArchivo={inscripcionYaComenzo ? () => { } : handleArchivo}
                         inputRef={inputArchivoRef}
                         id="input-convocatoria"
                         hasExistingFile={tieneArchivoExistente && !archivo}
                         showFileStatus={true}
                         currentFileName={archivoActualNombre}
                         newFile={archivo}
-                        onCancelFile={inscripcionYaComenzo ? () => {} : limpiarArchivoSeleccionado}
+                        onCancelFile={inscripcionYaComenzo ? () => { } : limpiarArchivoSeleccionado}
                         baseUrl="http://127.0.0.1:8000/storage"
                         fileTypeMessage="convocatoria"
                         disabled={inscripcionYaComenzo}
@@ -741,7 +742,7 @@ const ConfParamOlimpiada = () => {
                       />
                     </div>
                   </div>
-                  
+
                   {errores.convocatoria && (
                     <div className="mt-2">
                       <p className="text-sm text-red-600">{errores.convocatoria}</p>
@@ -753,11 +754,11 @@ const ConfParamOlimpiada = () => {
               <div className="flex justify-center gap-4 mt-8">
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="outline"
                   onClick={() => redirigir('/AdminLayout/Olimpiadas')}
-                  className="px-6"
+                  className="flex items-center px-6 py-2 rounded-md bg-white border border-blue-700 text-blue-700 hover:bg-blue-50 font-semibold shadow-none"
                 >
-                  Volver
+                  <ArrowLeft size={20} className="mr-2" /> Volver a Olimpiadas
                 </Button>
                 <Button
                   type="submit"
