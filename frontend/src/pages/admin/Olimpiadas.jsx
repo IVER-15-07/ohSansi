@@ -77,7 +77,7 @@ const Olimpiadas = () => {
         <ConfOlimpiada onBack={() => setIsConfOlimpiada(false)} />
       ) : (
         <div className="flex flex-col w-full px-6 py-4 gap-4">
-          <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
+          <div className="w-full max-w-7xl mx-auto flex flex-col gap-6">
 
             {/* Mensaje de éxito */}
             {successMessage && (
