@@ -20,6 +20,7 @@ const ConfParamOlimpiada = () => {
 
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState('');
+  const [advertencias, setAdvertencias] = useState({});
   const [modal, setModal] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [datosIniciales, setDatosIniciales] = useState({});
@@ -163,6 +164,7 @@ const ConfParamOlimpiada = () => {
   // Solo validar cuando se esté editando un campo específico y haya sido tocado
   const validarCampos = useCallback((valores) => {
     const errs = {};
+    const warns = {};
 
     // Validar el nombre si está siendo editado y ha sido tocado
     if (editando.nombre && camposTocados.nombre) {
@@ -199,10 +201,11 @@ const ConfParamOlimpiada = () => {
       const hoyGMT4 = soloFecha(new Date(now.getTime() - (now.getTimezoneOffset() * 60000) - (4 * 60 * 60 * 1000)));
 
       const fecha_inicio = soloFecha(parseFecha(valores.fecha_inicio));
-      const fecha_fin = soloFecha(parseFecha(valores.fecha_fin));
       const inicio_inscripcion = soloFecha(parseFecha(valores.inicio_inscripcion));
+      const fecha_fin = soloFecha(parseFecha(valores.fecha_fin));
       const fin_inscripcion = soloFecha(parseFecha(valores.fin_inscripcion));
-
+      const fecha_fin_original = soloFecha(parseFecha(datosIniciales.fecha_fin));
+      const fin_inscripcion_original = soloFecha(parseFecha(datosIniciales.fin_inscripcion));
       // Validar fecha_inicio solo si se está editando y ha sido tocado
       if (editando.fecha_inicio && camposTocados.fecha_inicio) {
         if (!fecha_inicio) {
@@ -219,6 +222,27 @@ const ConfParamOlimpiada = () => {
         } else if (fecha_fin < hoyGMT4) {
           errs.fecha_fin = 'La fecha de fin debe ser hoy o una fecha futura.';
         }
+      }
+
+      // Advertencia para fecha_fin
+    if (
+        editando.fecha_fin &&
+        camposTocados.fecha_fin &&
+        fecha_fin &&
+        fecha_fin_original &&
+        fecha_fin < fecha_fin_original
+      ) {
+        warns.fecha_fin = 'Advertencia: La nueva fecha de fin es menor a la fecha registrada originalmente.';
+      }
+      // Advertencia para fin_inscripcion
+      if (
+        editando.fin_inscripcion &&
+        camposTocados.fin_inscripcion &&
+        fin_inscripcion &&
+        fin_inscripcion_original &&
+        fin_inscripcion < fin_inscripcion_original
+      ) {
+        warns.fin_inscripcion = 'Advertencia: El nuevo fin de inscripción es menor a la fecha registrada originalmente.';
       }
 
       // Validaciones cruzadas solo si los campos están siendo editados y han sido tocados
@@ -247,7 +271,8 @@ const ConfParamOlimpiada = () => {
       }
     }
     setErrores(errs);
-  }, [editando, camposTocados]);
+    setAdvertencias(warns);
+  }, [editando, camposTocados, datosIniciales]);
 
   // Función para verificar si algún campo ha sido modificado
   const hayModificaciones = useMemo(() => {
@@ -591,6 +616,8 @@ const ConfParamOlimpiada = () => {
     // Si la inscripción ya comenzó, solo se puede editar la fecha de fin de inscripción
     const estaDeshabilitado = inscripcionYaComenzo && name !== 'fin_inscripcion';
 
+    const advertenciaToShow = advertencias[name];
+
     return (
       <div className="mb-6 w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -613,6 +640,11 @@ const ConfParamOlimpiada = () => {
               disabled={estaDeshabilitado}
               {...inputProps}
             />
+              {advertenciaToShow && (
+              <div className="mt-1 p-2 rounded bg-yellow-50 border border-yellow-300 text-yellow-800 text-xs">
+                {advertenciaToShow}
+              </div>
+            )}
           </div>
           <PencilIcon className={
             estaDeshabilitado
