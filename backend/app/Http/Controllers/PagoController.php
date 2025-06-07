@@ -159,18 +159,17 @@ class PagoController extends Controller
         foreach ($agrupados as $key => $grupo) {
             if ($key !== 'individual') {
                 // Es un grupo por lista
-                $detalle->push("inscripcion realizada por la lista de incripcion numero: {$key} para " . count($grupo) . " registros");
+                $detalle->push("Inscripción realizada por la lista número: {$key} para " . count($grupo) . " postulantes");
             } else {
                 // Son individuales, usar el formato anterior
                 foreach ($grupo as $item) {
-                    $detalle->push("inscripción: {$item->nombres} {$item->apellidos} - {$item->nombre_area} ({$item->nombre_nivel_categoria}) - {$item->grado}");
+                    $detalle->push("Inscripción: {$item->nombres} {$item->apellidos} - {$item->nombre_area} ({$item->nombre_nivel_categoria}) - {$item->grado}");
                 }
             }
         }
 
         $detalleConcatenado = $detalle->join(', ');
 
-        // ...resto del código igual...
         // Calcular la cantidad, precio por unidad e importe total
         $cantidad = count($registros);
         $costoPorUnidad = $olimpiada->costo;
