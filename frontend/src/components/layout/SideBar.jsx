@@ -30,7 +30,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
     // Limpiar cualquier estado de autenticación si es necesario
     // localStorage.removeItem('authToken') // Si hay tokens de autenticación
     // sessionStorage.clear() // Si hay datos de sesión
-    
+
     // Navegar al home/login
     navigate('/')
     setShowLogoutModal(false)
@@ -47,7 +47,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
       <div
         className={cn(
           "bg-white border-r border-slate-200 h-full flex flex-col transition-all duration-300",
-          isCollapsed ? "w-16" : "w-64",
+          isCollapsed ? "w-16" : "w-70",
           className,
         )}
       >
@@ -92,7 +92,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 flex flex-col justify-center space-y-4">
           {navigation.map((item) => {
             const Icon = item.icon
             return (

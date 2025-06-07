@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAreas, createArea } from '../../../service/areas.api';
 import Error from '../Error';
-import { Modal, Button, Input, LoadingSpinner , Card, Alert } from '../../components/ui';
+import { Modal, Button, Input, LoadingSpinner, Card, Alert } from '../../components/ui';
 
 const Areas = () => {
   const queryClient = useQueryClient();
@@ -85,13 +85,13 @@ const Areas = () => {
       const nuevaArea = await createArea({ nombre: nombreArea });
       setNewArea('');
       setErrorMessage('');
-      
+
       // Make sure we're adding a properly structured area object without any JSX attributes
       const areaToAdd = {
         ...nuevaArea.data,
         nombre: nuevaArea.data.nombre // ensure we're getting just the string value
       };
-      
+
       queryClient.setQueryData(['areas'], (oldData) => ({
         ...oldData,
         data: [...oldData.data, areaToAdd],
@@ -136,9 +136,11 @@ const Areas = () => {
           {areas.data.map((area, index) => (
             <Card
               key={index}
-              className={`flex justify-between items-center gap-4 p-4 rounded-xl shadow-sm transition-all duration-300 ease-in-out hover:scale-[1.01] hover:shadow hover:border-blue-300 hover:bg-blue-50`}
+              
+               style={{ backgroundColor: '#f0f7ff' }} // bg-blue-50 de Tailwind
+              className="flex justify-between items-center gap-4 p-4 rounded-xl shadow-sm transition-all duration-300 ease-in-out bg-blue-50 border border-blue-200 hover:scale-[1.01] hover:shadow hover:border-blue-300 hover:bg-blue-100"
             >
-              <span className="text-[#20335C] font-medium">{area.nombre}</span>
+              <span className="text-blue-900 font-medium">{area.nombre}</span>
             </Card>
           ))}
         </div>
