@@ -19,3 +19,14 @@ export const createArea = async (data) => {
     throw error;
   }
 }
+
+
+export const getAreasdeOlimpiada = async (idOlimpiada) => {
+  try {
+    const response = await axiosInstance.get(`/areasOlimpiada/${idOlimpiada}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching areas by olimpiada:", error);
+    throw error;
+  }
+}

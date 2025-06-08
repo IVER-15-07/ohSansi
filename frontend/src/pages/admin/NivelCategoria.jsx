@@ -177,7 +177,7 @@ const NivelCategoria = () => {
         {isNivel ? (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del nivel</label>
+              <label className="block text-sm font-medium text-blue-900 mb-1">Nombre del nivel</label>
               <Input
                 type="text"
                 value={nombre}
@@ -187,7 +187,7 @@ const NivelCategoria = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Grado</label>
+              <label className="block text-sm font-medium text-blue-900 mb-1">Grado</label>
               <Select
                 value={gradoSeleccionado}
                 onChange={e => setGradoSeleccionado(parseInt(e.target.value))}
@@ -202,7 +202,7 @@ const NivelCategoria = () => {
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la categoría</label>
+              <label className="block text-sm font-medium text-blue-900 mb-1">Nombre de la categoría</label>
               <Input
                 type="text"
                 value={nombre}
@@ -213,7 +213,7 @@ const NivelCategoria = () => {
             </div>
             <div className="flex gap-4">
               <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Grado inicial</label>
+                <label className="block text-sm font-medium text-blue-900 mb-1">Grado inicial</label>
                 <Select
                   value={gradoInicio}
                   onChange={e => setGradoInicio(parseInt(e.target.value))}
@@ -225,7 +225,7 @@ const NivelCategoria = () => {
                 />
               </div>
               <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Grado final</label>
+                <label className="block text-sm font-medium text-blue-900 mb-1">Grado final</label>
                 <Select
                   value={gradoFin}
                   onChange={(e) => setGradoFin(parseInt(e.target.value))}

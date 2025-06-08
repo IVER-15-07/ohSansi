@@ -4,6 +4,10 @@ import { getOlimpiada } from '../../../service/olimpiadas.api';
 import { Button, Card, CardContent, CardHeader, CardTitle, Alert, LoadingSpinner } from '../../components/ui';
 import { useDeviceAgent } from '../../hooks/useDeviceAgent';
 import { ArrowLeft, Calendar, FileText, DollarSign, Users, Clock, ExternalLink } from 'lucide-react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
+import { getAreasdeOlimpiada } from '../../../service/areas.api';
+
 
 
 import dayjs from "dayjs";
@@ -19,6 +23,7 @@ const MenuOlimpiada = () => {
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const { isMobile, isTablet, screenSize } = useDeviceAgent();
+    const [areasConDetalle, setAreasConDetalle] = useState([]);
 
 
     const hoy = dayjs();
@@ -53,6 +58,12 @@ const MenuOlimpiada = () => {
             setError("");
             const data = await getOlimpiada(idOlimpiada);
             setOlimpiada(data);
+
+            // Aquí consumes tu endpoint estructurado
+            const areasRes = await getAreasdeOlimpiada(idOlimpiada);
+             console.log("Respuesta de getAreasByOlimpiada:", areasRes);
+            setAreasConDetalle(Array.isArray(areasRes.data) ? areasRes.data : []);
+
         } catch (error) {
             console.error("Error fetching olimpiada:", error);
             setError("No se pudo cargar la información de la olimpiada. Por favor, intente nuevamente.");
@@ -114,6 +125,8 @@ const MenuOlimpiada = () => {
             </a>
         );
     };
+
+
 
     // Loading state
     if (loading) {
@@ -304,6 +317,58 @@ const MenuOlimpiada = () => {
                             </CardContent>
                         </Card>
                     )}
+
+                      
+                    {Array.isArray(areasConDetalle) && areasConDetalle.length > 0 && (
+                        <div className="mb-8">
+                            <h3 className="text-xl font-bold text-slate-800 mb-4 text-center">Áreas de la Olimpiada</h3>
+                            <Swiper
+                                spaceBetween={24}
+                                slidesPerView={1}
+                                breakpoints={{
+                                    640: { slidesPerView: 2 },
+                                    1024: { slidesPerView: 3 },
+                                }}
+                                className="pb-6"
+                            >
+                                {areasConDetalle.map((area, idx) => (
+                                    <SwiperSlide key={area.id || idx}>
+                                        <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-xl shadow-lg p-6 h-full flex flex-col">
+                                            <h4 className="text-2xl font-bold text-blue-900 mb-2 flex items-center gap-2">
+                                                <span className="inline-block w-2 h-2 bg-blue-400 rounded-full"></span>
+                                                {area.nombre}
+                                            </h4>
+                                            <p className="text-slate-700 mb-4 italic">{area.descripcion || "Sin descripción"}</p>
+                                            {/* Niveles */}
+                                            {Array.isArray(area.niveles) && area.niveles.length > 0 ? (
+                                                <div>
+                                                    <span className="font-semibold text-indigo-700">Niveles:</span>
+                                                    <ul className="list-disc list-inside ml-4 mt-1">
+                                                        {area.niveles.map((nivel, i) => (
+                                                            <li key={nivel.id || i} className="text-indigo-900 font-medium mb-2">
+                                                                <div>
+                                                                    <span className="font-bold">{nivel.nombre}</span>
+                                                                    {/* Grados del nivel */}
+                                                                    {nivel.grados && nivel.grados.length > 0 && (
+                                                                        <div className="text-blue-700 text-sm ml-2">
+                                                                            Grados: {nivel.grados.map(g => g.nombre).join(', ')}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            ) : (
+                                                <span className="ml-2 text-slate-500">No hay niveles</span>
+                                            )}
+                                        </div>
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
+                        </div>
+                    )}
+
 
                     {/* Action button */}
                     <div className="flex justify-center pt-6">
