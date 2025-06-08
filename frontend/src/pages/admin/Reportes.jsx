@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import { getOlimpiadasActivas, getOlimpiadas } from "../../../service/olimpiadas.api";
 import { getReportes } from "../../../service/Reporte.api"; // Asegúrate de tener esta función en tu servicio
 import { useParams } from "react-router-dom";
@@ -27,6 +27,7 @@ const Reportes = () => {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [tab, setTab] = useState("reporte");
+    const tablaRef = useRef(null);
 
   useEffect(() => {
     getOlimpiadasActivas()
@@ -63,6 +64,14 @@ const Reportes = () => {
       })
       .catch(() => setReportes([]))
       .finally(() => setLoadingReportes(false));
+
+        // Hacer scroll a la tabla después de cargar
+      setTimeout(() => {
+        if (tablaRef.current) {
+          tablaRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 300); // Espera breve para asegurar renderizado
+
   };
 
   const handleCategoriaChange = (e) => {
@@ -217,7 +226,7 @@ const reportesFiltrados = reportes.filter(r => {
 
           {/* Detalle de reportes */}
           {olimpiadaSeleccionada && (
-            <div className="mt-8">
+            <div className="mt-8" ref={tablaRef}>
               <h3 className="text-lg font-bold mb-4 text-center">
                 Reportes de la olimpiada: <span className="text-blue-700">{olimpiadaSeleccionada.nombre}</span>
               </h3>

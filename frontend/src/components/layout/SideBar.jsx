@@ -40,7 +40,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
     <>
       {/* Mobile backdrop */}
       {isMobileOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={toggleMobileSidebar} />
+         <div className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={toggleMobileSidebar} />
       )}
 
       {/* Sidebar */}
@@ -107,6 +107,12 @@ const Sidebar = ({ isCollapsed, isMobileOpen, toggleMobileSidebar, onToggleColla
                   isCollapsed && "justify-center",
                 )}
                 title={isCollapsed ? item.name : undefined}
+                onClick={() => {
+                  // Si está en móvil, cerrar el sidebar al navegar
+                  if (window.innerWidth < 768 && typeof toggleMobileSidebar === "function") {
+                    toggleMobileSidebar();
+                  }
+                }}
               >
                 <Icon className="h-5 w-5 flex-shrink-0" />
                 {!isCollapsed && <span>{item.name}</span>}
