@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import CrearOlimpiada from './CrearOlimpiada'
 import { getOlimpiadas, getOlimpiadasActivas, iniciarOlimpiada } from "../../../service/olimpiadas.api";
 import { useNavigate, Outlet, useLocation } from 'react-router-dom'
@@ -11,65 +11,61 @@ import Error from '../Error';
 const Olimpiadas = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [olimpiadasActivas, setOlimpiadasActivas] = useState([]);
-  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
+  
+  // Estados simplificados
   const [isConfOlimpiada, setIsConfOlimpiada] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [publishingId, setPublishingId] = useState(null);
 
+  // Query para olimpiadas creadas
   const { data: olimpiadas, isLoading, error: errorOlimpiadas } = useQuery({
     queryKey: ['olimpiadas'],
     queryFn: getOlimpiadas,
   });
 
-  // Manejar mensaje de éxito desde navegación
+  // Query para olimpiadas activas - SIMPLIFICADO
+  const { data: olimpiadasActivas, error: errorActivas } = useQuery({
+    queryKey: ['olimpiadasActivas'],
+    queryFn: getOlimpiadasActivas,
+    select: (data) => data.data || [], // Extraer solo el array de datos
+  });
+
+  // Manejar mensajes desde navegación
   useEffect(() => {
     if (location.state?.successMessage && location.state?.olimpiadaCreada) {
       setSuccessMessage(location.state.successMessage);
-      // Limpiar el estado de navegación para evitar que se muestre nuevamente
       navigate(location.pathname, { replace: true });
     }
     
-    // Manejar mensaje de error desde navegación
     if (location.state?.errorMessage) {
       setErrorMessage(location.state.errorMessage);
-      // Limpiar el estado de navegación para evitar que se muestre nuevamente
       navigate(location.pathname, { replace: true });
     }
   }, [location.state, navigate, location.pathname]);
 
-  // Solo olimpiadas activas
-  useEffect(() => {
-    const fetchOlimpiadasActivas = async () => {
-      try {
-        const response = await getOlimpiadasActivas();
-        setOlimpiadasActivas(response.data);
-      } catch (err) {
-        setError("Error al cargar las olimpiadas activas.");
-        console.error(err);
-      }
-    };
-    fetchOlimpiadasActivas();
-  }, []);
-
-
-
-
-
+  // Función simplificada para publicar
   const handleIniciar = async (id) => {
+    setPublishingId(id);
     try {
       const result = await iniciarOlimpiada(id);
-      alert(result.message); // Mensaje de éxito del backend
+      
+      // Invalidar queries para actualizar datos automáticamente
+      queryClient.invalidateQueries(['olimpiadas']);
+      queryClient.invalidateQueries(['olimpiadasActivas']);
+      
+      setSuccessMessage(result.message || 'Olimpiada publicada exitosamente');
     } catch (error) {
-      // Aquí recibes el objeto lanzado arriba
-      alert(error.message || "Ocurrió un error inesperado");
+      setErrorMessage(error.message || "Error al publicar la olimpiada");
+    } finally {
+      setPublishingId(null);
     }
   };
 
   const handleReportes = (idOlimpiada) => {
     navigate(`/AdminLayout/Reportes/${idOlimpiada}`);
   };
-
 
   if (isLoading) return (
     <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -87,7 +83,7 @@ const Olimpiadas = () => {
         <div className="flex flex-col w-full px-6 py-4 gap-4">
           <div className="w-full max-w-7xl mx-auto flex flex-col gap-6">
 
-            {/* Mensaje de éxito */}
+            {/* Mensajes unificados */}
             {successMessage && (
               <Alert
                 variant="success"
@@ -101,7 +97,6 @@ const Olimpiadas = () => {
               </Alert>
             )}
 
-            {/* Mensaje de error */}
             {errorMessage && (
               <Alert
                 variant="error"
@@ -128,7 +123,7 @@ const Olimpiadas = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2">
-                {olimpiadas.data.length > 0 ? (
+                {olimpiadas?.data?.length > 0 ? (
                   olimpiadas.data.map((olimp) => (
                     <Card
                       key={olimp.id}
@@ -148,8 +143,7 @@ const Olimpiadas = () => {
                           onClick={() => navigate(`/AdminLayout/Olimpiadas/${olimp.id}/configurar/${olimp.nombre}`)}
                           className="px-3 py-1 rounded text-sm font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition"
                         >
-                          
-                        Áreas y Niveles
+                          Áreas y Niveles
                         </button>
                         <button
                           onClick={() => navigate(`/AdminLayout/Olimpiadas/${olimp.id}/configurarParametros/${olimp.nombre}`)}
@@ -165,9 +159,21 @@ const Olimpiadas = () => {
                         </button>
                         <button
                           onClick={() => handleIniciar(olimp.id)}
-                          className="px-3 py-1 rounded text-sm font-semibold bg-green-50 text-green-700 hover:bg-green-100 transition"
+                          disabled={publishingId === olimp.id}
+                          className={`px-3 py-1 rounded text-sm font-semibold transition flex items-center gap-1 ${
+                            publishingId === olimp.id
+                              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                              : 'bg-green-50 text-green-700 hover:bg-green-100'
+                          }`}
                         >
-                          Publicar
+                          {publishingId === olimp.id ? (
+                            <>
+                              <LoadingSpinner size="xs" />
+                              Publicando...
+                            </>
+                          ) : (
+                            'Publicar'
+                          )}
                         </button>
                       </div>  
                     </Card>
@@ -178,16 +184,18 @@ const Olimpiadas = () => {
               </div>
             </section>
 
-            {/* Olimpiadas Iniciadas */}
+            {/* Olimpiadas Activas - SIMPLIFICADO */}
             <section className="bg-white rounded-2xl shadow-md border border-gray-200 px-6 py-5 flex flex-col h-[38vh] mt-6">
               <h2 className="text-2xl font-semibold text-green-700 mb-4">Olimpiadas Activas</h2>
-              {error && (
+              
+              {errorActivas && (
                 <Alert variant="error" title="Error" className="mb-4">
-                  {error}
+                  Error al cargar olimpiadas activas
                 </Alert>
               )}
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-2">
-                {olimpiadasActivas.length > 0 ? (
+                {olimpiadasActivas?.length > 0 ? (
                   olimpiadasActivas.map((olimp) => (
                     <div
                       key={olimp.id}

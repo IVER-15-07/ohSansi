@@ -280,10 +280,12 @@ const RegistroTutor = () => {
 
       // Ocultar mensaje de éxito después de 5 segundos
       setTimeout(() => {
-        setShowSuccessAlert(false);
-      }, 5000);
-      // Redirigir al usuario a la página de identificación del encargado
-      navigate("/IdentificarEncargado", { state: { idEncargado, idOlimpiada } });
+        setShowSuccessAlert(true);
+        // Redirigir al usuario a la página de identificación del encargado
+        navigate(`/registros/${idEncargado}/${idOlimpiada}`);
+      }, 2000);
+      
+      
     } catch (error) {
       // Manejo de errores
       console.error("Error al enviar los datos del encargado:", error);
@@ -326,11 +328,11 @@ const RegistroTutor = () => {
           {/* Alerta de éxito */}
           {showSuccessAlert && (
             <Alert
-              variant="success"
-              title="Registro exitoso"
-              onClose={() => setShowSuccessAlert(false)}
+                  variant="success"
+                  title="Registro exitoso"
+                  onClose={() => setShowSuccessAlert(false)}
             >
-              Sus datos han sido registrados correctamente.
+                  Sus datos han sido registrados correctamente.
             </Alert>
           )}
 
