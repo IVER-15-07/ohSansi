@@ -47,7 +47,8 @@ const ConfOlimpiada = () => {
     const validarFechas = async () => {
       try {
         const response = await getOlimpiada(id);
-        const olimpiada = response.data;
+        const olimpiada = response;
+        console.log(response)
         if (!olimpiada) {
           setModalError("La información de la olimpiada no está disponible.");
           return;
