@@ -15,6 +15,7 @@ const Olimpiadas = () => {
   const [error, setError] = useState('');
   const [isConfOlimpiada, setIsConfOlimpiada] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { data: olimpiadas, isLoading, error: errorOlimpiadas } = useQuery({
     queryKey: ['olimpiadas'],
@@ -25,6 +26,13 @@ const Olimpiadas = () => {
   useEffect(() => {
     if (location.state?.successMessage && location.state?.olimpiadaCreada) {
       setSuccessMessage(location.state.successMessage);
+      // Limpiar el estado de navegación para evitar que se muestre nuevamente
+      navigate(location.pathname, { replace: true });
+    }
+    
+    // Manejar mensaje de error desde navegación
+    if (location.state?.errorMessage) {
+      setErrorMessage(location.state.errorMessage);
       // Limpiar el estado de navegación para evitar que se muestre nuevamente
       navigate(location.pathname, { replace: true });
     }
@@ -90,6 +98,20 @@ const Olimpiadas = () => {
                 onClose={() => setSuccessMessage('')}
               >
                 {successMessage}
+              </Alert>
+            )}
+
+            {/* Mensaje de error */}
+            {errorMessage && (
+              <Alert
+                variant="error"
+                title="¡Error!"
+                className="mb-4"
+                autoClose={true}
+                autoCloseDelay={8000}
+                onClose={() => setErrorMessage('')}
+              >
+                {errorMessage}
               </Alert>
             )}
 

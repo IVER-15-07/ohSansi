@@ -48,6 +48,32 @@ const ConfParamOlimpiada = () => {
     return fechaInicioInscripcion <= hoyFecha;
   }, [olimpiada]);
 
+  // Función para verificar si la fecha de fin de inscripción ya pasó
+  const inscripcionYaTermino = useMemo(() => {
+    if (!olimpiada || !olimpiada.fin_inscripcion) return false;
+
+    const hoy = new Date();
+    const hoyFecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+
+    // Parsear la fecha de fin de inscripción
+    let fechaFinInscripcion;
+    if (olimpiada.fin_inscripcion.includes('/')) {
+      // Formato DD/MM/YYYY
+      const [dia, mes, ano] = olimpiada.fin_inscripcion.split('/');
+      fechaFinInscripcion = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+    } else {
+      // Formato YYYY-MM-DD
+      fechaFinInscripcion = new Date(olimpiada.fin_inscripcion);
+    }
+
+    return hoyFecha > fechaFinInscripcion;
+  }, [olimpiada]);
+
+  // Verificar si se debe bloquear el acceso completo a la configuración
+  const accesoBloquedoPorFechaFin = useMemo(() => {
+    return inscripcionYaTermino;
+  }, [inscripcionYaTermino]);
+
   // Convierte fecha de formato YYYY-MM-DD a DD/MM/YYYY para mostrar
   const formatoDDMMAAAA = useCallback((fecha) => {
     if (!fecha) return '';
@@ -160,6 +186,19 @@ const ConfParamOlimpiada = () => {
       isMounted = false;
     };
   }, [id]);
+
+  // Efecto para verificar si el acceso debe ser bloqueado y redirigir
+  useEffect(() => {
+    if (olimpiada && accesoBloquedoPorFechaFin) {
+      // Redirigir con mensaje de error
+      redirigir('/AdminLayout/Olimpiadas', {
+        state: {
+          errorMessage: 'No se puede acceder a la configuración de parámetros. La fecha de fin de inscripciones ya ha pasado.',
+          olimpiadaNombre: olimpiada.nombre
+        }
+      });
+    }
+  }, [olimpiada, accesoBloquedoPorFechaFin, redirigir]);
 
   // Solo validar cuando se esté editando un campo específico y haya sido tocado
   const validarCampos = useCallback((valores) => {
@@ -516,7 +555,18 @@ const ConfParamOlimpiada = () => {
 
     try {
       const response = await updateOlimpiada(id, formData);
-      setMensaje('Cambios guardados correctamente.');
+      
+      // Mensaje de éxito más específico
+      let mensajeExito = 'Configuración guardada exitosamente';
+      if (archivo && !inscripcionYaComenzo) {
+        mensajeExito += ' (incluyendo nueva convocatoria)';
+      }
+      if (inscripcionYaComenzo) {
+        mensajeExito += '. Solo se actualizó la fecha de fin de inscripción';
+      }
+      mensajeExito += '.';
+      
+      setMensaje(mensajeExito);
 
       // Update file states after successful save
       if (archivo && !inscripcionYaComenzo) {
@@ -614,7 +664,41 @@ const ConfParamOlimpiada = () => {
 
     // Determinar si el campo debe estar deshabilitado
     // Si la inscripción ya comenzó, solo se puede editar la fecha de fin de inscripción
-    const estaDeshabilitado = inscripcionYaComenzo && name !== 'fin_inscripcion';
+    // Si la fecha de fin de inscripción ya pasó, no se puede editar nada
+    const estaDeshabilitado = inscripcionYaTermino || (inscripcionYaComenzo && name !== 'fin_inscripcion');
+
+    // Función para obtener texto de ayuda contextual
+    const obtenerTextoAyuda = (fieldName) => {
+      const textoBase = {
+        nombre: 'Nombre identificativo de la olimpiada. Debe ser único y descriptivo.',
+        descripcion: 'Descripción detallada de la olimpiada, objetivos y características principales.',
+        costo: 'Costo de inscripción por participante. Debe ser un valor positivo.',
+        max_areas: 'Número máximo de áreas en las que un participante puede inscribirse. Dejar vacío para sin límite.',
+        fecha_inicio: 'Fecha de inicio de la olimpiada. Debe ser igual o posterior a hoy.',
+        fecha_fin: 'Fecha de finalización de la olimpiada. Debe ser posterior a la fecha de inicio.',
+        inicio_inscripcion: 'Fecha de apertura del período de inscripciones. Debe estar dentro del rango de la olimpiada.',
+        fin_inscripcion: 'Fecha de cierre del período de inscripciones. Debe ser anterior o igual a la fecha de fin de la olimpiada.',
+        convocatoria: 'Documento PDF con la convocatoria oficial de la olimpiada. Máximo 10MB.'
+      };
+
+      let textoContextual = textoBase[fieldName] || '';
+      
+      if (inscripcionYaTermino) {
+        textoContextual += ' (⚠️ BLOQUEADO: La fecha de fin de inscripción ya pasó)';
+      } else if (estaDeshabilitado && fieldName !== 'fin_inscripcion') {
+        textoContextual += ' (⚠️ BLOQUEADO: La inscripción ya comenzó)';
+      } else if (fieldName === 'fin_inscripcion' && inscripcionYaComenzo) {
+        textoContextual += ' (✏️ Editable para extender el período de inscripción)';
+      }
+      
+      return (
+        <>
+          {textoContextual}
+          <br />
+          💾 Valor actual: {getValorOriginal(name)}
+        </>
+      );
+    };
 
     const advertenciaToShow = advertencias[name];
 
@@ -630,13 +714,9 @@ const ConfParamOlimpiada = () => {
               placeholder={placeholder}
               onChange={handleChange}
               onBlur={handleBlur}
-              helperText={
-                estaDeshabilitado
-                  ? `Campo deshabilitado - La inscripción ya comenzó. Valor registrado: ${getValorOriginal(name)}`
-                  : `Valor registrado: ${getValorOriginal(name)}`
-              }
+              helperText={obtenerTextoAyuda(name)}
               error={errorToShow}
-              className={hasChanged ? "border-primary-300" : ""}
+              className={hasChanged ? "border-primary-300 cursor-pointer" : "cursor-pointer"}
               disabled={estaDeshabilitado}
               {...inputProps}
             />
@@ -670,7 +750,27 @@ const ConfParamOlimpiada = () => {
               Configuración de {olimpiada.nombre}
             </h1>
 
-            {inscripcionYaComenzo && (
+            {inscripcionYaTermino && (
+              <div className="mb-6 p-4 rounded-md bg-red-50 border border-red-200">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-red-700 font-medium">
+                      🚫 Configuración Bloqueada - La fecha de fin de inscripción ya pasó
+                    </p>
+                    <p className="text-red-600 text-sm mt-1">
+                      No se pueden modificar los parámetros de la olimpiada porque el período de inscripciones ya ha finalizado.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {inscripcionYaComenzo && !inscripcionYaTermino && (
               <div className="mb-6 p-4 rounded-md bg-orange-50 border border-orange-200">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -690,17 +790,6 @@ const ConfParamOlimpiada = () => {
               </div>
             )}
 
-            {mensaje && (
-              <div className={`mb-6 p-4 rounded-md ${mensaje.includes('error') || mensaje.includes('corrija')
-                ? 'bg-red-50 border border-red-200'
-                : 'bg-green-50 border border-green-200'}`}>
-                <p className={`${mensaje.includes('error') || mensaje.includes('corrija')
-                  ? 'text-red-700'
-                  : 'text-green-700'} font-medium text-center`}>
-                  {mensaje}
-                </p>
-              </div>
-            )}
 
             <form onSubmit={handleGuardar} encType="multipart/form-data" className="space-y-6">
               <div className="grid grid-cols-1 gap-6">
@@ -782,7 +871,17 @@ const ConfParamOlimpiada = () => {
                   )}
                 </div>
               </div>
-
+                {mensaje && (
+              <div className={`mb-6 p-4 rounded-md ${mensaje.includes('error') || mensaje.includes('corrija')
+                ? 'bg-red-50 border border-red-200'
+                : 'bg-green-50 border border-green-200'}`}>
+                <p className={`${mensaje.includes('error') || mensaje.includes('corrija')
+                  ? 'text-red-700'
+                  : 'text-green-700'} font-medium text-center`}>
+                  {mensaje}
+                </p>
+              </div>
+            )}
               <div className="flex justify-center gap-4 mt-8">
                 <Button
                   type="button"
@@ -804,6 +903,7 @@ const ConfParamOlimpiada = () => {
                 </Button>
               </div>
             </form>
+            
           </div>
         </div>
       </div>
