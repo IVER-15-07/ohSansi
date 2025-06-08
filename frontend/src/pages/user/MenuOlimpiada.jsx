@@ -321,82 +321,87 @@ const MenuOlimpiada = () => {
 
 
                     {Array.isArray(areasConDetalle) && areasConDetalle.length > 0 && (
-                        <div className="mb-8 relative">
-                            <h3 className="text-xl font-bold text-slate-800 mb-4 text-center">Áreas de la Olimpiada</h3>
-                            <Swiper
-                                spaceBetween={24}
-                                slidesPerView={
-                                    areasConDetalle.length === 1 ? 1 :
-                                        areasConDetalle.length === 2 ? 2 : 1
-                                }
-                                centeredSlides={areasConDetalle.length <= 2}
-                                navigation={{
-                                    nextEl: '.custom-next',
-                                    prevEl: '.custom-prev'
-                                }}
-                                autoplay={{ delay: 2500, disableOnInteraction: false, pauseOnMouseEnter: true }}
-                                modules={[Navigation, Autoplay]}
-                                breakpoints={{
-                                    640: {
-                                        slidesPerView: areasConDetalle.length === 1 ? 1 : (areasConDetalle.length === 2 ? 2 : 2),
-                                        centeredSlides: areasConDetalle.length <= 2,
-                                    },
-                                    1024: {
-                                        slidesPerView: areasConDetalle.length === 1 ? 1 : (areasConDetalle.length === 2 ? 2 : 3),
-                                        centeredSlides: areasConDetalle.length <= 2,
-                                    },
-                                }}
-                                className="pb-6 "
-                            >
-                                {areasConDetalle.map((area, idx) => (
-                                    <SwiperSlide key={area.id || idx}  >
-                                        <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-xl shadow-lg p-6 h-full flex flex-col">
-                                            <h4 className="text-2xl font-bold text-blue-900 mb-2 flex items-center gap-2">
-                                                <span className="inline-block w-2 h-2 bg-blue-400 rounded-full"></span>
-                                                {area.nombre}
-                                            </h4>
-                                            <p className="text-slate-700 mb-4 italic">{area.descripcion || "Sin descripción"}</p>
-                                            {/* Niveles */}
-                                            {Array.isArray(area.niveles) && area.niveles.length > 0 ? (
-                                                <div>
-                                                    <span className="font-semibold text-indigo-700">Niveles/Categorias:</span>
-                                                    <ul className="list-disc list-inside ml-4 mt-1">
-                                                        {area.niveles.map((nivel, i) => (
-                                                            <li key={nivel.id || i} className="text-indigo-900 font-medium mb-2">
-                                                                <div>
-                                                                    <span className="font-bold">{nivel.nombre}</span>
-                                                                    {/* Grados del nivel */}
-                                                                    {nivel.grados && nivel.grados.length > 0 && (
-                                                                        <div className="text-blue-700 text-sm ml-2">
-                                                                            Grados: {nivel.grados.map(g => g.nombre).join(', ')}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            ) : (
-                                                <span className="ml-2 text-slate-500">No hay niveles</span>
-                                            )}
-                                        </div>
-                                    </SwiperSlide>
-                                ))}
-                            </Swiper>
-                            <button
-                                className="custom-prev absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
-                                type="button"
-                                aria-label="Anterior"
-                            >
-                                <span style={{ fontSize: 24 }}>&larr;</span>
-                            </button>
-                            <button
-                                className="custom-next absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
-                                type="button"
-                                aria-label="Siguiente"
-                            >
-                                <span style={{ fontSize: 24 }}>&rarr;</span>
-                            </button>
+                        
+
+                        <div className={`relative ${areasConDetalle.length === 1 ? "flex justify-center" : ""} mb-8`}>
+                            
+                            <div className={areasConDetalle.length === 1 ? "w-full max-w-md" : "w-full"}>
+                                <h3 className="text-xl font-bold text-slate-800 mb-4 text-center">Áreas de la Olimpiada</h3>
+                                <Swiper
+                                    spaceBetween={24}
+                                    slidesPerView={
+                                        areasConDetalle.length === 1 ? 1 :
+                                            areasConDetalle.length === 2 ? 2 : 1
+                                    }
+                                    centeredSlides={areasConDetalle.length <= 2}
+                                    navigation={{
+                                        nextEl: '.custom-next',
+                                        prevEl: '.custom-prev'
+                                    }}
+                                    autoplay={{ delay: 2500, disableOnInteraction: false, pauseOnMouseEnter: true }}
+                                    modules={[Navigation, Autoplay]}
+                                    breakpoints={{
+                                        640: {
+                                            slidesPerView: areasConDetalle.length === 1 ? 1 : (areasConDetalle.length === 2 ? 2 : 2),
+                                            centeredSlides: areasConDetalle.length <= 2,
+                                        },
+                                        1024: {
+                                            slidesPerView: areasConDetalle.length === 1 ? 1 : (areasConDetalle.length === 2 ? 2 : 3),
+                                            centeredSlides: areasConDetalle.length <= 2,
+                                        },
+                                    }}
+                                    className="pb-6 "
+                                >
+                                    {areasConDetalle.map((area, idx) => (
+                                        <SwiperSlide key={area.id || idx}  >
+                                            <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-xl shadow-lg p-6 h-full flex flex-col">
+                                                <h4 className="text-2xl font-bold text-blue-900 mb-2 flex items-center gap-2">
+                                                    <span className="inline-block w-2 h-2 bg-blue-400 rounded-full"></span>
+                                                    {area.nombre}
+                                                </h4>
+                                                <p className="text-slate-700 mb-4 italic">{area.descripcion || "Sin descripción"}</p>
+                                                {/* Niveles */}
+                                                {Array.isArray(area.niveles) && area.niveles.length > 0 ? (
+                                                    <div>
+                                                        <span className="font-semibold text-indigo-700">Niveles/Categorias:</span>
+                                                        <ul className="list-disc list-inside ml-4 mt-1">
+                                                            {area.niveles.map((nivel, i) => (
+                                                                <li key={nivel.id || i} className="text-indigo-900 font-medium mb-2">
+                                                                    <div>
+                                                                        <span className="font-bold">{nivel.nombre}</span>
+                                                                        {/* Grados del nivel */}
+                                                                        {nivel.grados && nivel.grados.length > 0 && (
+                                                                            <div className="text-blue-700 text-sm ml-2">
+                                                                                Grados: {nivel.grados.map(g => g.nombre).join(', ')}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                ) : (
+                                                    <span className="ml-2 text-slate-500">No hay niveles</span>
+                                                )}
+                                            </div>
+                                        </SwiperSlide>
+                                    ))}
+                                </Swiper>
+                                <button
+                                    className="custom-prev absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
+                                    type="button"
+                                    aria-label="Anterior"
+                                >
+                                    <span style={{ fontSize: 24 }}>&larr;</span>
+                                </button>
+                                <button
+                                    className="custom-next absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
+                                    type="button"
+                                    aria-label="Siguiente"
+                                >
+                                    <span style={{ fontSize: 24 }}>&rarr;</span>
+                                </button>
+                            </div>
                         </div>
                     )}
 
