@@ -62,7 +62,6 @@ const InscripcionForm = ({
 
       <Button
         onClick={onAgregarOpcion}
-        disabled={!puedeAgregarMas || todasOcupadas || opcionesInscripcion.length === 0}
         variant="primary"
         className="w-full sm:w-auto"
       >
