@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, useRef } from "react";
 import { getOlimpiadasActivas, getOlimpiadas } from "../../../service/olimpiadas.api";
 import { getReportes } from "../../../service/Reporte.api"; // Asegúrate de tener esta función en tu servicio
 import { useParams } from "react-router-dom";
@@ -27,6 +27,7 @@ const Reportes = () => {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [tab, setTab] = useState("reporte");
+    const tablaRef = useRef(null);
 
   useEffect(() => {
     getOlimpiadasActivas()
@@ -63,6 +64,14 @@ const Reportes = () => {
       })
       .catch(() => setReportes([]))
       .finally(() => setLoadingReportes(false));
+
+        // Hacer scroll a la tabla después de cargar
+      setTimeout(() => {
+        if (tablaRef.current) {
+          tablaRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 300); // Espera breve para asegurar renderizado
+
   };
 
   const handleCategoriaChange = (e) => {
@@ -81,17 +90,41 @@ const Reportes = () => {
     }
   };
 
-  const reportesFiltrados = reportes.filter(r => {
-    const texto = busqueda.toLowerCase();
-    return (
-      (r.postulante.nombres && r.postulante.nombres.toLowerCase().includes(texto)) ||
-      (r.postulante.apellidos && r.postulante.apellidos.toLowerCase().includes(texto)) ||
-      (r.postulante.ci && r.postulante.ci.toLowerCase().includes(texto)) ||
-      (r.encargado?.nombres && r.encargado.nombres.toLowerCase().includes(texto)) ||
-      (r.encargado?.apellidos && r.encargado.apellidos.toLowerCase().includes(texto)) ||
-      (r.encargado?.ci && r.encargado.ci.toLowerCase().includes(texto))
-    );
-  });
+const reportesFiltrados = reportes.filter(r => {
+  const texto = busqueda.toLowerCase();
+
+  // Unir todos los campos relevantes en un solo string
+  const campos = [
+    r.postulante.nombres,
+    r.postulante.apellidos,
+    r.postulante.ci,
+    r.postulante.area_categoria?.area,
+    r.postulante.area_categoria?.categoria,
+    // Datos adicionales del postulante
+    ...(r.postulante.datos_adicionales?.[0]?.map?.(d => d.valor) || []),
+    // Responsable
+    r.encargado?.nombres,
+    r.encargado?.apellidos,
+    r.encargado?.ci,
+    r.encargado?.correo,
+    // Tutor (si existe)
+    r.tutor?.nombres,
+    r.tutor?.apellidos,
+    r.tutor?.ci,
+    r.tutor?.correo,
+    // Datos adicionales del tutor
+    ...(r.tutor?.datos_adicionales?.[0]?.map?.(d => d.valor) || []),
+    // Estado de pago, validado, tipo de inscripción
+    r.estado_pago,
+    r.validado,
+    r.tipo_inscripcion
+  ]
+    .filter(Boolean) // Elimina undefined/null
+    .join(" ")
+    .toLowerCase();
+
+  return campos.includes(texto);
+});
 
   const camposAdicionales = Array.from(
     new Set(
@@ -193,7 +226,7 @@ const Reportes = () => {
 
           {/* Detalle de reportes */}
           {olimpiadaSeleccionada && (
-            <div className="mt-8">
+            <div className="mt-8" ref={tablaRef}>
               <h3 className="text-lg font-bold mb-4 text-center">
                 Reportes de la olimpiada: <span className="text-blue-700">{olimpiadaSeleccionada.nombre}</span>
               </h3>
@@ -278,8 +311,9 @@ const Reportes = () => {
                       <table className="min-w-full text-sm rounded-xl overflow-hidden">
                         <thead>
                           <tr>
-                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Nombres postulante</th>
-                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">CI</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Nombre Postulante</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Apellidos Postulante</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">CI Postulante</th>
                             <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Área</th>
                             <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Categoría</th>
                             {camposAdicionales.map((campo) => (
@@ -305,7 +339,8 @@ const Reportes = () => {
                                hover:bg-blue-200 transition
                                `}
                             >
-                              <td className="border px-3 py-2">{r.postulante.nombres} {r.postulante.apellidos}</td>
+                              <td className="border px-3 py-2">{r.postulante.nombres}</td>
+                              <td className="border px-3 py-2"> {r.postulante.apellidos}</td>
                               <td className="border px-3 py-2">{r.postulante.ci}</td>
                               <td className="border px-3 py-2">{r.postulante.area_categoria.area}</td>
                               <td className="border px-3 py-2">{r.postulante.area_categoria.categoria}</td>

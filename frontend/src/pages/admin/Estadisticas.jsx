@@ -58,7 +58,7 @@ const Estadisticas = ({ reportes }) => {
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="name" />
                             <YAxis />
-                            <Tooltip />
+                            <Tooltip formatter={(value) => [`${value}`, 'Cantidad']} />
                             <Bar dataKey="value">
                                 {areaData.map((entry, index) => (
                                     <Cell key={`cell-area-${index}`} fill={COLORS2[index % COLORS2.length]} />
@@ -77,7 +77,7 @@ const Estadisticas = ({ reportes }) => {
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="name" />
                             <YAxis />
-                            <Tooltip />
+                            <Tooltip formatter={(value) => [`${value}`, 'Cantidad']} />
                             <Bar dataKey="value">
                                 {nivelData.map((entry, index) => (
                                     <Cell key={`cell-nivel-${index}`} fill={COLORS2[index % COLORS2.length]} />

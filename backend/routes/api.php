@@ -68,6 +68,11 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::get('/areas', [AreaController::class, 'obtenerAreas']);
 Route::post('/areas', [AreaController::class, 'almacenarArea']);
 
+Route::get('/areasOlimpiada/{idOlimpiada}', [AreaController::class, 'areadeOlimpiada']);
+
+
+
+
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE NIVELES/CATEGORÍAS
 Route::get('/niveles_categorias', [NivelCategoriaController::class, 'obtenerNivelesCategorias']);
 Route::post('/niveles_categorias', [NivelCategoriaController::class, 'almacenarNivelCategoria']);

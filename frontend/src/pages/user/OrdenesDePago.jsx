@@ -177,7 +177,7 @@ const OrdenesDePago = () => {
         10,
         doc.lastAutoTable.finalY + 30
       );
-      doc.text("Firma del responsable: ____________________________", 10, doc.lastAutoTable.finalY + 40);
+      doc.text("Firma del encargado: ____________________________", 10, doc.lastAutoTable.finalY + 40);
       doc.save(`orden_de_pago_${datosOrden.id_pago}.pdf`);
       const pdfBlob = doc.output("blob");
       const formData = new FormData();
@@ -250,7 +250,7 @@ const OrdenesDePago = () => {
       </h2>
       {cargando ? (
         <div className="text-center text-blue-900 font-medium text-lg">
-          <h2>Buscando ordenes de pago...</h2>
+          <h2>Buscando órdenes de pago...</h2>
         </div>
       ) : (
         <>
@@ -353,7 +353,7 @@ const OrdenesDePago = () => {
                 Registros por lista
               </h2>
               <p className="text-center text-gray-700">
-                No hay registros por lista pendientes para generar una orden de pago.
+                No se encontraron registros por lista pendientes por generar una orden de pago.
               </p>
             </div>
           )}

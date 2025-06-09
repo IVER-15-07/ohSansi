@@ -1,9 +1,14 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useNavigate, useParams } from "react-router-dom";
 import { getOlimpiada } from '../../../service/olimpiadas.api';
 import { Button, Card, CardContent, CardHeader, CardTitle, Alert, LoadingSpinner } from '../../components/ui';
 import { useDeviceAgent } from '../../hooks/useDeviceAgent';
 import { ArrowLeft, Calendar, FileText, DollarSign, Users, Clock, ExternalLink } from 'lucide-react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import { getAreasdeOlimpiada } from '../../../service/areas.api';
+
 
 
 import dayjs from "dayjs";
@@ -19,6 +24,9 @@ const MenuOlimpiada = () => {
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const { isMobile, isTablet, screenSize } = useDeviceAgent();
+    const [areasConDetalle, setAreasConDetalle] = useState([]);
+    const [expandedIndex, setExpandedIndex] = useState(null);
+    const swiperRef = useRef(null);
 
 
     const hoy = dayjs();
@@ -53,6 +61,12 @@ const MenuOlimpiada = () => {
             setError("");
             const data = await getOlimpiada(idOlimpiada);
             setOlimpiada(data);
+
+            // Aquí consumes tu endpoint estructurado
+            const areasRes = await getAreasdeOlimpiada(idOlimpiada);
+            console.log("Respuesta de getAreasByOlimpiada:", areasRes);
+            setAreasConDetalle(Array.isArray(areasRes.data) ? areasRes.data : []);
+
         } catch (error) {
             console.error("Error fetching olimpiada:", error);
             setError("No se pudo cargar la información de la olimpiada. Por favor, intente nuevamente.");
@@ -114,6 +128,8 @@ const MenuOlimpiada = () => {
             </a>
         );
     };
+
+
 
     // Loading state
     if (loading) {
@@ -303,6 +319,107 @@ const MenuOlimpiada = () => {
                                 </div>
                             </CardContent>
                         </Card>
+                    )}
+
+
+                    {Array.isArray(areasConDetalle) && areasConDetalle.length > 0 && (
+                        <div className="relative flex justify-center mb-8">
+                            {/* Flecha izquierda */}
+                            <button
+                                className="custom-prev absolute -left-10 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
+                                type="button"
+                                aria-label="Anterior"
+                            >
+                                <span style={{ fontSize: 24 }}>&larr;</span>
+                            </button>
+                            <div className={areasConDetalle.length === 1 ? "w-full max-w-md" : "w-full"}
+                                onMouseEnter={() => {
+                                    if (swiperRef.current && swiperRef.current.autoplay) swiperRef.current.autoplay.stop();
+                                }}
+                                onMouseLeave={() => {
+                                    if (swiperRef.current && swiperRef.current.autoplay) swiperRef.current.autoplay.start();
+                                    setExpandedIndex(null);
+                                }}>
+                                <h3 className="text-xl font-bold text-slate-800 mb-4 text-center">Áreas de la Olimpiada</h3>
+                                <Swiper
+                                    spaceBetween={24}
+                                    slidesPerView={
+                                        areasConDetalle.length === 1 ? 1 :
+                                            areasConDetalle.length === 2 ? 2 : 1
+                                    }
+                                    centeredSlides={areasConDetalle.length <= 2}
+                                    navigation={{
+                                        nextEl: '.custom-next',
+                                        prevEl: '.custom-prev'
+                                    }}
+                                    autoplay={{ delay: 2500, disableOnInteraction: false, pauseOnMouseEnter: true }}
+                                    modules={[Navigation, Autoplay]}
+                                    breakpoints={{
+                                        640: {
+                                            slidesPerView: areasConDetalle.length === 1 ? 1 : (areasConDetalle.length === 2 ? 2 : 2),
+                                            centeredSlides: areasConDetalle.length <= 2,
+                                        },
+                                        1024: {
+                                            slidesPerView: areasConDetalle.length === 1 ? 1 : (areasConDetalle.length === 2 ? 2 : 3),
+                                            centeredSlides: areasConDetalle.length <= 2,
+                                        },
+                                    }}
+                                    className="pb-6"
+                                    onSwiper={swiper => (swiperRef.current = swiper)}
+                                >
+                                    {areasConDetalle.map((area, idx) => {
+                                        const isExpanded = expandedIndex === idx;
+                                        return (
+                                            <SwiperSlide
+                                                key={area.id || idx}
+                                                className="flex justify-center"
+                                                onMouseEnter={() => setExpandedIndex(idx)}
+                                                onMouseLeave={() => setExpandedIndex(null)}
+                                            >
+                                                <div className={`bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-xl shadow-lg p-6 flex flex-col w-full transition-all duration-300 ${isExpanded ? 'h-auto' : 'h-80'} relative`}>
+                                                    <h4 className="text-2xl font-bold text-blue-900 mb-2 flex items-center gap-2">
+                                                        <span className="inline-block w-2 h-2 bg-blue-400 rounded-full"></span>
+                                                        {area.nombre}
+                                                    </h4>
+                                                    <p className="text-slate-700 mb-4 italic">{area.descripcion || "Sin descripción"}</p>
+                                                    {/* Niveles */}
+                                                    {Array.isArray(area.niveles) && area.niveles.length > 0 ? (
+                                                        <div>
+                                                            <span className="font-semibold text-indigo-700">Niveles/Categorias:</span>
+                                                            <ul className={`list-disc list-inside ml-4 mt-1 overflow-hidden ${!isExpanded ? 'line-clamp-5' : ''}`}>
+                                                                {area.niveles.map((nivel, i) => (
+                                                                    <li key={nivel.id || i} className="text-indigo-900 font-medium mb-2">
+                                                                        <div>
+                                                                            <span className="font-bold">{nivel.nombre}</span>
+                                                                            {/* Grados del nivel */}
+                                                                            {nivel.grados && nivel.grados.length > 0 && (
+                                                                                <div className="text-blue-700 text-sm ml-2">
+                                                                                    Grados: {nivel.grados.map(g => g.nombre).join(', ')}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="ml-2 text-slate-500">No hay niveles</span>
+                                                    )}
+                                                </div>
+                                            </SwiperSlide>
+                                        );
+                                    })}
+                                </Swiper>
+                            </div>
+                            {/* Flecha derecha */}
+                            <button
+                                className="custom-next absolute -right-10 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
+                                type="button"
+                                aria-label="Siguiente"
+                            >
+                                <span style={{ fontSize: 24 }}>&rarr;</span>
+                            </button>
+                        </div>
                     )}
 
                     {/* Action button */}
