@@ -36,7 +36,7 @@ const RegistrarPostulante = () => {
   const { idOlimpiada, idEncargado } = useParams();
   const deviceInfo = useDeviceAgent();
 
-  const [modal, setModal] = useState({open: false, nombre: ''});
+  const [modal, setModal] = useState({open: false, nombre: '', type: 'info'});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formErrors, setFormErrors] = useState({});
@@ -333,10 +333,20 @@ const RegistrarPostulante = () => {
       const letrasConTilde = /[áéíóúÁÉÍÓÚñÑ]/;
       
       if (caracteresEspeciales.test(value) || letrasConTilde.test(value)) {
+        setModal({
+            open: true,
+            nombre: "Solo se permiten letras, números y espacios en este campo.",
+            type: "warning"
+          });
         return; // No actualizar si contiene caracteres no permitidos
       }
       
       if (!/^[a-zA-Z0-9 ]*$/.test(value)) {
+        setModal({
+          open: true,
+          nombre: "Solo se permiten letras, números y espacios en este campo.",
+          type: "warning"
+        });
         return; // No actualizar si no cumple el patrón
       }
     }
@@ -345,10 +355,20 @@ const RegistrarPostulante = () => {
     if (field === "nombres" || field === "apellidos") {
       const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
       if (caracteresEspeciales.test(value)) {
+        setModal({
+          open: true,
+          nombre: "Solo se permiten letras y espacios en este campo.",
+          type: "warning"
+        });
         return; // No actualizar si contiene caracteres especiales no permitidos
       }
       
       if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$/.test(value)) {
+        setModal({
+          open: true,
+          nombre: "Solo se permiten letras y espacios en este campo.",
+          type: "warning"
+        });
         return; // No actualizar si no cumple el patrón
 
       }
@@ -629,10 +649,20 @@ const RegistrarPostulante = () => {
         const letrasConTilde = /[áéíóúÁÉÍÓÚñÑ]/;
         
         if (caracteresEspeciales.test(value) || letrasConTilde.test(value)) {
+          setModal({
+            open: true,
+            nombre: "Solo se permiten letras, números y espacios en este campo.",
+            type: "warning"
+          });
           return tutor; // No actualizar
         }
         
         if (!/^[a-zA-Z0-9 ]*$/.test(value)) {
+          setModal({
+            open: true,
+            nombre: "Solo se permiten letras, números y espacios en este campo.",
+            type: "warning"
+          });
           return tutor; // No actualizar
         }
       }
@@ -640,10 +670,20 @@ const RegistrarPostulante = () => {
       if (field === "nombres" || field === "apellidos") {
         const caracteresEspeciales = /[!@#$%^&*(),.?":{}|<>\/\\`~_+=\[\];'-]/;
         if (caracteresEspeciales.test(value)) {
+          setModal({
+            open: true,
+            nombre: "Solo se permiten letras y espacios en este campo.",
+            type: "warning"
+          });
           return tutor; // No actualizar
         }
         
         if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$/.test(value)) {
+          setModal({
+            open: true,
+            nombre: "Solo se permiten letras y espacios en este campo.",
+            type: "warning"
+          });
           return tutor; // No actualizar
         }
       }
@@ -660,7 +700,8 @@ const RegistrarPostulante = () => {
           if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/.test(value)) {
             setModal({
               open: true,
-              nombre: "Solo se permiten letras y espacios en este campo."
+              nombre: "Solo se permiten letras y espacios en este campo.",
+              type: "warning"
             });
             return { ...tutor, [field]: tutor[field] }; // No actualiza el campo
           }
@@ -836,7 +877,24 @@ const RegistrarPostulante = () => {
       const esFechaValida =
         /^\d{2}\/\d{2}\/\d{4}$/.test(postulante.fecha_nacimiento) ||
         /^\d{4}-\d{2}-\d{2}$/.test(postulante.fecha_nacimiento);
-      if (!esFechaValida) errors.fecha_nacimiento = "La fecha debe tener formato dd/mm/aaaa";
+
+      if (!esFechaValida) {
+        errors.fecha_nacimiento = "La fecha debe tener formato dd/mm/aaaa";
+      } else {
+        // Validar que tenga al menos 4 años
+        let fechaNacimiento = postulante.fecha_nacimiento;
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(fechaNacimiento)) {
+          // Si está en formato dd/mm/yyyy, convertir a yyyy-mm-dd
+          const [dd, mm, yyyy] = fechaNacimiento.split("/");
+          fechaNacimiento = `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
+        }
+        const fechaNac = new Date(fechaNacimiento);
+        const hoy = new Date();
+        const haceCuatroAnios = new Date(hoy.getFullYear() - 4, hoy.getMonth(), hoy.getDate());
+        if (fechaNac > haceCuatroAnios) {
+          errors.fecha_nacimiento = "El postulante debe tener al menos 4 años cumplidos.";
+        }
+      }
     }
 
     if (!postulante.grado?.id) errors.grado = "El grado es obligatorio";
@@ -1018,9 +1076,20 @@ const RegistrarPostulante = () => {
       };
     });
   };
-
+  console.log(postulante);
   return (
     <div className={`max-w-5xl mx-auto p-4 ${deviceInfo.isMobile ? 'px-2' : 'p-6'}`}>
+      {/* Modal de adevertencia */}
+      <Modal
+        isOpen={modal.open}
+        onClose={() => setModal({ open: false, nombre: "", type: "warning" })}
+        variant= {modal.type}
+        title="Advertencia"
+        message={modal.nombre}
+        confirmText="Aceptar"
+        showCancelButton={false}
+      />
+
       <Card>
         <CardHeader>
           <h1 className={`${deviceInfo.isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-blue-900`}>
@@ -1272,6 +1341,8 @@ const RegistrarPostulante = () => {
         confirmText="Aceptar"
         showCancelButton={false}
       />
+
+      
     </div>
   ); 
 };

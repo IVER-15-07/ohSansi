@@ -49,10 +49,12 @@ class NivelCategoriaController extends Controller
       try {
         // Validar los datos enviados
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:nivel_categoria,nombre', // <-- validación de unicidad
             'esNivel' => 'required|boolean', // Validar que esNivel sea un booleano
             'grados' => 'array', // Validar que sea un array (opcional)
             'grados.*' => 'exists:grado,id', // Cada ID debe existir en la tabla `grado`
+        ], [
+            'nombre.unique' => 'Ya existe un nivel o categoría con ese nombre.'
         ]);
 
         // Crear el nivel/categoría
@@ -75,14 +77,24 @@ class NivelCategoriaController extends Controller
             'message' => 'Nivel/Categoria creado exitosamente',
             'data' => $nivelcategoria->load('grados'), // Incluye los grados asociados en la respuesta
         ], 201);
-    } catch (\Exception $e) {
+      } catch (\Illuminate\Validation\ValidationException $e) {
+        // Excepción de validación personalizada
+        $errores = $e->errors();
+        $erroresTexto = collect($errores)->flatten()->join(' ');
+        return response()->json([
+            'success' => false,
+            'status' => 'validation_error',
+            'errors' => $errores,
+            'message' => 'Error de validación al crear el nivel/categoría: ' . $erroresTexto
+        ], 422);
+      } catch (\Exception $e) {
         // Manejar errores y retornar una respuesta
         return response()->json([
             'success' => false,
             'status' => 'error',
             'message' => 'Error al crear el nivel/categoria: ' . $e->getMessage(),
         ], 500);
-    }
+      }
     }
 
 

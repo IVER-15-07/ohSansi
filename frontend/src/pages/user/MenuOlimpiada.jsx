@@ -381,7 +381,7 @@ const MenuOlimpiada = () => {
                                                         <span className="inline-block w-2 h-2 bg-blue-400 rounded-full"></span>
                                                         {area.nombre}
                                                     </h4>
-                                                    <p className="text-slate-700 mb-4 italic">{area.descripcion || "Sin descripción"}</p>
+                                                    {/*<p className="text-slate-700 mb-4 italic">{area.descripcion || "Sin descripción"}</p>*/}
                                                     {/* Niveles */}
                                                     {Array.isArray(area.niveles) && area.niveles.length > 0 ? (
                                                         <div>
