@@ -46,43 +46,52 @@ class NivelCategoriaController extends Controller
      */
     public function almacenarNivelCategoria(Request $request)
     {
-      try {
-        // Validar los datos enviados
-        $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'esNivel' => 'required|boolean', // Validar que esNivel sea un booleano
-            'grados' => 'array', // Validar que sea un array (opcional)
-            'grados.*' => 'exists:grado,id', // Cada ID debe existir en la tabla `grado`
-        ]);
+        try {
+            // Validar los datos enviados
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:255',
+                'esNivel' => 'required|boolean',
+                'grados' => 'array',
+                'grados.*' => 'exists:grado,id',
+            ]);
 
-        // Crear el nivel/categoría
-        $nivelcategoria = new NivelCategoria();
-        $nivelcategoria->nombre = $validated['nombre'];
-        $nivelcategoria->esNivel = $validated['esNivel'];
-        $nivelcategoria->save();
+            // Verificar si ya existe un nivel/categoría con el mismo nombre (ignorando mayúsculas/minúsculas)
+            $existe = NivelCategoria::whereRaw('LOWER(nombre) = ?', [strtolower($validated['nombre'])])->first();
+            if ($existe) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'Ya existe un nivel/categoría con ese nombre.',
+                ], 409);
+            }
 
-        // Asociar los grados si es un nivel y se enviaron grados
-        if ( isset($validated['grados'])) {
-            $nivelcategoria->grados()->sync($validated['grados']); // Sincroniza los grados
+            // Crear el nivel/categoría
+            $nivelcategoria = new NivelCategoria();
+            $nivelcategoria->nombre = $validated['nombre'];
+            $nivelcategoria->esNivel = $validated['esNivel'];
+            $nivelcategoria->save();
+
+            // Asociar los grados si es un nivel y se enviaron grados
+            if (isset($validated['grados'])) {
+                $nivelcategoria->grados()->sync($validated['grados']);
+            }
+
+            // Elimina la caché para que se actualice en la próxima consulta
+            Cache::forget('niveles_categorias');
+
+            // Retornar una respuesta exitosa con los grados asociados
+            return response()->json([
+                'success' => true,
+                'message' => 'Nivel/Categoria creado exitosamente',
+                'data' => $nivelcategoria->load('grados'),
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => 'Error al crear el nivel/categoria: ' . $e->getMessage(),
+            ], 500);
         }
-
-        // Elimina la caché para que se actualice en la próxima consulta
-        Cache::forget('niveles_categorias');
-
-        // Retornar una respuesta exitosa con los grados asociados
-        return response()->json([
-            'success' => true,
-            'message' => 'Nivel/Categoria creado exitosamente',
-            'data' => $nivelcategoria->load('grados'), // Incluye los grados asociados en la respuesta
-        ], 201);
-    } catch (\Exception $e) {
-        // Manejar errores y retornar una respuesta
-        return response()->json([
-            'success' => false,
-            'status' => 'error',
-            'message' => 'Error al crear el nivel/categoria: ' . $e->getMessage(),
-        ], 500);
-    }
     }
 
 
