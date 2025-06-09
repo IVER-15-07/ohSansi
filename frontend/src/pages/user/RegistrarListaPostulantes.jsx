@@ -1,7 +1,7 @@
 
 import * as XLSX from "@e965/xlsx";
 import { useEffect, useRef, useState } from "react";
-import { FileUp, FileCheck2, FileX2 } from "lucide-react";
+import { FileUp, FileCheck2, FileX2, Trash2 } from "lucide-react";
 import { enviarRegistrosLote } from '../../../service/registros.api';
 import { useParams } from "react-router-dom";
 import SubirArchivo from "../../components/ui/SubirArchivo";
@@ -70,16 +70,16 @@ const RegistrarListaPostulantes = () => {
         setData(cleanRows);
 
         // Guardar en localStorage
-        localStorage.setItem("postulantes_excel_headers", JSON.stringify(cleanHeaders));
-        localStorage.setItem("postulantes_excel_data", JSON.stringify(cleanRows));
-        localStorage.setItem("postulantes_excel_fileName", file.name);
+        sessionStorage.setItem("postulantes_excel_headers", JSON.stringify(cleanHeaders));
+        sessionStorage.setItem("postulantes_excel_data", JSON.stringify(cleanRows));
+        sessionStorage.setItem("postulantes_excel_fileName", file.name);
       } catch (err) {
         setError("Hubo un error al procesar el archivo. Asegúrate de que esté en formato correcto.");
         setData([]);
         setHeaders([]);
-        localStorage.removeItem("postulantes_excel_headers");
-        localStorage.removeItem("postulantes_excel_data");
-        localStorage.removeItem("postulantes_excel_fileName");
+        sessionStorage.removeItem("postulantes_excel_headers");
+        sessionStorage.removeItem("postulantes_excel_data");
+        sessionStorage.removeItem("postulantes_excel_fileName");
       }
     };
 
@@ -104,9 +104,9 @@ const RegistrarListaPostulantes = () => {
 
       if (response && response.message && !response.errors && !response.error) {
         alert(response.message);
-        localStorage.removeItem("postulantes_excel_headers");
-        localStorage.removeItem("postulantes_excel_data");
-        localStorage.removeItem("postulantes_excel_fileName");
+        sessionStorage.removeItem("postulantes_excel_headers");
+        sessionStorage.removeItem("postulantes_excel_data");
+        sessionStorage.removeItem("postulantes_excel_fileName");
         setHeaders([]);
         setData([]);
         setFileName("");
@@ -139,9 +139,9 @@ const RegistrarListaPostulantes = () => {
     setFile(null);
     setError("");
     setErroresPorCelda({});
-    localStorage.removeItem("postulantes_excel_headers");
-    localStorage.removeItem("postulantes_excel_data");
-    localStorage.removeItem("postulantes_excel_fileName");
+    sessionStorage.removeItem("postulantes_excel_headers");
+    sessionStorage.removeItem("postulantes_excel_data");
+    sessionStorage.removeItem("postulantes_excel_fileName");
   };
 
 
@@ -177,9 +177,10 @@ const RegistrarListaPostulantes = () => {
               <button
                 type="button"
                 onClick={limpiarLista}
-                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-red-600 hover:bg-red-700 shadow-lg transition"
+                title="Borrar lista"
               >
-                Borrar lista
+                <Trash2 className="w-6 h-6 text-white" />
               </button>
             </div>
           )}
