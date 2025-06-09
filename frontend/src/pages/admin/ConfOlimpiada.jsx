@@ -53,7 +53,7 @@ const ConfOlimpiada = () => {
           setModalError("La información de la olimpiada no está disponible.");
           return;
         }
-        
+
         if (olimpiada.inicio_inscripcion) {
           const hoy = new Date();
           const inicioInscripcion = new Date(olimpiada.inicio_inscripcion);
@@ -229,7 +229,7 @@ const ConfOlimpiada = () => {
     <div className="p-6 flex flex-col gap-4 w-full h-full min-h-[600px] max-h-[780px] bg-[#F9FAFB]">
     <div className="flex flex-col gap-4 h-full">
       <h2 className="text-xl font-bold text-gray-800">
-          Configuración de la Olimpiada {nombreOlimpiada}
+          Configuración de áreas y niveles de {nombreOlimpiada}
         </h2>
       
       {/* Contenido principal de la configuración */}
