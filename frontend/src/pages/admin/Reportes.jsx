@@ -319,7 +319,8 @@ const reportesFiltrados = reportes.filter(r => {
                             {camposAdicionales.map((campo) => (
                               <th key={campo} className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">{campo}</th>
                             ))}
-                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Nombres Responsable</th>
+                            <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Nombre Responsable</th>
+                             <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Apellidos Responsable</th>
                             <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">CI Responsable</th>
                             <th className="border px-3 py-2 bg-blue-100 text-blue-900 font-bold">Correo Responsable</th>
                             {camposTutor.map((campo) => (
@@ -350,7 +351,8 @@ const reportesFiltrados = reportes.filter(r => {
                                   <td key={campo} className="border px-3 py-2">{dato ? dato.valor : ""}</td>
                                 );
                               })}
-                              <td className="border px-3 py-2">{r.encargado?.nombres || ""} {r.encargado?.apellidos || ""}</td>
+                              <td className="border px-3 py-2">{r.encargado?.nombres || ""} </td>
+                              <td className="border px-3 py-2">{r.encargado?.apellidos || ""}</td>
                               <td className="border px-3 py-2">{r.encargado?.ci || ""}</td>
                               <td className="border px-3 py-2">{r.encargado?.correo || ""}</td>
                               {camposTutor.map((campo) => {
