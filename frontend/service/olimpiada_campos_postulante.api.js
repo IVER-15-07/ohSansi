@@ -4,12 +4,12 @@ export const getOlimpiadaCamposPostulante = async (idOlimpiada, idPostulante = n
   try {
     if(!idPostulante) {
       const response = await axiosInstance.get(
-      `/olimpiadas/${idOlimpiada}/campos_postulante/`,
+      `/olimpiadas-campos_postulante/${idOlimpiada}`,
       );
       return response.data;
     }else{
       const response = await axiosInstance.get(
-      `/olimpiadas/${idOlimpiada}/campos_postulante/${idPostulante}`,
+      `/olimpiadas-campos_postulante/${idOlimpiada}/${idPostulante}`,
       );
       return response.data;
     }
@@ -23,7 +23,7 @@ export const getOlimpiadaCamposPostulante = async (idOlimpiada, idPostulante = n
 export const deleteOlimpiadaCampoPostulante = async (idOlimpiadaCampoPostulante) => {
   try {
     const response = await axiosInstance.delete(
-      `/olimpiadas/campos_postulante/${idOlimpiadaCampoPostulante}`,
+      `/olimpiadas-campos_postulante/${idOlimpiadaCampoPostulante}`,
     );
     return response.data;
   } catch (error) {
@@ -35,7 +35,7 @@ export const deleteOlimpiadaCampoPostulante = async (idOlimpiadaCampoPostulante)
 export const postOlimpiadaCampoPostulante = async (olimpiadaCampoPostulante) => {
   try {
     const response = await axiosInstance.post(
-      `/olimpiadas/campos_postulante/`,
+      `/olimpiadas-campos_postulante/`,
       olimpiadaCampoPostulante,
     );
     return response.data;

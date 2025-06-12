@@ -4,12 +4,12 @@ export const getOlimpiadaCamposTutor = async (idOlimpiada, idTutor = null) => {
   try {
     if(!idTutor) {
       const response = await axiosInstance.get(
-        `/olimpiadas/${idOlimpiada}/campos_tutor/`
+        `/olimpiadas-campos_tutor/${idOlimpiada}`
       );
       return response.data;
     }else{
       const response = await axiosInstance.get(
-        `/olimpiadas/${idOlimpiada}/campos_tutor/${idTutor}`
+        `/olimpiadas-campos_tutor/${idOlimpiada}/${idTutor}`
       );
       return response.data;
     }
@@ -22,7 +22,7 @@ export const getOlimpiadaCamposTutor = async (idOlimpiada, idTutor = null) => {
 export const deleteOlimpiadaCampoTutor = async (idOlimpiadaCampoTutor) => {
   try {
     const response = await axiosInstance.delete(
-      `/olimpiadas/campos_tutor/${idOlimpiadaCampoTutor}`,
+      `/olimpiadas-campos_tutor/${idOlimpiadaCampoTutor}`,
     );
     return response.data;
   } catch (error) {
@@ -34,7 +34,7 @@ export const deleteOlimpiadaCampoTutor = async (idOlimpiadaCampoTutor) => {
 export const postOlimpiadaCampoTutor = async (olimpiadaCampoTutor) => {
   try {
     const response = await axiosInstance.post(
-      `/olimpiadas/campos_tutor/`,
+      `/olimpiadas-campos_tutor/`,
       olimpiadaCampoTutor,
     );
     return response.data;
