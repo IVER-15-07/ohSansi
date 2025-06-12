@@ -62,7 +62,7 @@ const Login = () => {
             {loading ? "Ingresando..." : "Ingresar"}
           </Button>
           <Button type="button" variant="secondary" className="w-full" onClick={() => navigate("/")} >
-            ← Volver
+            ← Volver al inicio
           </Button>
         </form>
       </div>
