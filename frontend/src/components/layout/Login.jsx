@@ -1,13 +1,14 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Eye, EyeClosed } from 'lucide-react'
 import logo from "../../assets/logo.png"
-import { cn } from "../../utils/cn"
 import { Input, Button } from "../ui"
 import { loginAdmin } from "../../../service/auth.api"
 
 const Login = () => {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -48,15 +49,28 @@ const Login = () => {
             autoFocus
             placeholder="Ingrese su usuario"
           />
-          <Input
-            label="Contraseña"
-            name="password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            placeholder="Ingrese su contraseña"
-          />
+          <div className="relative">
+            <Input
+              label="Contraseña"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              placeholder="Ingrese su contraseña"
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-9 text-gray-500 hover:text-blue-700"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <Eye className="h-6 w-6" strokeWidth={3} />
+              ) : (
+                <EyeClosed className="h-6 w-6" strokeWidth={3} />
+              )}
+            </button>
+          </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}
           <Button type="submit" variant="primary" className="w-full" disabled={loading}>
             {loading ? "Ingresando..." : "Ingresar"}
