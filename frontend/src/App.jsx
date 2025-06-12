@@ -6,8 +6,12 @@ import LoadingSpinner from "./components/ui/LoadingSpinner" // Necesitarás crea
 import AdminLayout from "./layouts/AdminLayout"
 import UserLayout from "./layouts/UserLayout"
 
+// Proteccion de rutas
+import AdminPrivateRoute from "./components/AdminPrivateRoute"
+
 // Lazy loading para páginas principales
 const Home = lazy(() => import("./pages/Home"))
+const Login = lazy(() => import("./components/layout/Login"))
 
 // Admin pages - lazy loaded
 const Olimpiadas = lazy(() => import("./pages/admin/Olimpiadas"))
@@ -32,6 +36,7 @@ function App() {
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           {/* Public Layout */}
+          <Route path="/login" element={<Login />} />
           <Route path="/" element={<UserLayout />}>
             <Route index element={<Home />} />
             <Route path="versiones" element={<Versiones />} />
@@ -42,17 +47,22 @@ function App() {
           </Route>
 
           {/* Admin Layout */}
-          <Route path="/AdminLayout" element={<AdminLayout />}>
-            <Route path="Olimpiadas" element={<Olimpiadas />} />
-            <Route path="/AdminLayout/Reportes/:idOlimpiada" element={<Reportes />} />
-            <Route path="Reportes" element={<Reportes />} />
-            <Route path="Olimpiadas/CrearOlimpiada" element={<CrearOlimpiada />} />
-            <Route path="Olimpiadas/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
-            <Route path="Olimpiadas/:id/configurar-campos" element={<ConfigurarCamposOlimpiada />} />
-            <Route path="Olimpiadas/:id/configurarParametros/:nombreOlimpiada" element={<ConfParamOlimpiada />} />
-            <Route path="Areas" element={<Areas />} />
-            <Route path="NivelCategoria" element={<NivelCategoria />} />
-          </Route>
+          
+            <Route path="/AdminLayout" element={
+              <AdminPrivateRoute>
+                <AdminLayout />
+              </AdminPrivateRoute>
+              }>
+              <Route path="Olimpiadas" element={<Olimpiadas />} />
+              <Route path="/AdminLayout/Reportes/:idOlimpiada" element={<Reportes />} />
+              <Route path="Reportes" element={<Reportes />} />
+              <Route path="Olimpiadas/CrearOlimpiada" element={<CrearOlimpiada />} />
+              <Route path="Olimpiadas/:id/configurar/:nombreOlimpiada" element={<ConfOlimpiada />} />
+              <Route path="Olimpiadas/:id/configurar-campos" element={<ConfigurarCamposOlimpiada />} />
+              <Route path="Olimpiadas/:id/configurarParametros/:nombreOlimpiada" element={<ConfParamOlimpiada />} />
+              <Route path="Areas" element={<Areas />} />
+              <Route path="NivelCategoria" element={<NivelCategoria />} />
+            </Route>
         </Routes>
       </Suspense>
     </div>

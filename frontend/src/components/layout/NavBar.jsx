@@ -12,7 +12,7 @@ const Navbar = () => {
 
   const navigation = [
     { name: "Inicio", href: "/", icon: Home },
-    { name: "Iniciar Sesion", href: "/AdminLayout/Olimpiadas", icon: Users },
+    { name: "Iniciar Sesion", href: "/login", icon: Users },
   ]
 
   const isActive = (href) => location.pathname === href

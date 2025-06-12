@@ -16,6 +16,11 @@ return [
     'defaults' => [
         'guard' => 'web',
         'passwords' => 'users',
+
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => 'administradores', // o el provider que uses para admins
+        ],
     ],
 
     /*
