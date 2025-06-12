@@ -70,35 +70,109 @@ const ConfigurarCamposOlimpiada = () => {
     2: { title: "Campos del Tutor", icon: UserCheck }
   }), []);
 
-  // Data fetching functions
+  // Data fetching functions with improved error handling
   const fetchCatalogos = useCallback(async () => {
     try {
       setIsLoading(true);
+      setError(null);
+      
+      console.log('🔄 Iniciando carga de catálogos...');
+      
       const [catalogoPostulanteRes, catalogoTutorRes] = await Promise.all([
         getCatalogoCamposPostulante(),
         getCatalogoCamposTutor()
       ]);
 
-      setCatalogoCamposPostulante(catalogoPostulanteRes.data);
-      setCatalogoCamposTutor(catalogoTutorRes.data);
+      console.log('✅ Catálogos cargados exitosamente');
+      setCatalogoCamposPostulante(catalogoPostulanteRes.data || []);
+      setCatalogoCamposTutor(catalogoTutorRes.data || []);
+      
     } catch (error) {
-      console.error('Error fetching catalogos:', error);
-      setError('Error al cargar los catálogos de campos');
+      console.error('❌ Error fetching catalogos:', error);
+      
+      // Análisis detallado del error
+      let errorMessage = 'Error al cargar los catálogos de campos';
+      let errorDetails = error.message;
+      
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        console.error('📊 Error Response Status:', status);
+        console.error('📝 Error Response Data:', data);
+        
+        if (status === 500) {
+          errorMessage = 'Error interno del servidor al cargar los catálogos';
+          if (data?.message?.includes('invalid input syntax for type bigint')) {
+            errorMessage = 'Error de configuración de rutas en el servidor. Contacte al administrador.';
+            errorDetails = 'Las rutas del backend están en conflicto. Se requiere reorganización de rutas.';
+          }
+        } else if (status === 404) {
+          errorMessage = 'Los endpoints de catálogos no fueron encontrados';
+          errorDetails = 'Verificar que las rutas /api/campos_postulante y /api/campos_tutor estén disponibles';
+        } else if (status >= 400 && status < 500) {
+          errorMessage = 'Error de solicitud al servidor';
+          errorDetails = data?.message || `Error ${status}`;
+        }
+      } else if (error.code === 'NETWORK_ERROR' || error.code === 'ECONNREFUSED') {
+        errorMessage = 'Error de conexión con el servidor';
+        errorDetails = 'Verificar que el servidor backend esté ejecutándose';
+      }
+      
+      setError({
+        message: errorMessage,
+        details: errorDetails,
+        canRetry: true,
+        timestamp: new Date().toLocaleString()
+      });
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   const fetchOlimpiadaCampos = useCallback(async () => {
     try {
+      if (!id) {
+        setError({ 
+          message: 'ID de olimpiada no válido', 
+          details: 'No se proporcionó un ID válido para la olimpiada',
+          canRetry: false 
+        });
+        return;
+      }
+
       const [olimpiadaPostulanteRes, olimpiadaTutorRes] = await Promise.all([
         getOlimpiadaCamposPostulante(id),
         getOlimpiadaCamposTutor(id)
       ]);
 
-      setOlimpiadaCamposPostulante(olimpiadaPostulanteRes.data);
-      setOlimpiadaCamposTutor(olimpiadaTutorRes.data);
+      setOlimpiadaCamposPostulante(olimpiadaPostulanteRes.data || []);
+      setOlimpiadaCamposTutor(olimpiadaTutorRes.data || []);
+      
     } catch (error) {
       console.error('Error fetching olimpiada campos:', error);
-      setError('Error al cargar los campos configurados');
+      
+      let errorMessage = 'Error al cargar los campos configurados';
+      let errorDetails = error.message;
+      
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        if (status === 404) {
+          errorMessage = 'Olimpiada no encontrada';
+          errorDetails = `No se encontró la olimpiada con ID ${id}`;
+        } else if (status === 500) {
+          errorMessage = 'Error interno del servidor al cargar campos de olimpiada';
+          errorDetails = data?.message || 'Error en el servidor';
+        }
+      }
+      
+      setError({
+        message: errorMessage,
+        details: errorDetails,
+        canRetry: error.response?.status === 500
+      });
     } finally {
       setIsLoading(false);
     }
@@ -187,15 +261,62 @@ const ConfigurarCamposOlimpiada = () => {
     </div>
   );
 
-  // Error state with Alert component
+  // Error state with Alert component and retry functionality
   if (error) return (
     <div className={containerClasses}>
-      <Alert
-        type="error"
-        message={error}
-        onClose={() => setError(null)}
-        className="max-w-md mx-auto mt-8"
-      />
+      <div className="max-w-md mx-auto mt-8">
+        <Alert
+          variant="error"
+          title="Error de Carga"
+          className="mb-4"
+        >
+          <div className="space-y-2">
+            <p className="text-red-700 font-medium">{error.message || error}</p>
+            {error.details && (
+              <details className="text-sm text-gray-600">
+                <summary className="cursor-pointer hover:text-gray-800">
+                  Ver detalles técnicos
+                </summary>
+                <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-32">
+                  {error.details}
+                </pre>
+              </details>
+            )}
+            {error.timestamp && (
+              <p className="text-xs text-gray-500">
+                Ocurrido el: {error.timestamp}
+              </p>
+            )}
+          </div>
+        </Alert>
+        
+        <div className="flex gap-2 justify-center">
+          <button
+            onClick={() => setError(null)}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded border border-gray-300 hover:border-gray-400"
+          >
+            Cerrar
+          </button>
+          {error.canRetry && (
+            <button
+              onClick={() => {
+                setError(null);
+                fetchCatalogos();
+                fetchOlimpiadaCampos();
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              Reintentar
+            </button>
+          )}
+          <button
+            onClick={handleBackToOlimpiadas}
+            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+          >
+            Volver a Olimpiadas
+          </button>
+        </div>
+      </div>
     </div>
   );
 

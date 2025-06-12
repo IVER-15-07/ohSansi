@@ -11,13 +11,41 @@ class OlimpiadaCampoTutorController extends Controller
     function obtenerCamposTutor($idOlimpiada, $idTutor = null)
     {
         try {
-            // Obtener los campos de postulante filtrados por id_olimpiada y cargar las relaciones necesarias
-            $campos_tutor =OlimpiadaCampoTutor::where('id_olimpiada', $idOlimpiada)
+            // Validar que el ID de olimpiada sea numérico
+            if (!is_numeric($idOlimpiada)) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'El ID de olimpiada debe ser un número válido.',
+                ], 400);
+            }
+
+            // Verificar que la olimpiada existe
+            $olimpiada = \App\Models\Olimpiada::find($idOlimpiada);
+            if (!$olimpiada) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'La olimpiada especificada no existe.',
+                ], 404);
+            }
+
+            // Obtener los campos de tutor filtrados por id_olimpiada y cargar las relaciones necesarias
+            $campos_tutor = OlimpiadaCampoTutor::where('id_olimpiada', $idOlimpiada)
                     ->with(['campo_tutor.tipo_campo'])
                     ->get();
         
             if($idTutor) {
-                // Si se proporciona un idPostulante, cargar los datos del postulante
+                // Validar que el ID de tutor sea numérico
+                if (!is_numeric($idTutor)) {
+                    return response()->json([
+                        'success' => false,
+                        'status' => 'error',
+                        'message' => 'El ID de tutor debe ser un número válido.',
+                    ], 400);
+                }
+
+                // Si se proporciona un idTutor, cargar los datos del tutor
                 $campos_tutor->each(function ($campo) use ($idTutor) {
                     $campo->datos_tutor = $campo->datos_tutor($idTutor)->get();
                 }); 
@@ -27,8 +55,16 @@ class OlimpiadaCampoTutorController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $campos_tutor,
+                'message' => 'Campos de tutor de la olimpiada obtenidos exitosamente.',
             ], 200);
         } catch (\Exception $e) {
+            // Log del error para debugging
+            \Log::error('Error en obtenerCamposTutor: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'idOlimpiada' => $idOlimpiada,
+                'idTutor' => $idTutor,
+            ]);
+
             // Manejar errores y retornar una respuesta
             return response()->json([
                 'success' => false,

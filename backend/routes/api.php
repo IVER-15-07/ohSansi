@@ -87,24 +87,40 @@ Route::get('/registros_tutores/{idRegistro}', [RegistroTutorController::class, '
 Route::post('/registros_tutores', [RegistroTutorController::class, 'crearRegistroTutor']);
 Route::delete('/registros_tutores/{idRegistroTutor}', [RegistroTutorController::class, 'eliminarRegistroTutor']);
 
+// ========================================================================
+// RUTAS DE CATÁLOGOS GENERALES (SIN PARÁMETROS DINÁMICOS) - PRIMERO
+// ========================================================================
+
+// RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS POSTULANTE (CATÁLOGO GENERAL)
+Route::get('/campos_postulante', [CampoPostulanteController::class, 'obtenerCatalogoCamposPostulante']);
+
+// RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS TUTOR (CATÁLOGO GENERAL)
+Route::get('/campos_tutor', [CampoTutorController::class, 'obtenerCatalogoCamposTutor']);
+
+// RUTAS PARA ADMINISTRAR EL CATÁLOGO DE OLIMPIADAS (RUTAS ESPECÍFICAS)
+Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
+Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiadasActivas']);
+
+// ========================================================================
+// RUTAS CON PARÁMETROS ESPECÍFICOS (DESPUÉS DE LOS CATÁLOGOS GENERALES)
+// ========================================================================
+
 // RUTAS PARA ADMINISTRAR EL CATÁLOGO DE OPCIONES DE INSCRIPCIÓN A UNA OLIMPIADA 
 Route::get('/opciones_inscripcion/{idOlimpiada}', [OpcionInscripcionController::class, 'obtenerOpcionesInscripcion']);
 Route::get('/opciones_inscripcion/{idOlimpiada}/areas', [OpcionInscripcionController::class, 'obtenerAreasPorOlimpiada']);
 Route::get('/opciones_inscripcion/{idOlimpiada}/mapa', [OpcionInscripcionController::class, 'obtenerMapaOlimpiada']);
 Route::get('/opciones_inscripcion/{idOlimpiada}/con-postulantes', [OpcionInscripcionController::class, 'verificarOpcionesConPostulantes']);
 
-// RUTAS PARA ADMINISTRAR EL CATÁLOGO DE OLIMPIADAS
-Route::get('/olimpiadas', [OlimpiadaController::class, 'obtenerOlimpiadas']);
-Route::get('/olimpiadas/activas', [OlimpiadaController::class, 'obtenerOlimpiadasActivas']);
+// RUTAS CON PARÁMETROS DINÁMICOS DE OLIMPIADA (AL FINAL)
 Route::get('/olimpiadas/{id}', [OlimpiadaController::class, 'obtenerOlimpiada']);
 
+//RUTAS PARA LOS CAMPOS DE TUTOR DADA UNA OLIMPIADA
+Route::get('/olimpiadas/{idOlimpiada}/campos_tutor/{idTutor}', [OlimpiadaCampoTutorController::class, 'obtenerCamposTutor']);
+Route::get('/olimpiadas/{idOlimpiada}/campos_tutor/', [OlimpiadaCampoTutorController::class, 'obtenerCamposTutor']);      
 
-// RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS DE POSTULANTE
-Route::get('/campos_postulante', [CampoPostulanteController::class, 'obtenerCatalogoCamposPostulante']);
-
-// RUTAS PARA ADMINISTRAR EL CATÁLOGO DE CAMPOS DE TUTOR
-Route::get('/campos_tutor', [CampoTutorController::class, 'obtenerCatalogoCamposTutor']);
-
+//RUTAS PARA LOS CAMPOS DE POSTULANTE DADA UNA OLIMPIADA
+Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/{idPostulante}', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
+Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
 
 //RUTAS PARA LOS DATOS DEL POSTULANTE
 Route::post('/datos_postulante', [DatoPostulanteController::class, 'almacenarDatosPostulante']);
@@ -117,14 +133,6 @@ Route::get('/encargados', [EncargadoController::class, 'obtenerEncargados']);
 Route::get('/encargados/verificar/{ci}', [EncargadoController::class, 'verificarEncargado']);
 Route::post('/encargados', [EncargadoController::class, 'almacenarEncargado']);
 Route::get('/encargados/{id}', [EncargadoController::class, 'obtenerEncargado']);
-
-//RUTAS PARA LOS CAMPOS DE TUTOR DADA UNA OLIMPIADA
-Route::get('/olimpiadas/{idOlimpiada}/campos_tutor/{idTutor}', [OlimpiadaCampoTutorController::class, 'obtenerCamposTutor']);
-Route::get('/olimpiadas/{idOlimpiada}/campos_tutor/', [OlimpiadaCampoTutorController::class, 'obtenerCamposTutor']);      
-
-//RUTAS PARA LOS CAMPOS DE POSTULANTE DADA UNA OLIMPIADA
-Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/{idPostulante}', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
-Route::get('/olimpiadas/{idOlimpiada}/campos_postulante/', [OlimpiadaCampoPostulanteController::class, 'obtenerCamposPostulante']);
 
 // RUTAS PARA REGISTRO DE POSTULANTE A UNA OLIMPIADA
 Route::post('/registro', [RegistroController::class, 'crearRegistro']);

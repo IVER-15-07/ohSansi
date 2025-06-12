@@ -11,25 +11,60 @@ class OlimpiadaCampoPostulanteController extends Controller
     function obtenerCamposPostulante($idOlimpiada, $idPostulante = null)
     {
         try {
+            // Validar que el ID de olimpiada sea numérico
+            if (!is_numeric($idOlimpiada)) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'El ID de olimpiada debe ser un número válido.',
+                ], 400);
+            }
+
+            // Verificar que la olimpiada existe
+            $olimpiada = \App\Models\Olimpiada::find($idOlimpiada);
+            if (!$olimpiada) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'La olimpiada especificada no existe.',
+                ], 404);
+            }
+
             // Obtener los campos de postulante filtrados por id_olimpiada y cargar las relaciones necesarias
-            $campos_postulante =OlimpiadaCampoPostulante::where('id_olimpiada', $idOlimpiada)
+            $campos_postulante = OlimpiadaCampoPostulante::where('id_olimpiada', $idOlimpiada)
                     ->with(['campo_postulante.tipo_campo'])
                     ->get();
                     
             if($idPostulante) {
+                // Validar que el ID de postulante sea numérico
+                if (!is_numeric($idPostulante)) {
+                    return response()->json([
+                        'success' => false,
+                        'status' => 'error',
+                        'message' => 'El ID de postulante debe ser un número válido.',
+                    ], 400);
+                }
+
                 // Si se proporciona un idPostulante, cargar los datos del postulante
                 $campos_postulante->each(function ($campo) use ($idPostulante) {
                     $campo->datos_postulante = $campo->datos_postulante($idPostulante)->get();
                 });
             }
-            
 
             // Retornar una respuesta exitosa
             return response()->json([
                 'success' => true,
                 'data' => $campos_postulante,
+                'message' => 'Campos de postulante de la olimpiada obtenidos exitosamente.',
             ], 200);
         } catch (\Exception $e) {
+            // Log del error para debugging
+            \Log::error('Error en obtenerCamposPostulante: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'idOlimpiada' => $idOlimpiada,
+                'idPostulante' => $idPostulante,
+            ]);
+
             // Manejar errores y retornar una respuesta
             return response()->json([
                 'success' => false,
