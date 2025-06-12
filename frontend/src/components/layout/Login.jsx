@@ -35,7 +35,7 @@ const Login = () => {
     <div className="min-h-screen flex flex-col justify-center items-center bg-secondary-50">
       <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
         <div className="flex flex-col items-center mb-6">
-          <img src={logo} alt="Logo" className="w-20 h-20 mb-2" />
+          <img src={logo} alt="Logo" className="w-40 h-40 mb-2 object-contain" />
           <h2 className="text-2xl font-bold text-blue-900">Iniciar Sesión</h2>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -58,8 +58,11 @@ const Login = () => {
             placeholder="Ingrese su contraseña"
           />
           {error && <div className="text-red-600 text-sm">{error}</div>}
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" variant="primary" className="w-full" disabled={loading}>
             {loading ? "Ingresando..." : "Ingresar"}
+          </Button>
+          <Button type="button" variant="secondary" className="w-full" onClick={() => navigate("/")} >
+            ← Volver
           </Button>
         </form>
       </div>
