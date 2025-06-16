@@ -197,6 +197,70 @@ const OrdenesDePago = () => {
     }
   };
 
+const generarOrdenesDePagoIndependientes = async () => {
+  try {
+    for (const idInscripcion of registrosSeleccionados) {
+      const datosOrdenResponse = await generarDatosDeOrden({
+        id_encargado: idEncargado,
+        id_olimpiada: idOlimpiada,
+        registros: [idInscripcion],
+      });
+      const datosOrden = datosOrdenResponse.data;
+      const doc = new jsPDF();
+      doc.setFontSize(12);
+      doc.text("Universidad Mayor de San Simón", 10, 10);
+      doc.text("Facultad de ciencias y tecnología", 10, 15);
+      doc.text("Secretaría administrativa", 10, 20);
+      doc.setFontSize(16);
+      doc.text("Orden de pago", 105, 30, { align: "center" });
+      doc.setFontSize(12);
+      doc.text(`Nro Orden: ${datosOrden.id_pago}`, 160, 10);
+      doc.text(`Emitido por la Unidad: ${datosOrden.nombre_olimpiada}`, 10, 40);
+      doc.text(`Señor(a): ${datosOrden.nombre_completo_encargado}`, 10, 50);
+      doc.text(`NIT/CI: ${datosOrden.ci_encargado}`, 10, 60);
+      doc.text("Por lo siguiente:", 10, 70);
+      autoTable(doc, {
+        startY: 75,
+        head: [["Cantidad", "Concepto", "Precio por unidad", "Importe total"]],
+        body: [
+          [
+            datosOrden.cantidad,
+            `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`,
+            `${datosOrden.precio_por_unidad} Bs.`,
+            `${datosOrden.importe_total} Bs.`,
+          ],
+        ],
+      });
+      doc.text("Nota: no vale como factura oficial", 10, doc.lastAutoTable.finalY + 10);
+      doc.text(`Son: ${datosOrden.importe_en_literal}`, 10, doc.lastAutoTable.finalY + 20);
+      doc.text(
+        `Cochabamba, ${new Date(datosOrden.fecha_pago).toLocaleDateString("es-ES", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}`,
+        10,
+        doc.lastAutoTable.finalY + 30
+      );
+      doc.text("Firma del encargado: ____________________________", 10, doc.lastAutoTable.finalY + 40);
+      // doc.save(`orden_de_pago_${datosOrden.id_pago}.pdf`); // Opcional: descarga local
+      const pdfBlob = doc.output("blob");
+      const formData = new FormData();
+      formData.append("id", datosOrden.id_pago);
+      formData.append("monto", datosOrden.importe_total);
+      formData.append("fecha_generado", datosOrden.fecha_pago);
+      formData.append("concepto", `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`);
+      formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
+      formData.append("registros[]", idInscripcion);
+      await guardarOrdenPago(formData);
+    }
+    window.location.reload();
+  } catch (error) {
+    console.error("Error al generar o guardar las órdenes de pago independientes:", error);
+    alert("Ocurrió un error al generar o guardar las órdenes de pago independientes.");
+  }
+};
+
   // Pantalla de detalles de lista
   if (verDetallesLista) {
     const listaRegistros = registrosPorLista.find(([id]) => id === verDetallesLista)?.[1] || [];
@@ -391,6 +455,18 @@ const OrdenesDePago = () => {
               type="button"
             >
               Generar Orden de Pago
+            </button>
+            <button
+              onClick={generarOrdenesDePagoIndependientes}
+              className={`px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition ${
+                registrosSeleccionados.length > 0
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-400 text-gray-700 cursor-not-allowed"
+              } text-xs md:text-base`}
+              disabled={registrosSeleccionados.length === 0}
+              type="button"
+            >
+              Generar Orden de Pago Independiente
             </button>
           </div>
 
