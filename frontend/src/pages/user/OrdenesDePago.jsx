@@ -133,6 +133,9 @@ const OrdenesDePago = () => {
     }
   };
 
+  const idsPorLista = registrosPorLista.flatMap(([_, lista]) => lista.map(r => r.id_inscripcion));
+  const haySeleccionPorLista = registrosSeleccionados.some(id => idsPorLista.includes(id));
+
   const generarOrdenDePago = async () => {
     try {
       const datosOrdenResponse = await generarDatosDeOrden({
@@ -447,12 +450,13 @@ const generarOrdenesDePagoIndependientes = async () => {
             <button
               onClick={generarOrdenDePago}
               className={`px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition ${
-                registrosSeleccionados.length > 0
+                registrosSeleccionados.length > 0 && !haySeleccionPorLista
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : "bg-gray-400 text-gray-700 cursor-not-allowed"
               } text-xs md:text-base`}
-              disabled={registrosSeleccionados.length === 0}
+              disabled={registrosSeleccionados.length === 0 || haySeleccionPorLista}
               type="button"
+              title={haySeleccionPorLista ? "Solo puedes generar orden de pago independiente para registros por lista" : ""}
             >
               Generar Orden de Pago
             </button>
