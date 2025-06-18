@@ -449,26 +449,51 @@ const generarOrdenesDePagoIndependientes = async () => {
             </button>
             <button
               onClick={generarOrdenDePago}
-              className={`px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition ${
+              className={`relative px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition ${
                 registrosSeleccionados.length > 0 && !haySeleccionPorLista
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : "bg-gray-400 text-gray-700 cursor-not-allowed"
               } text-xs md:text-base`}
               disabled={registrosSeleccionados.length === 0 || haySeleccionPorLista}
               type="button"
-              title={haySeleccionPorLista ? "Solo puedes generar orden de pago independiente para registros por lista" : ""}
+              title="Genera una sola orden de pago para todos los registros individuales seleccionados"
+              onMouseOver={e => {
+                const tooltip = document.createElement('div');
+                tooltip.className = "z-50 absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-blue-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg";
+                tooltip.innerText = "Genera una sola orden de pago para todos los registros individuales seleccionados.";
+                tooltip.style.pointerEvents = "none";
+                tooltip.id = "tooltip-orden-general";
+                e.currentTarget.appendChild(tooltip);
+              }}
+              onMouseOut={e => {
+                const tooltip = document.getElementById("tooltip-orden-general");
+                if (tooltip) tooltip.remove();
+              }}
             >
               Generar Orden de Pago
             </button>
             <button
               onClick={generarOrdenesDePagoIndependientes}
-              className={`px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition ${
+              className={`relative px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition ${
                 registrosSeleccionados.length > 0
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : "bg-gray-400 text-gray-700 cursor-not-allowed"
               } text-xs md:text-base`}
               disabled={registrosSeleccionados.length === 0}
               type="button"
+              title="Genera órdenes de pago únicas para cada registro y/o registro por lista seleccionado"
+              onMouseOver={e => {
+                const tooltip = document.createElement('div');
+                tooltip.className = "z-50 absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 bg-blue-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg";
+                tooltip.innerText = "Genera órdenes de pago únicas para cada registro y/o registro por lista seleccionado.";
+                tooltip.style.pointerEvents = "none";
+                tooltip.id = "tooltip-orden-independiente";
+                e.currentTarget.appendChild(tooltip);
+              }}
+              onMouseOut={e => {
+                const tooltip = document.getElementById("tooltip-orden-independiente");
+                if (tooltip) tooltip.remove();
+              }}
             >
               Generar Orden de Pago Independiente
             </button>
