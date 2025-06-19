@@ -146,6 +146,10 @@ const MenuOlimpiada = () => {
         );
     };
 
+    const mostrarFlechas = isMobile
+        ? areasConDetalle.length > 2
+        : areasConDetalle.length > 3;
+
 
 
 
@@ -345,13 +349,15 @@ const MenuOlimpiada = () => {
                     {Array.isArray(areasConDetalle) && areasConDetalle.length > 0 && (
                         <div className="relative flex justify-center mb-8">
                             {/* Flecha izquierda */}
-                            <button
-                                className="custom-prev absolute -left-10 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
-                                type="button"
-                                aria-label="Anterior"
-                            >
-                                <span style={{ fontSize: 24 }}>&larr;</span>
-                            </button>
+                            {mostrarFlechas && (
+                                <button
+                                    className="custom-prev absolute left-2 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
+                                    type="button"
+                                    aria-label="Anterior"
+                                >
+                                    <span style={{ fontSize: 24 }}>&larr;</span>
+                                </button>
+                            )}
                             <div className={areasConDetalle.length === 1 ? "w-full max-w-md" : "w-full"}
                                 onMouseEnter={() => {
                                     if (swiperRef.current && swiperRef.current.autoplay) swiperRef.current.autoplay.stop();
@@ -432,13 +438,15 @@ const MenuOlimpiada = () => {
                                 </Swiper>
                             </div>
                             {/* Flecha derecha */}
-                            <button
-                                className="custom-next absolute -right-10 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
-                                type="button"
-                                aria-label="Siguiente"
-                            >
-                                <span style={{ fontSize: 24 }}>&rarr;</span>
-                            </button>
+                            {mostrarFlechas && (
+                                <button
+                                    className="custom-next absolute right-2 sm:-right-8 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
+                                    type="button"
+                                    aria-label="Siguiente"
+                                >
+                                    <span style={{ fontSize: 24 }}>&rarr;</span>
+                                </button>
+                            )}
                         </div>
                     )}
 

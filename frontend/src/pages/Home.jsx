@@ -16,13 +16,16 @@ import {
 } from "lucide-react"
 import { Typewriter } from "react-simple-typewriter"
 import { Swiper, SwiperSlide } from "swiper/react"
-import { Autoplay } from "swiper/modules"
+import { Autoplay, Navigation } from "swiper/modules"
 import "swiper/css"
 import "swiper/css/autoplay"
+
 
 import { getOlimpiadasActivas } from "../../service/olimpiadas.api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Alert, LoadingSpinner } from "../components/ui"
 import logo from "../assets/logo.png"
+
+
 
 const Home = () => {
   const navigate = useNavigate()
@@ -160,6 +163,8 @@ const Home = () => {
   }
 
   const hasOlimpiadas = olimpiadas && olimpiadas.length > 0
+  const mostrarFlechas = (olimpiadas.length > 1 && window.innerWidth < 640) || (olimpiadas.length > 3 && window.innerWidth >= 640);
+
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -267,88 +272,113 @@ const Home = () => {
           </div>
 
           {hasOlimpiadas ? (
-            <Swiper
-              modules={[Autoplay]}
-              spaceBetween={30}
-              slidesPerView={olimpiadas.length >= 3 ? 3 : olimpiadas.length}
-              centeredSlides={olimpiadas.length > 3}
-              autoplay={
-                olimpiadas.length > 3
-                  ? {
-                    delay: 3000,
-                    disableOnInteraction: true,
-                    pauseOnMouseEnter: true,
-                  }
-                  : false
-              }
-              breakpoints={{
-                0: {
-                  slidesPerView: 1,
-                  centeredSlides: false,
-                },
-                640: {
-                  slidesPerView: olimpiadas.length >= 2 ? 2 : olimpiadas.length,
-                  centeredSlides: olimpiadas.length > 2,
-                },
-                1024: {
-                  slidesPerView: olimpiadas.length >= 3 ? 3 : olimpiadas.length,
-                  centeredSlides: olimpiadas.length > 3,
-                },
-              }}
-              className="w-full"
-            >
-              {olimpiadas.map((olimpiada) => (
-                <SwiperSlide key={olimpiada.id}>
-                  <Card className="h-full hover:shadow-lg transition-all duration-300">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-xl text-rose-700">{olimpiada.nombre}</CardTitle>
-                        {olimpiada.id === olimpiadas[0].id && (
-                          <div className="flex items-center space-x-1 text-amber-500">
-                            <Star className="h-5 w-5 fill-current" />
-                            <span className="text-sm font-medium">Destacada</span>
-                          </div>
+            <div className="relative">
+              {mostrarFlechas && (
+                <button
+                  className="custom-prev absolute left-2 sm:-left-8 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
+                  type="button"
+                  aria-label="Anterior"
+                >
+                  <span style={{ fontSize: 24 }}>&larr;</span>
+                </button>
+              )}
+              {/* Swiper */}
+              <Swiper
+                modules={[Autoplay, Navigation]}
+                spaceBetween={30}
+                slidesPerView={olimpiadas.length >= 3 ? 3 : olimpiadas.length}
+                centeredSlides={olimpiadas.length > 3}
+                navigation={{
+                  nextEl: '.custom-next',
+                  prevEl: '.custom-prev'
+                }}
+                autoplay={
+                  olimpiadas.length > 3
+                    ? {
+                      delay: 3000,
+                      disableOnInteraction: true,
+                      pauseOnMouseEnter: true,
+                    }
+                    : false
+                }
+                breakpoints={{
+                  0: {
+                    slidesPerView: 1,
+                    centeredSlides: false,
+                  },
+                  640: {
+                    slidesPerView: olimpiadas.length >= 2 ? 2 : olimpiadas.length,
+                    centeredSlides: olimpiadas.length > 2,
+                  },
+                  1024: {
+                    slidesPerView: olimpiadas.length >= 3 ? 3 : olimpiadas.length,
+                    centeredSlides: olimpiadas.length > 3,
+                  },
+                }}
+                className="w-full"
+              >
+                {olimpiadas.map((olimpiada) => (
+                  <SwiperSlide key={olimpiada.id}>
+                    <Card className="h-full min-h-[370px] sm:min-h-0 hover:shadow-lg transition-all duration-300 px-2 py-8 max-w-xs w-full sm:px-6 sm:py-6 sm:max-w-none mx-auto">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-xl text-rose-700">{olimpiada.nombre}</CardTitle>
+                          {olimpiada.id === olimpiadas[0].id && (
+                            <div className="flex items-center space-x-1 text-amber-500">
+                              <Star className="h-5 w-5 fill-current" />
+                              <span className="text-sm font-medium">Destacada</span>
+                            </div>
+                          )}
+                        </div>
+                        {olimpiada.descripcion && (
+                          <CardDescription className="text-slate-700 line-clamp-2">
+                            {olimpiada.descripcion}
+                          </CardDescription>
                         )}
-                      </div>
-                      {olimpiada.descripcion && (
-                        <CardDescription className="text-slate-700 line-clamp-2">
-                          {olimpiada.descripcion}
-                        </CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4 mb-6">
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium text-slate-900">Periodo de Inscripción</span>
-                            <span className="text-sm text-slate-600">
-                              Del {formatDate(olimpiada?.inicio_inscripcion)}
-                            </span>
-                            <span className="text-sm text-slate-600">
-                              Al {formatDate(olimpiada?.fin_inscripcion)}
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4 mb-6">
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium text-slate-900">Periodo de Inscripción</span>
+                              <span className="text-sm text-slate-600">
+                                Del {formatDate(olimpiada?.inicio_inscripcion)}
+                              </span>
+                              <span className="text-sm text-slate-600">
+                                Al {formatDate(olimpiada?.fin_inscripcion)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                            <span className="text-sm">
+                              <strong>Costo:</strong> {olimpiada.costo ? `Bs. ${olimpiada.costo}` : "Gratuito"}
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <DollarSign className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                          <span className="text-sm">
-                            <strong>Costo:</strong> {olimpiada.costo ? `Bs. ${olimpiada.costo}` : "Gratuito"}
-                          </span>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => handleSeleccionarOlimpiada(olimpiada)}
-                        variant={olimpiada.id === olimpiadas[0].id ? "accent" : "outline"}
-                        className="w-full"
-                      >
-                        Ver Detalles e Inscribirse
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+                        <Button
+                          onClick={() => handleSeleccionarOlimpiada(olimpiada)}
+                          variant={olimpiada.id === olimpiadas[0].id ? "accent" : "outline"}
+                          className="w-full"
+                        >
+                          Ver Detalles e Inscribirse
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+              {mostrarFlechas && (
+                <button
+                  className="custom-next absolute right-2 sm:-right-8 top-1/2 -translate-y-1/2 z-20 bg-white rounded-full shadow p-2 border border-blue-200 hover:bg-blue-100 transition"
+                  type="button"
+                  aria-label="Siguiente"
+                >
+                  <span style={{ fontSize: 24 }}>&rarr;</span>
+                </button>
+              )}
+            </div>
           ) : (
             <Card className="text-center py-12">
               <CardContent>
