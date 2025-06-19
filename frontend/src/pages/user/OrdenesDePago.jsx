@@ -133,6 +133,9 @@ const OrdenesDePago = () => {
     }
   };
 
+  const idsPorLista = registrosPorLista.flatMap(([_, lista]) => lista.map(r => r.id_inscripcion));
+  const haySeleccionPorLista = registrosSeleccionados.some(id => idsPorLista.includes(id));
+
   const generarOrdenDePago = async () => {
     try {
       const datosOrdenResponse = await generarDatosDeOrden({
@@ -196,6 +199,151 @@ const OrdenesDePago = () => {
       alert("Ocurrió un error al generar o guardar la orden de pago.");
     }
   };
+
+const generarOrdenesDePagoIndependientes = async () => {
+  try {
+    // 1. Agrupar seleccionados por lista
+    const seleccionadosPorLista = {};
+    registrosPorLista.forEach(([idLista, listaRegistros]) => {
+      // Solo los seleccionados de esta lista
+      const seleccionadosEnEstaLista = listaRegistros
+        .filter(r => registrosSeleccionados.includes(r.id_inscripcion));
+      if (seleccionadosEnEstaLista.length > 0) {
+        seleccionadosPorLista[idLista] = seleccionadosEnEstaLista;
+      }
+    });
+
+    // 2. Registros individuales seleccionados (que no están en ninguna lista seleccionada)
+    const idsPorLista = Object.values(seleccionadosPorLista).flat().map(r => r.id_inscripcion);
+    const individualesSeleccionados = registrosIndividuales.filter(
+      r => registrosSeleccionados.includes(r.id_inscripcion) && !idsPorLista.includes(r.id_inscripcion)
+    );
+
+    // 3. Generar una orden por cada grupo de lista (agrupados) y una por cada individual
+    // --- Por lista ---
+    for (const [idLista, registros] of Object.entries(seleccionadosPorLista)) {
+      // Genera UNA orden para todos los registros seleccionados de esta lista
+      const ids = registros.map(r => r.id_inscripcion);
+      const datosOrdenResponse = await generarDatosDeOrden({
+        id_encargado: idEncargado,
+        id_olimpiada: idOlimpiada,
+        registros: ids,
+      });
+      const datosOrden = datosOrdenResponse.data;
+      const doc = new jsPDF();
+      doc.setFontSize(12);
+      doc.text("Universidad Mayor de San Simón", 10, 10);
+      doc.text("Facultad de ciencias y tecnología", 10, 15);
+      doc.text("Secretaría administrativa", 10, 20);
+      doc.setFontSize(16);
+      doc.text("Orden de pago", 105, 30, { align: "center" });
+      doc.setFontSize(12);
+      doc.text(`Nro Orden: ${datosOrden.id_pago}`, 160, 10);
+      doc.text(`Emitido por la Unidad: ${datosOrden.nombre_olimpiada}`, 10, 40);
+      doc.text(`Señor(a): ${datosOrden.nombre_completo_encargado}`, 10, 50);
+      doc.text(`NIT/CI: ${datosOrden.ci_encargado}`, 10, 60);
+      doc.text("Por lo siguiente:", 10, 70);
+      autoTable(doc, {
+        startY: 75,
+        head: [["Cantidad", "Concepto", "Precio por unidad", "Importe total"]],
+        body: [
+          [
+            datosOrden.cantidad,
+            `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`,
+            `${datosOrden.precio_por_unidad} Bs.`,
+            `${datosOrden.importe_total} Bs.`,
+          ],
+        ],
+      });
+      doc.text("Nota: no vale como factura oficial", 10, doc.lastAutoTable.finalY + 10);
+      doc.text(`Son: ${datosOrden.importe_en_literal}`, 10, doc.lastAutoTable.finalY + 20);
+      doc.text(
+        `Cochabamba, ${new Date(datosOrden.fecha_pago).toLocaleDateString("es-ES", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}`,
+        10,
+        doc.lastAutoTable.finalY + 30
+      );
+      doc.text("Firma del encargado: ____________________________", 10, doc.lastAutoTable.finalY + 40);
+      // doc.save(`orden_de_pago_${datosOrden.id_pago}.pdf`); // Opcional: descarga local
+      const pdfBlob = doc.output("blob");
+      const formData = new FormData();
+      formData.append("id", datosOrden.id_pago);
+      formData.append("monto", datosOrden.importe_total);
+      formData.append("fecha_generado", datosOrden.fecha_pago);
+      formData.append("concepto", `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`);
+      formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
+      ids.forEach((id) => {
+        formData.append("registros[]", id);
+      });
+      await guardarOrdenPago(formData);
+    }
+
+    // --- Individuales ---
+    for (const registro of individualesSeleccionados) {
+      const datosOrdenResponse = await generarDatosDeOrden({
+        id_encargado: idEncargado,
+        id_olimpiada: idOlimpiada,
+        registros: [registro.id_inscripcion],
+      });
+      const datosOrden = datosOrdenResponse.data;
+      const doc = new jsPDF();
+      doc.setFontSize(12);
+      doc.text("Universidad Mayor de San Simón", 10, 10);
+      doc.text("Facultad de ciencias y tecnología", 10, 15);
+      doc.text("Secretaría administrativa", 10, 20);
+      doc.setFontSize(16);
+      doc.text("Orden de pago", 105, 30, { align: "center" });
+      doc.setFontSize(12);
+      doc.text(`Nro Orden: ${datosOrden.id_pago}`, 160, 10);
+      doc.text(`Emitido por la Unidad: ${datosOrden.nombre_olimpiada}`, 10, 40);
+      doc.text(`Señor(a): ${datosOrden.nombre_completo_encargado}`, 10, 50);
+      doc.text(`NIT/CI: ${datosOrden.ci_encargado}`, 10, 60);
+      doc.text("Por lo siguiente:", 10, 70);
+      autoTable(doc, {
+        startY: 75,
+        head: [["Cantidad", "Concepto", "Precio por unidad", "Importe total"]],
+        body: [
+          [
+            datosOrden.cantidad,
+            `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`,
+            `${datosOrden.precio_por_unidad} Bs.`,
+            `${datosOrden.importe_total} Bs.`,
+          ],
+        ],
+      });
+      doc.text("Nota: no vale como factura oficial", 10, doc.lastAutoTable.finalY + 10);
+      doc.text(`Son: ${datosOrden.importe_en_literal}`, 10, doc.lastAutoTable.finalY + 20);
+      doc.text(
+        `Cochabamba, ${new Date(datosOrden.fecha_pago).toLocaleDateString("es-ES", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}`,
+        10,
+        doc.lastAutoTable.finalY + 30
+      );
+      doc.text("Firma del encargado: ____________________________", 10, doc.lastAutoTable.finalY + 40);
+      // doc.save(`orden_de_pago_${datosOrden.id_pago}.pdf`); // Opcional: descarga local
+      const pdfBlob = doc.output("blob");
+      const formData = new FormData();
+      formData.append("id", datosOrden.id_pago);
+      formData.append("monto", datosOrden.importe_total);
+      formData.append("fecha_generado", datosOrden.fecha_pago);
+      formData.append("concepto", `${datosOrden.concepto} - detalles: ${datosOrden.detalle}`);
+      formData.append("orden", new File([pdfBlob], "orden_de_pago.pdf", { type: "application/pdf" }));
+      formData.append("registros[]", registro.id_inscripcion);
+      await guardarOrdenPago(formData);
+    }
+
+    window.location.reload();
+  } catch (error) {
+    console.error("Error al generar o guardar las órdenes de pago independientes:", error);
+    alert("Ocurrió un error al generar o guardar las órdenes de pago independientes.");
+  }
+};
 
   // Pantalla de detalles de lista
   if (verDetallesLista) {
@@ -382,15 +530,53 @@ const OrdenesDePago = () => {
             </button>
             <button
               onClick={generarOrdenDePago}
-              className={`px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition ${
+              className={`relative px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition ${
+                registrosSeleccionados.length > 0 && !haySeleccionPorLista
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-400 text-gray-700 cursor-not-allowed"
+              } text-xs md:text-base`}
+              disabled={registrosSeleccionados.length === 0 || haySeleccionPorLista}
+              type="button"
+              title="Genera una sola orden de pago para todos los registros individuales seleccionados"
+              onMouseOver={e => {
+                const tooltip = document.createElement('div');
+                tooltip.className = "z-50 absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-blue-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg";
+                tooltip.innerText = "Genera una sola orden de pago para todos los registros individuales seleccionados.";
+                tooltip.style.pointerEvents = "none";
+                tooltip.id = "tooltip-orden-general";
+                e.currentTarget.appendChild(tooltip);
+              }}
+              onMouseOut={e => {
+                const tooltip = document.getElementById("tooltip-orden-general");
+                if (tooltip) tooltip.remove();
+              }}
+            >
+              Generar Orden de Pago
+            </button>
+            <button
+              onClick={generarOrdenesDePagoIndependientes}
+              className={`relative px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition ${
                 registrosSeleccionados.length > 0
                   ? "bg-blue-600 text-white hover:bg-blue-700"
                   : "bg-gray-400 text-gray-700 cursor-not-allowed"
               } text-xs md:text-base`}
               disabled={registrosSeleccionados.length === 0}
               type="button"
+              title="Genera órdenes de pago únicas para cada registro y/o registro por lista seleccionado"
+              onMouseOver={e => {
+                const tooltip = document.createElement('div');
+                tooltip.className = "z-50 absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 bg-blue-900 text-white text-xs rounded-lg px-3 py-2 shadow-lg";
+                tooltip.innerText = "Genera órdenes de pago únicas para cada registro y/o registro por lista seleccionado.";
+                tooltip.style.pointerEvents = "none";
+                tooltip.id = "tooltip-orden-independiente";
+                e.currentTarget.appendChild(tooltip);
+              }}
+              onMouseOut={e => {
+                const tooltip = document.getElementById("tooltip-orden-independiente");
+                if (tooltip) tooltip.remove();
+              }}
             >
-              Generar Orden de Pago
+              Generar Orden de Pago Independiente
             </button>
           </div>
 
