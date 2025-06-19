@@ -69,17 +69,12 @@ const RegistrarListaPostulantes = () => {
         setHeaders(cleanHeaders);
         setData(cleanRows);
 
-        // Guardar en localStorage
-        sessionStorage.setItem("postulantes_excel_headers", JSON.stringify(cleanHeaders));
-        sessionStorage.setItem("postulantes_excel_data", JSON.stringify(cleanRows));
-        sessionStorage.setItem("postulantes_excel_fileName", file.name);
+  
       } catch (err) {
         setError("Hubo un error al procesar el archivo. Asegúrate de que esté en formato correcto.");
         setData([]);
         setHeaders([]);
-        sessionStorage.removeItem("postulantes_excel_headers");
-        sessionStorage.removeItem("postulantes_excel_data");
-        sessionStorage.removeItem("postulantes_excel_fileName");
+
       }
     };
 
@@ -104,9 +99,7 @@ const RegistrarListaPostulantes = () => {
 
       if (response && response.message && !response.errors && !response.error) {
         alert(response.message);
-        sessionStorage.removeItem("postulantes_excel_headers");
-        sessionStorage.removeItem("postulantes_excel_data");
-        sessionStorage.removeItem("postulantes_excel_fileName");
+      
         setHeaders([]);
         setData([]);
         setFileName("");
@@ -139,9 +132,7 @@ const RegistrarListaPostulantes = () => {
     setFile(null);
     setError("");
     setErroresPorCelda({});
-    sessionStorage.removeItem("postulantes_excel_headers");
-    sessionStorage.removeItem("postulantes_excel_data");
-    sessionStorage.removeItem("postulantes_excel_fileName");
+
   };
 
 
