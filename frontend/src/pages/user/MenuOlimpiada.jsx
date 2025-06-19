@@ -25,7 +25,7 @@ const MenuOlimpiada = () => {
     const navigate = useNavigate();
     const { isMobile, isTablet, screenSize } = useDeviceAgent();
     const [areasConDetalle, setAreasConDetalle] = useState([]);
-    const [expandedIndex, setExpandedIndex] = useState(null);
+   
     const swiperRef = useRef(null);
 
 
@@ -171,6 +171,7 @@ const MenuOlimpiada = () => {
             </div>
         );
     }
+    
 
     // Main content
     return (
@@ -338,7 +339,7 @@ const MenuOlimpiada = () => {
                                 }}
                                 onMouseLeave={() => {
                                     if (swiperRef.current && swiperRef.current.autoplay) swiperRef.current.autoplay.start();
-                                    setExpandedIndex(null);
+                                    
                                 }}>
                                 <h3 className="text-xl font-bold text-slate-800 mb-4 text-center">Áreas de la Olimpiada</h3>
                                 <Swiper
@@ -368,7 +369,7 @@ const MenuOlimpiada = () => {
                                     onSwiper={swiper => (swiperRef.current = swiper)}
                                 >
                                     {areasConDetalle.map((area, idx) => {
-                                        const isExpanded = expandedIndex === idx;
+                                        
                                         return (
                                             <SwiperSlide
                                                 key={area.id || idx}
