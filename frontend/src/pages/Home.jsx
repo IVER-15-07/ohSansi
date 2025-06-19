@@ -257,8 +257,8 @@ const Home = () => {
       </section>
 
       {/* Active Olimpiadas */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-16 sm:py-16">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Olimpiadas Activas</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
@@ -282,6 +282,10 @@ const Home = () => {
                   : false
               }
               breakpoints={{
+                0: {
+                  slidesPerView: 1,
+                  centeredSlides: false,
+                },
                 640: {
                   slidesPerView: olimpiadas.length >= 2 ? 2 : olimpiadas.length,
                   centeredSlides: olimpiadas.length > 2,
