@@ -137,7 +137,7 @@ class PostulantesImport implements ToCollection, WithHeadingRow, WithBatchInsert
                 $nombre = $this->normalizarCampoExcel($campo->campo_postulante->nombre);
 
                 if (empty($fila[$nombre])) {
-                    $errores[] = "El campo obligatorioee '{$campo->campo_postulante->nombre}' está vacío.";
+                    $errores[] = "El campo obligatorio '{$campo->campo_postulante->nombre}' está vacío.";
                 }
             }
         }

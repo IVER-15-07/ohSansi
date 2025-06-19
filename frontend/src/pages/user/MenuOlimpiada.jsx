@@ -373,10 +373,10 @@ const MenuOlimpiada = () => {
                                             <SwiperSlide
                                                 key={area.id || idx}
                                                 className="flex justify-center"
-                                                onMouseEnter={() => setExpandedIndex(idx)}
-                                                onMouseLeave={() => setExpandedIndex(null)}
+                                                
+                                                
                                             >
-                                                <div className={`bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-xl shadow-lg p-6 flex flex-col w-full transition-all duration-300 ${isExpanded ? 'h-auto' : 'h-80'} relative`}>
+                                                <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-xl shadow-lg p-6 flex flex-col w-full transition-all duration-300 h-auto relative">
                                                     <h4 className="text-2xl font-bold text-blue-900 mb-2 flex items-center gap-2">
                                                         <span className="inline-block w-2 h-2 bg-blue-400 rounded-full"></span>
                                                         {area.nombre}
@@ -386,7 +386,7 @@ const MenuOlimpiada = () => {
                                                     {Array.isArray(area.niveles) && area.niveles.length > 0 ? (
                                                         <div>
                                                             <span className="font-semibold text-indigo-700">Niveles/Categorias:</span>
-                                                            <ul className={`list-disc list-inside ml-4 mt-1 overflow-hidden ${!isExpanded ? 'line-clamp-5' : ''}`}>
+                                                            <ul className="list-disc list-inside ml-4 mt-1 overflow-hidden ">
                                                                 {area.niveles.map((nivel, i) => (
                                                                     <li key={nivel.id || i} className="text-indigo-900 font-medium mb-2">
                                                                         <div>
