@@ -33,20 +33,29 @@ const MenuOlimpiada = () => {
     const inicioInscripcion = olimpiada?.inicio_inscripcion ? dayjs(olimpiada.inicio_inscripcion) : null;
     const finInscripcion = olimpiada?.fin_inscripcion ? dayjs(olimpiada.fin_inscripcion) : null;
 
-    const tieneAreasYniveles = Array.isArray(olimpiada.areas) &&
-        olimpiada.areas.length > 0 &&
-        olimpiada.areas.some(area =>
+
+    const inscripcionPorFecha =
+        inicioInscripcion &&
+        finInscripcion &&
+        hoy.isSameOrAfter(inicioInscripcion, 'day') &&
+        hoy.isSameOrBefore(finInscripcion, 'day');
+
+    const tieneAreasYniveles =
+        Array.isArray(areasConDetalle) &&
+        areasConDetalle.length > 0 &&
+        areasConDetalle.some(area =>
             Array.isArray(area.niveles) && area.niveles.length > 0
         );
 
 
-    const inscripcionHabilitada =
-        inicioInscripcion &&
-        finInscripcion &&
-        hoy.isSameOrAfter(inicioInscripcion, 'day') &&
-        hoy.isSameOrBefore(finInscripcion, 'day') &&
-        tieneAreasYniveles;;
+    const inscripcionHabilitada = inscripcionPorFecha && tieneAreasYniveles;
 
+    let mensajeBoton = "Inscribirse en la Olimpiada";
+    if (!inscripcionPorFecha) {
+        mensajeBoton = "La inscripción no está disponible en este momento.";
+    } else if (!tieneAreasYniveles) {
+        mensajeBoton = "No puedes inscribirte: la olimpiada no tiene áreas o niveles disponibles.";
+    }
     // Memoized handlers for better performance
     const handleVolver = useCallback(() => {
         navigate("/");
@@ -442,12 +451,7 @@ const MenuOlimpiada = () => {
                             className="w-full sm:w-auto min-w-48 font-semibold"
                             disabled={!inscripcionHabilitada}
                         >
-                            {!tieneAreasYniveles
-                                ? "No puedes inscribirte: la olimpiada no tiene áreas o niveles disponibles."
-                                : inscripcionHabilitada
-                                    ? "Inscribirse en la Olimpiada"
-                                    : "La inscripción no está disponible en este momento."
-                            }
+                            {mensajeBoton}
                         </Button>
                     </div>
                 </CardContent>
