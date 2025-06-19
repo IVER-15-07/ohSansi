@@ -25,7 +25,7 @@ const MenuOlimpiada = () => {
     const navigate = useNavigate();
     const { isMobile, isTablet, screenSize } = useDeviceAgent();
     const [areasConDetalle, setAreasConDetalle] = useState([]);
-   
+
     const swiperRef = useRef(null);
 
 
@@ -33,11 +33,19 @@ const MenuOlimpiada = () => {
     const inicioInscripcion = olimpiada?.inicio_inscripcion ? dayjs(olimpiada.inicio_inscripcion) : null;
     const finInscripcion = olimpiada?.fin_inscripcion ? dayjs(olimpiada.fin_inscripcion) : null;
 
+    const tieneAreasYniveles = Array.isArray(olimpiada.areas) &&
+        olimpiada.areas.length > 0 &&
+        olimpiada.areas.some(area =>
+            Array.isArray(area.niveles) && area.niveles.length > 0
+        );
+
+
     const inscripcionHabilitada =
         inicioInscripcion &&
         finInscripcion &&
         hoy.isSameOrAfter(inicioInscripcion, 'day') &&
-        hoy.isSameOrBefore(finInscripcion, 'day');
+        hoy.isSameOrBefore(finInscripcion, 'day') &&
+        tieneAreasYniveles;;
 
     // Memoized handlers for better performance
     const handleVolver = useCallback(() => {
@@ -131,6 +139,8 @@ const MenuOlimpiada = () => {
 
 
 
+
+
     // Loading state
     if (loading) {
         return (
@@ -171,7 +181,7 @@ const MenuOlimpiada = () => {
             </div>
         );
     }
-    
+
 
     // Main content
     return (
@@ -339,7 +349,7 @@ const MenuOlimpiada = () => {
                                 }}
                                 onMouseLeave={() => {
                                     if (swiperRef.current && swiperRef.current.autoplay) swiperRef.current.autoplay.start();
-                                    
+
                                 }}>
                                 <h3 className="text-xl font-bold text-slate-800 mb-4 text-center">Áreas de la Olimpiada</h3>
                                 <Swiper
@@ -369,13 +379,13 @@ const MenuOlimpiada = () => {
                                     onSwiper={swiper => (swiperRef.current = swiper)}
                                 >
                                     {areasConDetalle.map((area, idx) => {
-                                        
+
                                         return (
                                             <SwiperSlide
                                                 key={area.id || idx}
                                                 className="flex justify-center"
-                                                
-                                                
+
+
                                             >
                                                 <div className="bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-xl shadow-lg p-6 flex flex-col w-full transition-all duration-300 h-auto relative">
                                                     <h4 className="text-2xl font-bold text-blue-900 mb-2 flex items-center gap-2">
@@ -432,9 +442,11 @@ const MenuOlimpiada = () => {
                             className="w-full sm:w-auto min-w-48 font-semibold"
                             disabled={!inscripcionHabilitada}
                         >
-                            {inscripcionHabilitada
-                                ? "Inscribirse en la Olimpiada"
-                                : "La inscripción no está disponible en este momento."
+                            {!tieneAreasYniveles
+                                ? "No puedes inscribirte: la olimpiada no tiene áreas o niveles disponibles."
+                                : inscripcionHabilitada
+                                    ? "Inscribirse en la Olimpiada"
+                                    : "La inscripción no está disponible en este momento."
                             }
                         </Button>
                     </div>
