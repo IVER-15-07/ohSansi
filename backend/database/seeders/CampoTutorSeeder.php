@@ -19,11 +19,11 @@ class CampoTutorSeeder extends Seeder
         CampoTutor::truncate();
         $campos = [
             [
-                'nombre' => "Correo Electronico",
+                'nombre' => "Correo Electronico Tutor",
                 'id_tipo_campo' => 2,
             ],
             [
-                'nombre' => "Telefono",
+                'nombre' => "Telefono Tutor",
                 'id_tipo_campo' => 11,
             ],
         ];

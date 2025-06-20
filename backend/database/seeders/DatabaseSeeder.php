@@ -50,5 +50,7 @@ class DatabaseSeeder extends Seeder
         $this->call(RolTutorSeeder::class);
 
         $this->call(AdministradorSeeder::class);
+
+        $this->call(DatoPostulanteSeeder::class);
     }
 }
