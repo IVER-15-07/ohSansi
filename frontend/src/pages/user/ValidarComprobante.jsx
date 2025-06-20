@@ -142,7 +142,6 @@ const ValidarComprobante = () => {
       setAlertMessage("Comprobante validado exitosamente.");
       setShowSuccessAlert(true);
       setShowConfirmModal(false);
-      window.location.reload(); // Recargar la página para reflejar los cambios
       console.log("Respuesta del servidor:", response);
     } catch (error) {
       console.error("Error al validar el comprobante:", error);
